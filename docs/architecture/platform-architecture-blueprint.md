@@ -2,12 +2,15 @@
 
 **Status:** Source of truth. This document defines the platform we are building — it is independent of Chisfis. Chisfis is referenced only in the final section, as a UI/component donor. No code has been written against this document yet; it is the design to implement against.
 
-**Key assumptions (flag anything you want to override before implementation starts):**
+**Entity-level detail lives in `docs/architecture/domain-model-specification.md`** — this document stays system/architecture-level; the Domain Model Specification is the authoritative source for field lists, validation rules, and per-entity lifecycles.
+
+**Confirmed scope (client-decided, no longer an assumption):** property-only platform (residential and commercial buildings, no cars/experiences/flights) supporting **two rental transaction types on one unified `Listing` model — short-term (nightly/weekly) and long-term (monthly/annual lease)**. See Domain Model Specification §0 for the full rationale on why this is one entity with conditional fields, not two.
+
+**Remaining assumptions (flag anything you want to override before implementation starts):**
 
 | Assumption | Why | Override cost if wrong |
 |---|---|---|
-| Single listing vertical: short-term **property/stay rentals** (not cars/experiences/flights/real estate) | Prior assessment (§4/§13/§19 of the Chisfis audit) found multi-vertical support was the root cause of nearly all type/component duplication in the template. Repo origin (`Airbnb`) also points at stays. | Low now, high later — this is the decision the rest of the doc is built on |
-| **Stripe Connect** for payments | Industry-standard for two-sided marketplaces (host payouts + platform fee in one flow) | Medium — payment module is isolated behind an interface (§6) |
+| **Payment provider abstraction** (interface + adapters), first adapter = Stripe Connect, with Paystack/Flutterwave as later adapters | Client requirement — booking/payment logic must not be tightly coupled to one gateway | Low — this is the point of the abstraction; adding a second adapter is additive |
 | **PostgreSQL + Prisma** for persistence | Matches DB-readiness recommendation in prior audit; App Router pairs naturally with Prisma | Low — no code written against it yet |
 | **NextAuth (Auth.js)** for authentication | Already a dependency; needs relocation/reconfiguration, not replacement | Low |
 | No public REST API for external clients (mobile app, partners) at MVP | Nothing in scope indicates a non-Next.js client yet | Low — API boundaries (§13) are designed so this can be added later without rework |
@@ -59,31 +62,16 @@ A listing's **availability** and **pricing** are versioned data attached to the 
 
 ## 3. Booking Lifecycle
 
-```mermaid
-stateDiagram-v2
-    [*] --> Pending: Guest requests/pays
-    Pending --> Confirmed: Payment captured + host accepts (or auto-accept)
-    Pending --> Declined: Host declines / request expires
-    Confirmed --> CheckedIn: Check-in date reached
-    CheckedIn --> Completed: Check-out date reached
-    Confirmed --> CancelledByGuest: Guest cancels
-    Confirmed --> CancelledByHost: Host cancels
-    CancelledByGuest --> Refunded: Per cancellation policy
-    CancelledByHost --> Refunded: Full refund always
-    Completed --> Disputed: Guest/host raises issue
-    Declined --> [*]
-    Refunded --> [*]
-    Completed --> [*]
-    Disputed --> [*]: Admin resolves
-```
+**One `Booking` entity covers both rental types** — `rentalType` (snapshotted from the listing) determines which status subset and date fields apply. Full field-level detail and both state diagrams (short-term reservation vs. long-term lease) are in **Domain Model Specification §2.9** — summarized here:
 
-- **Pending**: PaymentIntent created, funds authorized (not yet captured, or captured-and-held depending on chosen Stripe flow — see §6), host has a decision window if manual-accept is enabled for that listing.
-- **Confirmed**: booking is real — dates are now blocked on the listing calendar, both parties can message, notifications fire.
-- **CheckedIn / Completed**: date-driven transitions (a scheduled job flips these, not user action), Completed is what unlocks reviews (§9).
-- **Cancellation**: refund amount is policy-driven (flexible/moderate/strict — a property of the listing, chosen by the host at listing-creation time), computed server-side, never trust a client-submitted refund amount.
-- **Disputed**: rare path, routes to admin queue (§11) for manual resolution — not automated.
+- **Pending**: payment/application in progress — for short-term, a charge is authorized; for long-term, the security deposit + first month's rent are captured at lease signing. Host has a decision window if manual-accept is enabled for that listing.
+- **Confirmed**: booking is real. Short-term: dates are now blocked on the listing's `Availability` calendar. Long-term: lease is signed, awaiting move-in date. Both parties can message; notifications fire.
+- **Short-term only — CheckedIn → Completed**: date-driven transitions (a scheduled job flips these), Completed unlocks reviews (§8).
+- **Long-term only — Active → Completed / TerminatedEarly**: Active once the move-in date is reached; Completed when the lease term ends naturally, TerminatedEarly for breach/mutual agreement.
+- **Cancellation**: refund amount is policy-driven (flexible/moderate/strict for short-term; deposit-forfeiture rules for long-term — both properties of the listing, chosen by the host at listing-creation time), computed server-side, never trust a client-submitted refund amount.
+- **Disputed**: rare path, routes to admin queue (§10) for manual resolution — not automated.
 
-This directly replaces the Chisfis flow, where price is a hardcoded, internally-inconsistent string on two different pages and no state carries between them (prior audit, §6).
+This directly replaces the Chisfis flow, where price is a hardcoded, internally-inconsistent string on two different pages and no state carries between them (prior audit, §6), and extends it to cover recurring long-term rent (§5 below), which Chisfis has no concept of at all.
 
 ---
 
@@ -91,7 +79,8 @@ This directly replaces the Chisfis flow, where price is a hardcoded, internally-
 
 **Principle: the URL is the single source of truth for search state.** This is the direct fix for Chisfis's search, where every input held isolated local state that never reached the results grid.
 
-- **Query params** (`?location=&checkin=&checkout=&guests=&minPrice=&maxPrice=&amenities=&propertyType=&sort=`) drive a server-side query — parsed in a Server Component, not client `useState`.
+- **`rentalType` is a required top-level query param** (`SHORT_TERM` or `LONG_TERM`) — it determines which secondary filters render and which query branch runs (nightly dates + price vs. move-in date + monthly rent). Both branches resolve through one `searchListings(params)` function that dispatches internally on `rentalType`; see Domain Model Specification §3 for the full filter/facet mapping.
+- **Query params** (`?rentalType=&location=&checkin=&checkout=&moveIn=&guests=&minPrice=&maxPrice=&amenities=&propertyType=&sort=`) drive a server-side query — parsed in a Server Component, not client `useState`.
 - **Filter UI components** (location input, date range, guest counter, price slider, amenity checkboxes) are controlled inputs whose `onChange` updates the URL (`router.replace` with shallow routing), not local component state that dead-ends.
 - **Availability-aware search**: when `checkin`/`checkout` are present, exclude listings with overlapping confirmed bookings or host-blocked dates for that range — this is a real query against the Availability table (§12), not decorative.
 - **Sorting**: price asc/desc, rating desc, newest — a `sort` param mapped to an `ORDER BY` clause.
@@ -103,29 +92,27 @@ This directly replaces the Chisfis flow, where price is a hardcoded, internally-
 
 ## 5. Payment Architecture
 
-**Model: Stripe Connect (destination charges).** Guest pays the platform; the platform automatically splits the payment — most goes to the host's connected account, the platform keeps a service fee — in a single PaymentIntent.
+**Not tightly coupled to any single gateway.** All booking/payment business logic calls a `PaymentProvider` interface (`lib/payments/`); concrete gateways (Stripe Connect first, Paystack/Flutterwave as later adapters) are swappable implementations behind it. Full interface shape and rationale: Domain Model Specification §6.
 
 ```
-Guest checkout
-  → create PaymentIntent (amount = total, application_fee_amount = platform fee,
-      transfer_data.destination = host's Stripe connected account)
-  → Stripe Elements collects card client-side (raw card data never touches our server —
-      fixes the Chisfis anti-pattern of a plaintext card-number <input>)
-  → on confirm: Booking.status = Pending
-  → webhook `payment_intent.succeeded` (POST /api/webhooks/stripe, signature-verified, idempotent)
-      → Booking.status = Confirmed
-      → Transaction row recorded
-      → notifications fired (§8)
-  → payout to host's connected account: immediate (destination charge) or delayed until
-      check-in per platform policy — configurable, not hardcoded
-  → cancellation/refund: refund amount computed server-side from the listing's cancellation
-      policy, issued via Stripe Refund API, webhook updates Booking + Transaction state
+PaymentProvider (interface)
+  createCharge(amount, currency, payerRef, metadata) → { providerTransactionRef, status }
+  refund(providerTransactionRef, amount?) → { status }
+  createPayeeAccount(user) → payoutAccountRef      // host payout onboarding
+  payout(payoutAccountRef, amount, currency) → { providerTransactionRef, status }
+  verifyWebhookSignature(payload, signature) → boolean
+  parseWebhookEvent(payload) → NormalizedPaymentEvent
 ```
 
+- **`Payment` (formerly "Transaction")** is the one DB entity for every money movement (charge/refund/payout/deposit-hold/deposit-release), and it is **provider-agnostic by design** — it stores a `provider` enum + opaque `providerTransactionRef`, never gateway-specific field names. See Domain Model Specification §2.14.
+- **Webhook endpoints are per-adapter** (`/api/webhooks/stripe`, `/api/webhooks/paystack`, …), each verifying its own signature and normalizing the event before handing it to shared domain logic — the booking/payment state-transition code never knows which provider fired.
+- **Flow differs by rental type, not by provider** (Domain Model Specification §4):
+  - **Short-term**: one `createCharge` at booking confirmation (full stay total, or deposit+balance per policy).
+  - **Long-term**: a `SECURITY_DEPOSIT_HOLD` charge at lease signing, then one `createCharge` per billing period for the lease duration — scheduled by our own background job (§15), not a provider "subscription" feature (subscription semantics differ too much across gateways to build the abstraction around them). A `RENT_DUE_REMINDER` notification fires ahead of each due date.
 - **Money is stored as integer minor units (cents) + an explicit currency code** on every monetary field, from day one — retrofitting this later is painful.
 - **Single currency at MVP** (e.g. USD); the integer-cents + currency-code convention means adding currencies later is a display/conversion concern, not a schema migration.
-- **PCI scope**: minimized to "SAQ A" by using Stripe Elements/Checkout exclusively — no card data ever reaches our server or database.
-- **Payout module** is a distinct concern from the Booking/Payment tables (a host may batch multiple bookings into one payout run) — see `Payout` entity, §12.
+- **PCI scope**: minimized by using each provider's hosted card-collection UI (e.g. Stripe Elements) exclusively — no card data ever reaches our server or database. This fixes the Chisfis anti-pattern of a plaintext card-number `<input>`.
+- **Payouts are modeled as `Payment(type = PAYOUT)`**, not a separate entity — MVP is one payout per booking; see Domain Model Specification §7 (Design Decisions Log) for why a dedicated `Payout` entity was deliberately not introduced yet.
 
 ---
 
@@ -184,25 +171,28 @@ A single logged-in user with both Guest and Host roles sees a **role switcher**,
 
 ## 11. Core Database Entities
 
-| Entity | Purpose |
-|---|---|
-| `User` | Account record; roles as a set; profile fields |
-| `HostProfile` | 1:1 extension of `User` when the Host role is active — bio, response rate, Stripe Connect account ID, verification status |
-| `Listing` | A bookable property; status per §2 |
-| `ListingImage` | Ordered images belonging to a listing |
-| `Category` | Property type taxonomy (admin-managed) |
-| `Amenity` | Feature taxonomy (admin-managed); `ListingAmenity` join table |
-| `Availability` | Date-range blocks per listing — `booked` (derived from confirmed bookings) or `host_blocked` (manual) |
-| `Booking` | A reservation; status per §3; snapshotted price/terms at time of booking |
-| `Transaction` | A Stripe-linked money movement (`charge`/`refund`/`payout`) tied to a booking |
-| `Payout` | A host payout run, may aggregate multiple bookings |
-| `Review` | Two-sided per §9; polymorphic-ish via `targetType`/`targetId`, or two explicit FK columns (`listingReview`, `guestReview`) — recommend explicit columns for query simplicity over generic polymorphism |
-| `Conversation` / `ConversationParticipant` | Messaging container + membership |
-| `Message` | A single message within a conversation |
-| `Notification` | In-app notification record |
-| `NotificationPreference` | Per-user opt-in/out per type/channel |
-| `Favorite` | Saved-listing join (`userId`, `listingId`) |
-| `AdminAuditLog` | Admin action accountability trail |
+**Full field-by-field detail (types, validation, status values, permissions, lifecycle, indexes) is the Domain Model Specification's job — see `docs/architecture/domain-model-specification.md` §2.** Summary of the entity set and what changed from the original draft of this document:
+
+| Entity | Purpose | Note |
+|---|---|---|
+| `User` | Account record; roles as a set; profile fields | Host-specific fields (bio, response rate, payout reference) live directly on `User` — no separate `HostProfile` (deliberately not introduced, see spec §7) |
+| `Listing` | A single unified property model — status per §2 | One entity for both rental types via a `rentalType` field + conditional fields, not per-type tables |
+| `Image` | Ordered images belonging to a listing | Renamed from `ListingImage` |
+| `PropertyType` | Property category taxonomy (admin-managed) | Renamed from `Category` |
+| `Amenity` | Feature taxonomy (admin-managed); `ListingAmenity` join table | Unchanged |
+| `Address` | Structured, normalized listing location | Added — was implicit in `Listing` before |
+| `Availability` | Sparse date-blocks — **short-term listings only**; long-term occupancy is derived from an active `Booking`, no calendar table needed | Scope narrowed |
+| `Inquiry` | Pre-booking contact before a formal `Booking` exists | Added |
+| `Booking` | One unified reservation/lease entity; status subset and date fields depend on `rentalType`; snapshotted price/terms | Now explicitly covers both short-term reservations and long-term leases |
+| `Payment` | A provider-agnostic money movement (`charge`/`refund`/`payout`/`deposit-hold`/`deposit-release`) tied to a booking | Renamed from `Transaction`; no gateway-specific fields (§5) |
+| `Review` | Two-sided per §8, explicit `direction` enum, one row per direction | Direction approach confirmed, no generic polymorphism |
+| `Conversation` / `ConversationParticipant` | Messaging container + membership | Unchanged |
+| `Message` | A single message within a conversation | Unchanged |
+| `Notification` / `NotificationPreference` | In-app/email notification record + per-user opt-in/out | Unchanged |
+| `Favorite` | Saved-listing join (`userId`, `listingId`) | Unchanged |
+| `AuditLog` | Admin action accountability trail | Renamed from `AdminAuditLog` |
+
+**Not introduced** (and why, per Domain Model Specification §7): a separate `HostProfile` (folded into `User`), a separate `Payout` entity (modeled as `Payment(type=PAYOUT)`), and separate `ShortTermListing`/`LongTermListing` or `Booking`/`Lease` tables (one entity each, with conditional fields, per the client's explicit instruction to avoid premature polymorphism).
 
 ---
 
@@ -210,33 +200,36 @@ A single logged-in user with both Guest and Host roles sees a **role switcher**,
 
 ```mermaid
 erDiagram
-    User ||--o| HostProfile : "has (if Host)"
-    User ||--o{ Listing : "hosts"
+    User ||--o{ Listing : hosts
     User ||--o{ Booking : "books (as guest)"
     User ||--o{ Favorite : saves
     User ||--o{ Review : authors
     User ||--o{ Notification : receives
     User ||--o{ ConversationParticipant : "participates in"
-    User ||--o{ AdminAuditLog : "performs (if Admin)"
+    User ||--o{ Inquiry : sends
+    User ||--o{ AuditLog : "performs (if Admin)"
+    User ||--o{ Payment : "pays/receives"
 
-    Listing }o--|| Category : "belongs to"
-    Listing ||--o{ ListingImage : has
+    Listing }o--|| PropertyType : "categorized as"
+    Listing ||--|| Address : "located at"
+    Listing ||--o{ Image : has
     Listing ||--o{ ListingAmenity : has
     Amenity ||--o{ ListingAmenity : "used by"
-    Listing ||--o{ Availability : has
+    Listing ||--o{ Availability : "has (short-term only)"
     Listing ||--o{ Booking : "booked via"
     Listing ||--o{ Favorite : "saved as"
-    Listing ||--o{ Conversation : "inquired about"
+    Listing ||--o{ Inquiry : "asked about"
 
-    Booking ||--o{ Transaction : generates
-    Booking ||--o| Review : "reviewed via"
+    Booking ||--o{ Payment : generates
+    Booking ||--o{ Review : "reviewed as"
     Booking ||--o| Conversation : "coordinated via"
 
-    HostProfile ||--o{ Payout : receives
-
+    Inquiry ||--o| Conversation : spawns
     Conversation ||--o{ ConversationParticipant : has
     Conversation ||--o{ Message : contains
 ```
+
+*(Full ERD with cardinality notes: Domain Model Specification §5.)*
 
 ---
 
@@ -261,7 +254,7 @@ src/
     (host)/                    # host dashboard: listings, bookings, earnings, add-listing wizard
     (admin)/                   # admin dashboard
     api/
-      webhooks/stripe/route.ts
+      webhooks/stripe/route.ts    # one webhook route per active payment adapter
       auth/[...nextauth]/route.ts
 
   modules/                     # one folder per domain — the real architecture lives here
@@ -287,7 +280,7 @@ src/
 
   lib/
     db.ts                       # Prisma client singleton
-    stripe.ts
+    payments/                   # PaymentProvider interface + adapters (stripe.ts, paystack.ts, flutterwave.ts)
     auth.ts                     # session/role/ownership checks — single source of truth
     email.ts
 
