@@ -123,18 +123,18 @@
 | `city`, `region` | String | |
 | `postalCode` | String | Format validated per `country` where feasible |
 | `country` | String | ISO 3166-1 alpha-2 |
-| `latitude`, `longitude` | Decimal, nullable | Populated by geocoding if not supplied directly |
+| `location` | `geography(Point, 4326)`, nullable | Populated by geocoding if not supplied directly. Stored as a PostGIS geography type (not two plain decimals) from day one — the storage shape is what's expensive to retrofit at scale; the radius-query itself is deferred until needed (see pre-implementation review §3) |
 | `formattedAddress` | String, nullable | Geocoder output |
 
-**Validation:** `country` required and valid ISO code. `latitude` ∈ [-90,90], `longitude` ∈ [-180,180] if present.
+**Validation:** `country` required and valid ISO code. `location` must be a valid WGS84 point if present.
 
 **Relationships:** 1—1 `Listing` (cascade delete).
 
 **Permissions:** Editable only by the listing's owning host, or admin.
 
-**Lifecycle:** Created with the listing draft → updated as host edits → geocoded asynchronously if lat/lng absent.
+**Lifecycle:** Created with the listing draft → updated as host edits → geocoded asynchronously if `location` absent.
 
-**Indexes:** unique(`listingId`); index(`city`, `country`); index(`latitude`,`longitude`) — candidate for a PostGIS GIST index if/when radius search is added (not required at MVP).
+**Indexes:** unique(`listingId`); index(`city`, `country`); GIST index on `location` (PostGIS) — enabled from day one since the extension/column-type is cheap to add now and expensive to backfill later; the radius *query* itself is still deferred to when "near me" search is actually built.
 
 ---
 
@@ -175,6 +175,7 @@
 | `weeklyDiscountPercent`, `monthlyDiscountPercent` | Decimal, nullable | 0–100; `monthlyDiscountPercent` covers 28+ night stays *within* the short-term model — distinct from a long-term lease |
 | `checkInTime`, `checkOutTime` | Time | e.g. `15:00` / `11:00` |
 | `instantBook` | Boolean, default false | Auto-confirm vs. host approval required |
+| `cancellationPolicy` | Enum {FLEXIBLE, MODERATE, STRICT} | Drives the server-computed refund amount on cancellation (Booking §2.9) — added in pre-implementation review; was referenced in Blueprint §3 prose but missing from this table |
 
 **Long-term-specific fields** (required if `rentalType = LONG_TERM`; must be `NULL` if `SHORT_TERM`):
 
@@ -187,6 +188,7 @@
 | `availableFromDate` | Date | |
 | `utilitiesIncluded` | Boolean, default false | |
 | `petPolicy` | Enum {NOT_ALLOWED, ALLOWED, CASE_BY_CASE} | |
+| `earlyTerminationPolicy` | Enum {STANDARD, STRICT} | `STANDARD` = prorated deposit return by notice given; `STRICT` = deposit forfeited on early termination. Added in pre-implementation review, same gap as `cancellationPolicy` above |
 
 **Validation rules:**
 - `rentalType` required at creation; a Zod discriminated union on `rentalType` enforces the correct field group is present and the other is absent at the application layer. A DB `CHECK` constraint mirrors this as a safety net against writes that bypass the app layer.
@@ -218,7 +220,7 @@ stateDiagram-v2
     Archived --> [*]
 ```
 
-**Indexes:** unique(`slug`); index(`hostId`); index(`status`); index(`rentalType`); composite(`status`,`rentalType`,`propertyTypeId`) for search filtering; full-text (`tsvector`) index on `title`+`description`. *(Optimization candidate, not required at MVP: denormalize `city`/`country` from `Address` onto `Listing` to avoid a join on every search query — revisit if search latency demands it.)*
+**Indexes:** unique(`slug`); index(`hostId`); index(`status`); index(`rentalType`); composite(`status`,`rentalType`,`propertyTypeId`) for search filtering; **GIN** index on a `tsvector` generated column over `title`+`description` (a plain B-tree index does not support full-text match operators — GIN is required, not optional, for this to do anything). *(Optimization candidate, not required at MVP: denormalize `city`/`country` from `Address` onto `Listing` to avoid a join on every search query — revisit if search latency demands it.)*
 
 ---
 
@@ -315,6 +317,7 @@ stateDiagram-v2
 | `rentalType` | Enum {SHORT_TERM, LONG_TERM} | Snapshotted, immutable |
 | `status` | Enum | See below — shared column, type-conditional valid subset |
 | `currency` | String | |
+| `idempotencyKey` | String, unique | Client-generated (UUID) on the create-booking request; a duplicate key (double-click, retry after timeout) returns the existing `Booking` instead of creating a second one and double-charging — added in pre-implementation review |
 | `createdAt`, `updatedAt` | DateTime | |
 | `cancelledAt` | DateTime, nullable | |
 | `cancellationReason` | Text, nullable | |
@@ -342,8 +345,9 @@ stateDiagram-v2
 
 **Validation:**
 - `rentalType` must match `listing.rentalType` at creation.
-- Short-term: dates must not overlap any existing `BOOKED` `Availability` row for that listing — **enforced server-side at booking creation, not just in the UI.**
-- Long-term: `leaseStartDate` ≥ `listing.availableFromDate`; `leaseTermMonths` within listing bounds.
+- `idempotencyKey` required and unique — a repeat submission with the same key returns the original booking rather than creating a duplicate.
+- Short-term: dates must not overlap any existing `BOOKED` `Availability` row for that listing. **Concurrency mechanism (added in pre-implementation review — this was previously stated as "enforced server-side" without specifying how):** booking creation runs inside a single database transaction that attempts to `INSERT` one `Availability` row (`status = BOOKED`) per night of the stay. The existing `unique(listingId, date)` constraint on `Availability` is the atomicity guarantee — if any night is already taken, the insert violates the constraint and the whole transaction rolls back, failing the booking attempt cleanly. A separate "check availability, then insert" is a race condition under concurrent requests and must not be used.
+- Long-term: `leaseStartDate` ≥ `listing.availableFromDate`; `leaseTermMonths` within listing bounds. **At most one `Booking` may be `CONFIRMED`/`ACTIVE` per long-term listing at a time** (enforced by a partial unique index, see Indexes below); multiple `PENDING` applications for the same listing are allowed (a landlord fielding several applicants is normal) — only the transition to `CONFIRMED` is exclusive.
 
 **Relationships:** N—1 `Listing`, N—1 `User` (guest), N—1 `User` (host), 1—N `Payment`, 1—N `Availability` (short-term only — the booking "owns" its `BOOKED` date rows), 0/1—1 `Conversation`, up to two `Review` rows (guest→host, host→guest).
 
@@ -384,7 +388,7 @@ stateDiagram-v2
     Active --> Disputed: Guest/host raises issue
 ```
 
-**Indexes:** index(`listingId`), index(`guestId`), index(`hostId`), index(`status`), index(`rentalType`); partial composite index(`listingId`,`checkInDate`,`checkOutDate`) `WHERE rentalType = 'SHORT_TERM'` for overlap queries; partial composite index(`listingId`,`leaseStartDate`,`leaseEndDate`) `WHERE rentalType = 'LONG_TERM'`.
+**Indexes:** unique(`idempotencyKey`); index(`listingId`), index(`guestId`), index(`status`), index(`rentalType`); composite(`hostId`,`status`,`checkInDate`) for the host dashboard's "my active bookings" query; partial composite index(`listingId`,`checkInDate`,`checkOutDate`) `WHERE rentalType = 'SHORT_TERM'` for overlap queries; partial composite index(`listingId`,`leaseStartDate`,`leaseEndDate`) `WHERE rentalType = 'LONG_TERM'`; **partial unique index `(listingId) WHERE rentalType = 'LONG_TERM' AND status IN ('CONFIRMED', 'ACTIVE')`** — enforces the one-active-lease-per-listing rule above at the database level, not just in application code.
 
 ---
 
@@ -515,7 +519,8 @@ See §6 for the full provider-agnostic design rationale. Fields/lifecycle summar
 | `id` | UUID (PK) | |
 | `bookingId` | UUID (FK) | 1:1 with the triggering booking at MVP — see §0.3 on why a separate `Payout` entity was not introduced |
 | `payerUserId`, `payeeUserId` | UUID (FK, nullable) | |
-| `type` | Enum {CHARGE, REFUND, PAYOUT, SECURITY_DEPOSIT_HOLD, SECURITY_DEPOSIT_RELEASE} | |
+| `relatedPaymentId` | UUID (FK → Payment, nullable, self-referencing) | Links a `REFUND` or `CHARGEBACK` row to the original `CHARGE` row it applies to. Added in pre-implementation review — without this, multiple `Payment` rows on one booking (e.g. several monthly charges plus a refund) had no way to express which charge was refunded other than inferring from amount/date |
+| `type` | Enum {CHARGE, REFUND, PAYOUT, SECURITY_DEPOSIT_HOLD, SECURITY_DEPOSIT_RELEASE, CHARGEBACK} | `CHARGEBACK` added in pre-implementation review — a bank-initiated dispute is a distinct event from a platform-initiated `REFUND` and was previously unrepresentable |
 | `amount` | Integer (minor units/cents) | > 0 |
 | `currency` | String | ISO 4217, must match booking's currency |
 | `provider` | Enum {STRIPE_CONNECT, PAYSTACK, FLUTTERWAVE, …} | Extensible |
@@ -525,21 +530,25 @@ See §6 for the full provider-agnostic design rationale. Fields/lifecycle summar
 | `failureReason` | String, nullable | |
 | `createdAt`, `updatedAt` | DateTime | |
 
-**Validation:** `amount` > 0; `currency` matches booking; `billingPeriod*` required when `booking.rentalType = LONG_TERM AND type = CHARGE`, forbidden otherwise.
+**Validation:** `amount` > 0; `currency` matches booking; `billingPeriod*` required when `booking.rentalType = LONG_TERM AND type = CHARGE`, forbidden otherwise; `relatedPaymentId` required when `type IN (REFUND, CHARGEBACK)`, must reference a `Payment` with `type = CHARGE` on the same `bookingId`.
 
-**Relationships:** N—1 `Booking`.
+**Relationships:** N—1 `Booking`; N—1 `Payment` (self, via `relatedPaymentId`, nullable).
 
 **Permissions:** System-created only, never directly user-editable; read access limited to payer, payee, and `ADMIN`.
 
-**Lifecycle:** `PENDING` → `SUCCEEDED` (provider webhook confirms) → optionally `REFUNDED`/`PARTIALLY_REFUNDED` later. `FAILED` is terminal for that row — a retry creates a **new** `Payment` row (financial records are immutable, never mutated after the fact).
+**Lifecycle:** `PENDING` → `SUCCEEDED` (provider webhook confirms) → optionally `REFUNDED`/`PARTIALLY_REFUNDED` later. `FAILED` is terminal for that row — a retry creates a **new** `Payment` row (financial records are immutable, never mutated after the fact). A `CHARGEBACK` row additionally flags the related `Booking` for admin review — it is not auto-resolved.
 
-**Indexes:** index(`bookingId`), index(`status`), index(`provider`), index(`billingPeriodStart`) for recurring-rent queries; unique(`providerTransactionRef`) where not null.
+**Indexes:** index(`bookingId`), index(`status`), index(`provider`), index(`billingPeriodStart`) for recurring-rent queries; index(`payerUserId`), index(`payeeUserId`) for payment-history/earnings dashboard queries — added in pre-implementation review, previously missing despite being high-frequency reads; index(`relatedPaymentId`); unique(`providerTransactionRef`) where not null.
+
+**Webhook handling requirements (added in pre-implementation review):**
+- **Duplicate delivery:** a unique `providerTransactionRef` gives idempotency for the row itself, but the handler's *side effects* (status transitions, notifications) must also be guarded — before acting on a webhook event, check whether a `Payment` with that `providerTransactionRef` already has `status = SUCCEEDED`, and short-circuit (return 200, no further action) if so. Payment providers do not guarantee exactly-once delivery.
+- **Out-of-order delivery:** payment providers do not guarantee event ordering either. Handlers should treat an event as "a fact occurred," and where ambiguity is possible, re-derive current state from the referenced object rather than blindly applying events in arrival order.
 
 ---
 
 ### 2.15 AuditLog
 
-**Purpose:** Immutable, append-only accountability trail of admin actions.
+**Purpose:** Immutable, append-only accountability trail. Scope broadened in pre-implementation review: covers **admin actions** (approve/reject listing, suspend user, manual refund) **and sensitive security events on any account** (failed login attempts, password changes, email changes, payout-account changes) — a platform moving money needs the latter for fraud investigation, not just admin accountability.
 
 | Field | Type |
 |---|---|
@@ -635,22 +644,25 @@ Not a database entity — the architectural layer the `Payment` entity (§2.14) 
 
 ```
 PaymentProvider (interface, lib/payments/)
-  createCharge(amount, currency, payerRef, metadata) → { providerTransactionRef, status }
-  refund(providerTransactionRef, amount?) → { status }
+  createCharge(amount, currency, payerRef, metadata: { bookingId, paymentType }) → { providerTransactionRef, status }
+  refund(providerTransactionRef, amount?) → { providerTransactionRef, status }
   createPayeeAccount(user) → payoutAccountRef   // host payout onboarding
   payout(payoutAccountRef, amount, currency) → { providerTransactionRef, status }
   verifyWebhookSignature(payload, signature) → boolean
   parseWebhookEvent(payload) → NormalizedPaymentEvent
 
 Concrete adapters (one file each, same interface):
-  StripeConnectProvider
-  PaystackProvider
-  FlutterwaveProvider
+  StripeConnectProvider   — built first, the only adapter implemented at MVP
+  PaystackProvider        — interface reserved, not built until a real requirement exists
+  FlutterwaveProvider     — interface reserved, not built until a real requirement exists
 ```
 
 - Business logic (`modules/booking`, `modules/payments`) calls **only** the `PaymentProvider` interface — never a provider SDK directly.
 - The active provider is selected via configuration (env var / platform setting per currency or region if ever needed); `Payment.provider` records which one handled each transaction, so different bookings could even use different providers without a schema change.
 - Webhook endpoints (`/api/webhooks/stripe`, `/api/webhooks/paystack`, …) each call their adapter's `verifyWebhookSignature`/`parseWebhookEvent`, then hand a **normalized** event to shared domain logic — the booking/payment state-transition code has no idea which provider fired the webhook.
+- **`metadata` is a normalized shape defined by the interface itself** (`{ bookingId, paymentType }`), not an arbitrary passthrough bag — added in pre-implementation review to prevent calling code from accidentally depending on a Stripe-specific metadata shape, which would defeat the point of the abstraction when a second adapter is added.
+- **Charge/payout model, decided in pre-implementation review: separate charges and transfers, not destination charges.** Guest payments land in the platform's own Stripe balance; the platform explicitly calls `payout()` to move a host's share to their connected account on whatever schedule the business chooses. This is the only model compatible with holding a payout until check-in (or any other buyer-protection window) — a destination charge moves funds to the connected account atomically at charge time and cannot be held. This also means `payout()` is a real, necessary interface method, not redundant with the charge step.
+- **Stripe Connect account type, decided in pre-implementation review: Express.** Stripe-hosted onboarding (Account Links/Embedded Components) means the platform never collects or stores KYC data (SSN, DOB, bank details) itself — consistent with `User.payoutAccountRef` being the only payout-related field on `User` (§2.1). Express is the account type that matches that intent most cleanly: faster onboarding than Standard, less platform liability than Custom.
 
 ---
 
@@ -664,3 +676,6 @@ Concrete adapters (one file each, same interface):
 | Payouts modeled as `Payment(type=PAYOUT)` | Separate `Payout` entity, possibly aggregating multiple bookings | Not in the requested entity list; MVP is 1 payout : 1 booking, which the existing `Payment` row already expresses. Revisit only if payout batching becomes a real operational need |
 | `Availability` is sparse (stores only non-default dates) and short-term-only | Dense calendar (one row per date per listing, both rental types) | A dense table is pure storage/write overhead with no query benefit here; long-term occupancy is a simple existence check against `Booking`, not a calendar concern at all |
 | `Review` uses an explicit `direction` enum, one row per direction | Two nullable rating/comment pairs on one row | Cleaner validation (`unique(bookingId, direction)`), avoids nullable-pair ambiguity about which side has and hasn't submitted |
+| Payments use separate charges + explicit transfers | Stripe destination charges (atomic split at charge time) | Destination charges cannot hold a host's payout for any buyer-protection window; separate charges + transfers is the only model compatible with configurable payout timing, and matches the `payout()` method the interface already needed |
+| Booking-creation concurrency enforced via a transactional per-night `Availability` insert against a unique constraint | An application-level "check then insert" availability check | The check-then-insert pattern is a textbook race condition under concurrent requests; the unique-constraint-as-guard approach is atomic by construction and reuses schema already in place |
+| One active (`CONFIRMED`/`ACTIVE`) long-term booking per listing, enforced by a partial unique index | Leaving exclusivity to application logic only | A DB-level constraint is the only guarantee that survives a bug in application code; multiple `PENDING` applications are still allowed, only the exclusive transition is constrained |

@@ -4,6 +4,8 @@
 
 **Entity-level detail lives in `docs/architecture/domain-model-specification.md`** — this document stays system/architecture-level; the Domain Model Specification is the authoritative source for field lists, validation rules, and per-entity lifecycles.
 
+**Frozen as of the pre-implementation review** (`docs/architecture/pre-implementation-review.md`) — that review adversarially challenged every major decision below and found 13 concrete gaps, all now fixed in place in this document and the Domain Model Specification. See that review for the reasoning behind each fix; this document states only the resulting decisions.
+
 **Confirmed scope (client-decided, no longer an assumption):** property-only platform (residential and commercial buildings, no cars/experiences/flights) supporting **two rental transaction types on one unified `Listing` model — short-term (nightly/weekly) and long-term (monthly/annual lease)**. See Domain Model Specification §0 for the full rationale on why this is one entity with conditional fields, not two.
 
 **Remaining assumptions (flag anything you want to override before implementation starts):**
@@ -30,6 +32,10 @@ Roles are **not mutually exclusive** — a single `User` can hold multiple roles
 | **Unauthenticated visitor** | Not a stored role | Search/browse/view listings only; any write action (favorite, message, book) redirects to login |
 
 **Permission enforcement:** centralize in one authorization layer (`lib/auth.ts` — role/ownership checks), never scattered per-page `if` checks. Every mutation checks both **role** (is this user a Host at all?) and **ownership** (is this Host the owner of *this* listing?) — the second check is the one Chisfis has zero examples of and is easy to forget.
+
+**Enforcement pattern, made explicit in the pre-implementation review:** `requireRole()`/`requireOwnership()` guard calls must be the first line of every mutating Server Action — a convention, not just an available helper, so it can't be silently skipped in one module while used everywhere else.
+
+**Password reset:** a token-based, single-use, time-limited, rate-limited forgot-password flow is required — flagged as missing from the original draft during the security review and added as required Auth-phase scope.
 
 ---
 
@@ -84,9 +90,10 @@ This directly replaces the Chisfis flow, where price is a hardcoded, internally-
 - **Filter UI components** (location input, date range, guest counter, price slider, amenity checkboxes) are controlled inputs whose `onChange` updates the URL (`router.replace` with shallow routing), not local component state that dead-ends.
 - **Availability-aware search**: when `checkin`/`checkout` are present, exclude listings with overlapping confirmed bookings or host-blocked dates for that range — this is a real query against the Availability table (§12), not decorative.
 - **Sorting**: price asc/desc, rating desc, newest — a `sort` param mapped to an `ORDER BY` clause.
-- **Pagination**: offset/limit at MVP scale; revisit cursor-based pagination only if/when listing volume demands it.
-- **MVP search engine**: PostgreSQL — `tsvector` full-text index on title/description, standard B-tree indexes on category/price/location, bounding-box or PostGIS radius query for geo search.
-- **Scale path**: search logic lives behind one function, `searchListings(params)`. When full-text relevance, typo tolerance, or geo performance outgrow Postgres, swap the implementation for a dedicated engine (Meilisearch/Typesense/Algolia) fed by a sync job on listing create/update — **the calling code and URL contract never change.**
+- **Pagination: cursor-based from day one**, not offset/limit. *(Corrected in pre-implementation review — offset pagination degrades non-linearly as the table grows, and switching strategy later is a breaking URL/API contract change for every consumer, not an internal refactor. Cursor pagination on an indexed sort key costs no more to build now.)*
+- **MVP search engine**: PostgreSQL — `tsvector` full-text column with a **GIN index** (a plain B-tree index does not support full-text match operators — this was previously unstated), standard B-tree indexes on category/price/location, `geography(Point)`-typed location column with a GIST index enabled from day one even though the radius query itself is deferred (retrofitting the column type later requires a backfill migration; enabling it now does not).
+- **Cache invalidation**: listing writes (`modules/listings/actions.ts`) call `revalidateTag('listing:{id}')` on publish/update/pause — stated explicitly because ISR without a wired invalidation trigger silently serves stale listing pages indefinitely.
+- **Scale path**: search logic lives behind one function, `searchListings(params)`. When full-text relevance, typo tolerance, or geo performance outgrow Postgres — concretely, when p95 search latency exceeds ~300ms or a single metro area exceeds ~50k active listings, not just "when it feels slow" — swap the implementation for a dedicated engine (Meilisearch/Typesense/Algolia) fed by a sync job on listing create/update — **the calling code and URL contract never change.**
 
 ---
 
@@ -109,10 +116,17 @@ PaymentProvider (interface)
 - **Flow differs by rental type, not by provider** (Domain Model Specification §4):
   - **Short-term**: one `createCharge` at booking confirmation (full stay total, or deposit+balance per policy).
   - **Long-term**: a `SECURITY_DEPOSIT_HOLD` charge at lease signing, then one `createCharge` per billing period for the lease duration — scheduled by our own background job (§15), not a provider "subscription" feature (subscription semantics differ too much across gateways to build the abstraction around them). A `RENT_DUE_REMINDER` notification fires ahead of each due date.
+- **Charge/payout model, decided in pre-implementation review: separate charges and transfers, not Stripe destination charges.** Guest payments land in the platform's own Stripe balance; the platform explicitly calls `payout()` to move a host's share to their connected account on a chosen schedule. This was previously undecided — the interface's `payout()` method implied this model but nothing ruled out destination charges, which move funds to the connected account atomically at charge time and **cannot** be held for any buyer-protection window. Separate charges + transfers is the only model compatible with holding a short-term payout until check-in, or holding long-term rent until a dispute window closes.
+- **Stripe Connect account type, decided in pre-implementation review: Express.** Stripe-hosted onboarding means the platform never collects/stores KYC data (SSN, DOB, bank details) itself — consistent with `User.payoutAccountRef` being the only payout-related field on `User`. Express matches that intent: faster onboarding than Standard, less platform liability than Custom.
+- **Webhook robustness, three requirements made explicit in the pre-implementation review:**
+  1. **Duplicate delivery**: `Payment.providerTransactionRef` being unique gives idempotency for the row, but the handler's side effects (status transitions, notifications) must independently check for an already-`SUCCEEDED` `Payment` with that ref and short-circuit — providers do not guarantee exactly-once delivery.
+  2. **Out-of-order delivery**: providers do not guarantee event ordering. Treat each event as "a fact occurred," re-deriving current state where ordering ambiguity is possible, rather than blindly applying events in arrival order.
+  3. **Chargebacks/disputes**: a bank-initiated dispute (`charge.dispute.created`) is distinct from a platform-initiated refund — handled via the `Payment.type = CHARGEBACK` value (Domain Model Specification §2.14), which additionally flags the related `Booking` for admin review rather than continuing its normal lifecycle silently.
 - **Money is stored as integer minor units (cents) + an explicit currency code** on every monetary field, from day one — retrofitting this later is painful.
 - **Single currency at MVP** (e.g. USD); the integer-cents + currency-code convention means adding currencies later is a display/conversion concern, not a schema migration.
-- **PCI scope**: minimized by using each provider's hosted card-collection UI (e.g. Stripe Elements) exclusively — no card data ever reaches our server or database. This fixes the Chisfis anti-pattern of a plaintext card-number `<input>`.
+- **PCI scope**: minimized by using each provider's hosted card-collection UI (e.g. Stripe Elements) exclusively — no card data ever reaches our server or database. **Explicit rule, not just an assumption: a raw card-number `<input>` must never be built.** This is precisely Chisfis's original defect (a plaintext card-number field with a hardcoded demo value), and given that exact anti-pattern already exists in this repo's history, it's stated here as a hard rule rather than left implicit.
 - **Payouts are modeled as `Payment(type = PAYOUT)`**, not a separate entity — MVP is one payout per booking; see Domain Model Specification §7 (Design Decisions Log) for why a dedicated `Payout` entity was deliberately not introduced yet.
+- **Only the Stripe Connect adapter is built at MVP.** Paystack/Flutterwave remain named in the `Payment.provider` enum (cost-free) but their adapters are not implemented until a real requirement exists — building three adapters against one confirmed provider would be premature.
 
 ---
 
@@ -165,7 +179,7 @@ A single logged-in user with both Guest and Host roles sees a **role switcher**,
 - **Taxonomy management**: CRUD on categories and amenities (the controlled vocabularies listings are built from) — admin-editable, not hardcoded constants like in Chisfis (`navigation.ts`, `contains/contants.ts`).
 - **Platform configuration**: service fee percentage, cancellation policy templates, whether listing moderation is required, feature flags for phased rollout.
 - **Analytics**: GMV, active listings, booking volume/conversion, top-performing listings — read-only aggregate views.
-- **Accountability**: every admin mutation (approve, suspend, refund, edit) writes an `AdminAuditLog` row — who, what, when, on what target. Any support-impersonation feature must be logged the same way.
+- **Accountability**: every admin mutation (approve, suspend, refund, edit) writes an `AuditLog` row — who, what, when, on what target. Any support-impersonation feature must be logged the same way. **Scope broadened in pre-implementation review**: `AuditLog` also covers sensitive security events on any account (failed logins, password changes, payout-account changes), not admin actions alone — necessary for fraud investigation on a platform moving money.
 
 ---
 
@@ -241,6 +255,9 @@ erDiagram
   - **Auth** — `/api/auth/[...nextauth]/route.ts` (the App Router–correct location; fixes the Chisfis defect where this handler is dead code at the wrong path).
   - **Anything a non-Next client needs** — deliberately not built yet (see assumptions table); if a mobile app or partner integration becomes real, version it under `/api/v1/...` at that point.
 - **Module-internal boundary rule**: each domain module (`modules/listings`, `modules/booking`, etc.) exposes its server actions/queries as its only public surface (e.g. `listings/actions.ts`, `listings/queries.ts`). Other modules call *through* that surface, never import another module's Prisma model directly. This is what keeps a monolith's modules independently reasoned-about and makes a future service extraction (e.g. pulling search or payments into its own service) a boundary that already exists in the code, not a new one to carve out under pressure.
+- **Error contract, added in pre-implementation review**: every Server Action returns `{ success: true, data } | { success: false, error: { code, message, fieldErrors? } }` for *expected* failures (validation errors, "dates no longer available," permission denied) — only genuinely unexpected failures (DB connection lost) should throw and hit the Next.js error boundary. Throwing for both was the original gap: expected, routine failures like a booking conflict would otherwise produce a generic error screen instead of an actionable message.
+- **Abuse prevention, added in pre-implementation review**: Server Actions have no built-in rate limiting. A Redis-backed sliding-window limiter (`lib/rate-limit.ts`), called from the same guard position as `requireRole()`/`requireOwnership()`, is required on: signup, `Inquiry` creation, `Message` creation, and `Review` submission — the endpoints most exposed to spam/abuse.
+- **File upload security, added in pre-implementation review**: presigned direct-to-S3 upload URLs, never proxying raw file bytes through the Next.js server; server-side content-type/size validation before issuing the presigned URL; EXIF stripping during the async resize step already planned for `Image` (both for storage hygiene and to avoid leaking a host's precise GPS location beyond what they intended to disclose).
 
 ---
 
@@ -286,6 +303,11 @@ src/
 
   types/                        # cross-module shared types only (avoid dumping everything here)
   styles/                       # kept from Chisfis's CSS-variable theming pattern
+  jobs/                         # background/scheduled tasks — added in pre-implementation review
+    expireStaleBookings.ts      # each file calls into a module's actions; never contains business logic itself
+    chargeMonthlyRent.ts
+    transitionListingStatuses.ts
+    expireReviewWindow.ts
 
 prisma/
   schema.prisma
@@ -293,11 +315,13 @@ prisma/
 
 This replaces Chisfis's category-route-group pattern (`(car-listings)/`, `(experience-listings)/`, etc. — one group per *listing type*) with role-based route groups (`(guest)/`, `(host)/`, `(admin)/`) plus a `modules/` layer organized by *domain*, matching the single-vertical decision in the assumptions table and the module-boundary rule in §13.
 
+**`jobs/` gap, found in pre-implementation review:** both documents repeatedly reference "a scheduled job" (status transitions, monthly rent charges, review-window expiry, stale-inquiry expiry) but no folder previously owned this recurring concern. Each job file calls into the relevant module's existing actions — the rule that modules own their business logic still holds; `jobs/` only owns scheduling/orchestration. Testing convention: co-located `*.test.ts` per module (not a mirrored `__tests__/` tree) — noted here as a convention, not enforced by the folder structure itself, given booking/payment state-machine logic is the highest-risk code in the system.
+
 ---
 
 ## 15. Scalability Considerations
 
-- **Database**: Postgres with indexes matched to the search/filter query shapes in §4; add a read replica only once read load actually demands it, not preemptively.
+- **Database**: Postgres with indexes matched to the search/filter query shapes in §4; add a read replica only once read load actually demands it, not preemptively. **Connection pooling (PgBouncer, Prisma Accelerate, or the hosting provider's built-in pooling e.g. Neon/Supabase) is required from the initial database setup (implementation Phase 2), not deferred as a "later" scale concern** — corrected in the pre-implementation review. A serverless Next.js deployment without pooling exhausts Postgres's connection limit at a far lower concurrency than "1M listings" implies; connection exhaustion is the realistic first bottleneck, not listing count.
 - **Caching**: Redis for session storage, rate limiting, and hot-path data (e.g. popular listing pages); Next.js ISR/full-route caching for listing detail pages, which are read-heavy and change infrequently.
 - **Search**: start on Postgres; graduate to a dedicated engine behind the `searchListings()` interface (§4) only when relevance/geo/typo-tolerance needs outgrow it.
 - **Media**: object storage (S3-compatible) + CDN for all listing images — never repo-bundled assets (Chisfis ships ~150 template images in-repo, including irrelevant stock photos and even brand-guideline PDFs).
@@ -338,3 +362,25 @@ Cross-referenced against the prior technical assessment (`docs/architecture/chis
 - `a0.muscache.com` (Airbnb CDN) from `next.config.js`, and all literal Airbnb-branded copy (e.g. `account-billing` payout text).
 - Component-level duplicates identified in the prior audit once each is touched by the phases above: `SwitchDarkMode2`, `NcPlayIcon2`, `SocialsList1`/`SocialsShare` (consolidate to one), `Heading2`, redundant `CardCategory1/3/4/5/6` variants.
 - `src/data/` mock JSON/`DEMO_*` arrays — retained only as a seed script for local dev/test fixtures once the database is live, not shipped as production data.
+
+---
+
+## 17. Implementation Roadmap
+
+Reviewed and re-sequenced from the original proposed order during the pre-implementation review (`docs/architecture/pre-implementation-review.md` §10) — five sequencing risks found and fixed. This is the order implementation follows.
+
+1. **Chisfis cleanup and project restructuring** — dependency/dead-code removal (Line Awesome font, dead `api/hello/` files, leaked Maps API key) happens first, before any new module scaffolding, so nothing new is written importing something already flagged for deletion.
+2. **Prisma schema and PostgreSQL database** — with **connection pooling and every index from the Domain Model Specification included now**, not deferred to a later "performance" phase.
+3. **Authentication and role system** — plus a minimal `notify()` primitive (writes a `Notification` row, no delivery yet) built here as shared infrastructure, since phases 8–10 need to call it.
+4. **Property listing CRUD**
+5. **Image upload and media management**
+6. **Availability management** *(moved before Search — search's date-filtering depends on this data existing)*
+7. **Search and filtering** *(moved after Availability, for the reason above)*
+8. **Short-term and long-term rental workflows** — built against a `MockPaymentProvider` test double, not blocked on Stripe integration; this also dog-foods the `PaymentProvider` abstraction before phase 11 swaps in the real adapter.
+9. **Messaging**
+10. **Reviews and favorites**
+11. **Stripe Connect payments and payouts** — swap `MockPaymentProvider` → `StripeConnectProvider`; separate-charges-and-transfers model; Express accounts (§5).
+12. **Admin dashboard**
+13. **Notifications** — email delivery and preferences UI; the emission primitive already exists from phase 3.
+14. **Performance optimization** — load testing and query tuning under real traffic, **not** a catch-up phase for indexes that should already exist from phase 2.
+15. **Final testing and production readiness**
