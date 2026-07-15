@@ -7,7 +7,18 @@ import GuestsInput from "../GuestsInput";
 import LocationInput from "../LocationInput";
 import DatesRangeInput from "../DatesRangeInput";
 
-const StaySearchForm = () => {
+export interface StaySearchFormValues {
+  city: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  guests: GuestsObject;
+}
+
+export interface StaySearchFormProps {
+  onValuesChange?: (values: StaySearchFormValues) => void;
+}
+
+const StaySearchForm: React.FC<StaySearchFormProps> = ({ onValuesChange }) => {
   //
   const [fieldNameShow, setFieldNameShow] = useState<
     "location" | "dates" | "guests"
@@ -29,6 +40,7 @@ const StaySearchForm = () => {
     const [start, end] = dates;
     setStartDate(start);
     setEndDate(end);
+    onValuesChange?.({ city: locationInputTo, startDate: start, endDate: end, guests: guestInput });
   };
 
   const renderInputLocation = () => {
@@ -55,6 +67,7 @@ const StaySearchForm = () => {
             onChange={(value) => {
               setLocationInputTo(value);
               setFieldNameShow("dates");
+              onValuesChange?.({ city: value, startDate, endDate, guests: guestInput });
             }}
           />
         )}
@@ -122,7 +135,13 @@ const StaySearchForm = () => {
             <span>{guestSelected || `Add guests`}</span>
           </button>
         ) : (
-          <GuestsInput defaultValue={guestInput} onChange={setGuestInput} />
+          <GuestsInput
+            defaultValue={guestInput}
+            onChange={(value) => {
+              setGuestInput(value);
+              onValuesChange?.({ city: locationInputTo, startDate, endDate, guests: value });
+            }}
+          />
         )}
       </div>
     );

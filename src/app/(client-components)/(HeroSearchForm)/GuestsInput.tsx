@@ -15,6 +15,7 @@ export interface GuestsInputProps {
   className?: string;
   buttonSubmitHref?: PathName;
   hasButtonSubmit?: boolean;
+  onGuestsChange?: (totalGuests: number) => void;
 }
 
 const GuestsInput: FC<GuestsInputProps> = ({
@@ -22,6 +23,7 @@ const GuestsInput: FC<GuestsInputProps> = ({
   className = "[ nc-flex-1 ]",
   buttonSubmitHref = "/listing-stay-map",
   hasButtonSubmit = true,
+  onGuestsChange,
 }) => {
   const [guestAdultsInputValue, setGuestAdultsInputValue] = useState(2);
   const [guestChildrenInputValue, setGuestChildrenInputValue] = useState(1);
@@ -45,6 +47,7 @@ const GuestsInput: FC<GuestsInputProps> = ({
       setGuestInfantsInputValue(value);
       newValue.guestInfants = value;
     }
+    onGuestsChange?.(newValue.guestAdults + newValue.guestChildren + newValue.guestInfants);
   };
 
   const totalGuests =

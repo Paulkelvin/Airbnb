@@ -14,6 +14,7 @@ export interface GuestsInputProps {
   fieldClassName?: string;
   autoFocus?: boolean;
   submitLink: PathName;
+  onGuestsChange?: (totalGuests: number) => void;
 }
 
 const GuestsInput: FC<GuestsInputProps> = ({
@@ -21,6 +22,7 @@ const GuestsInput: FC<GuestsInputProps> = ({
   className = "",
   autoFocus = false,
   submitLink,
+  onGuestsChange,
 }) => {
   const refContainer = React.createRef<HTMLDivElement>();
   const [isOpen, setIsOpen] = useState(false);
@@ -53,6 +55,7 @@ const GuestsInput: FC<GuestsInputProps> = ({
       setGuestInfantsInputValue(value);
       newValue.guestInfants = value;
     }
+    onGuestsChange?.(newValue.guestAdults + newValue.guestChildren + newValue.guestInfants);
   };
 
   const totalGuests =

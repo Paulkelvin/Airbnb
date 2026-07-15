@@ -1,46 +1,52 @@
 import React, { FC } from "react";
-import { DEMO_STAY_LISTINGS } from "@/data/listings";
-import { StayDataType } from "@/data/types";
-import Pagination from "@/components/ui/Pagination";
+import type { StayDataType } from "@/data/types";
 import TabFilters from "./TabFilters";
+import SortSelect from "./SortSelect";
+import LoadMoreResults from "./LoadMoreResults";
 import Heading from "@/components/ui/Heading";
-import StayCard from "@/components/StayCard";
+import type { SortOption } from "@/lib/validations/search";
 
 export interface SectionGridFilterCardProps {
   className?: string;
-  data?: StayDataType[];
+  items: StayDataType[];
+  nextCursor: string | null;
+  propertyTypes: { id: string; name: string; slug: string }[];
+  amenities: { id: string; name: string; slug: string; category: string | null }[];
+  appliedSort: SortOption;
+  resultKey: string;
 }
 
-const DEMO_DATA: StayDataType[] = DEMO_STAY_LISTINGS.filter((_, i) => i < 8);
+const AVAILABLE_SORTS: SortOption[] = ["newest", "price_asc", "price_desc", "rating"];
 
 const SectionGridFilterCard: FC<SectionGridFilterCardProps> = ({
   className = "",
-  data = DEMO_DATA,
+  items,
+  nextCursor,
+  propertyTypes,
+  amenities,
+  appliedSort,
+  resultKey,
 }) => {
   return (
-    <div
-      className={`nc-SectionGridFilterCard ${className}`}
-      data-nc-id="SectionGridFilterCard"
-    >
+    <div className={`nc-SectionGridFilterCard ${className}`} data-nc-id="SectionGridFilterCard">
       <Heading />
 
-      <div className="mb-8 lg:mb-11">
-        <TabFilters />
+      <div className="mb-8 lg:mb-11 flex flex-wrap items-center justify-between gap-4">
+        <TabFilters propertyTypes={propertyTypes} amenities={amenities} />
+        <SortSelect availableSorts={AVAILABLE_SORTS} />
       </div>
-      {data.length === 0 ? (
+
+      {appliedSort === "relevance" && (
+        <p className="mb-6 text-sm text-neutral-500">Sorted by relevance</p>
+      )}
+
+      {items.length === 0 ? (
         <p className="text-center text-neutral-500 py-16">
-          No listings published yet. Check back soon.
+          No listings match your search. Try adjusting your filters.
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {data.map((stay) => (
-            <StayCard key={stay.id} data={stay} />
-          ))}
-        </div>
+        <LoadMoreResults key={resultKey} initialItems={items} initialNextCursor={nextCursor} />
       )}
-      <div className="flex mt-16 justify-center items-center">
-        <Pagination />
-      </div>
     </div>
   );
 };

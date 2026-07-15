@@ -1,18 +1,46 @@
 "use client";
 
 import React, { Fragment, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Dialog, Transition } from "@headlessui/react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import ButtonSubmit from "./ButtonSubmit";
 import { useTimeoutFn } from "react-use";
-import StaySearchForm from "./(stay-search-form)/StaySearchForm";
+import StaySearchForm, {
+  type StaySearchFormValues,
+} from "./(stay-search-form)/StaySearchForm";
+import type { Route } from "@/routers/types";
+
+function toISODate(date: Date | null): string | null {
+  return date ? date.toISOString().slice(0, 10) : null;
+}
 
 const HeroSearchForm2Mobile = () => {
+  const router = useRouter();
   const [showModal, setShowModal] = useState(false);
+  const [values, setValues] = useState<StaySearchFormValues | null>(null);
 
   const [showDialog, setShowDialog] = useState(false);
   let [, , resetIsShowingDialog] = useTimeoutFn(() => setShowDialog(true), 1);
+
+  function handleSubmit() {
+    const params = new URLSearchParams();
+    if (values?.city) params.set("city", values.city);
+    if (values?.startDate && values?.endDate) {
+      params.set("checkIn", toISODate(values.startDate)!);
+      params.set("checkOut", toISODate(values.endDate)!);
+    }
+    const totalGuests =
+      (values?.guests.guestAdults ?? 0) +
+      (values?.guests.guestChildren ?? 0) +
+      (values?.guests.guestInfants ?? 0);
+    if (totalGuests > 0) params.set("guests", String(totalGuests));
+
+    const qs = params.toString();
+    router.push((qs ? `/listing-stay?${qs}` : "/listing-stay") as Route);
+    closeModal();
+  }
 
   function closeModal() {
     setShowModal(false);
@@ -87,7 +115,7 @@ const HeroSearchForm2Mobile = () => {
                       <div className="flex-1 pt-12 px-1.5 sm:px-4 flex overflow-hidden">
                         <div className="flex-1 overflow-y-auto hiddenScrollbar py-4">
                           <div className="transition-opacity animate-[myblur_0.4s_ease-in-out]">
-                            <StaySearchForm />
+                            <StaySearchForm onValuesChange={setValues} />
                           </div>
                         </div>
                       </div>
@@ -102,11 +130,7 @@ const HeroSearchForm2Mobile = () => {
                         >
                           Clear all
                         </button>
-                        <ButtonSubmit
-                          onClick={() => {
-                            closeModal();
-                          }}
-                        />
+                        <ButtonSubmit onClick={handleSubmit} />
                       </div>
                     </>
                   )}

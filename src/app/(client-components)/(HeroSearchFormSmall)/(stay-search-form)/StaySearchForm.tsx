@@ -1,30 +1,54 @@
-import React, { FC } from "react";
+"use client";
+
+import React, { FC, useState } from "react";
 import LocationInput from "../LocationInput";
 import GuestsInput from "../GuestsInput";
 import StayDatesRangeInput from "./StayDatesRangeInput";
 import { StaySearchFormFields } from "../../type";
+import type { Route } from "@/routers/types";
 
 export interface StaySearchFormProps {
   defaultFieldFocus?: StaySearchFormFields;
 }
 
+function toISODate(date: Date | null): string | null {
+  return date ? date.toISOString().slice(0, 10) : null;
+}
+
 const StaySearchForm: FC<StaySearchFormProps> = ({ defaultFieldFocus }) => {
+  const [city, setCity] = useState("");
+  const [dates, setDates] = useState<[Date | null, Date | null]>([null, null]);
+  const [guests, setGuests] = useState(0);
+
+  const params = new URLSearchParams();
+  if (city) params.set("city", city);
+  const [checkIn, checkOut] = dates;
+  if (checkIn && checkOut) {
+    params.set("checkIn", toISODate(checkIn)!);
+    params.set("checkOut", toISODate(checkOut)!);
+  }
+  if (guests > 0) params.set("guests", String(guests));
+
+  const qs = params.toString();
+  const submitLink = (qs ? `/listing-stay?${qs}` : "/listing-stay") as Route;
+
   const renderForm = () => {
     return (
       <form className="relative flex rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
         <LocationInput
-          // onInputDone={() => setDateFocused("startDate")}
           className="flex-[1.5]"
           autoFocus={defaultFieldFocus === "location"}
+          onInputDone={(value) => setCity(value)}
         />
         <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div>
-        <StayDatesRangeInput className="flex-[1.2]" />
+        <StayDatesRangeInput className="flex-[1.2]" onDatesChange={setDates} />
 
         <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div>
         <GuestsInput
           className="flex-1"
           autoFocus={defaultFieldFocus === "guests"}
-          submitLink="/listing-stay"
+          submitLink={submitLink}
+          onGuestsChange={setGuests}
         />
       </form>
     );

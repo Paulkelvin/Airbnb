@@ -17,7 +17,7 @@ export async function getActiveAmenities() {
   });
 }
 
-const listingInclude = {
+export const listingInclude = {
   address: true,
   images: true,
   amenities: { include: { amenity: true } },
@@ -73,6 +73,19 @@ export async function getMyListings(
     include: listingInclude,
     orderBy: { updatedAt: "desc" },
   });
+}
+
+/** Hydrates a set of listing IDs with full relations, preserving the given order (Prisma's `in` filter does not). */
+export async function getListingsByIds(ids: string[]): Promise<ListingWithRelations[]> {
+  if (ids.length === 0) return [];
+
+  const rows = await prisma.listing.findMany({
+    where: { id: { in: ids } },
+    include: listingInclude,
+  });
+
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return ids.map((id) => byId.get(id)).filter((row): row is ListingWithRelations => Boolean(row));
 }
 
 export interface PublishedListingsPage {

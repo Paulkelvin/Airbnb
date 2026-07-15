@@ -11,11 +11,13 @@ import ClearDataButton from "../ClearDataButton";
 export interface StayDatesRangeInputProps {
   className?: string;
   fieldClassName?: string;
+  onDatesChange?: (dates: [Date | null, Date | null]) => void;
 }
 
 const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
   className = "[ lg:nc-flex-2 ]",
   fieldClassName = "[ nc-hero-field-padding ]",
+  onDatesChange,
 }) => {
   const [startDate, setStartDate] = useState<Date | null>(
     new Date("2023/02/06")
@@ -27,6 +29,7 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
     const [start, end] = dates;
     setStartDate(start);
     setEndDate(end);
+    onDatesChange?.(dates);
   };
 
   const renderInput = () => {
