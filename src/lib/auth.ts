@@ -2,6 +2,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import type { UserRole } from "@prisma/client";
 
+/**
+ * Role model: GUEST (anonymous, unauthenticated — not a stored UserRole) <
+ * CUSTOMER (base authenticated capability: book, favorite, message, review,
+ * manage own profile) < HOST (customer capabilities + listing management) <
+ * ADMIN (platform-wide). HOST/ADMIN users carry CUSTOMER alongside their
+ * elevated role in `User.roles`, and ADMIN always bypasses role checks below.
+ */
+
 export async function getSession() {
   return getServerSession(authOptions);
 }
@@ -19,13 +27,27 @@ export async function requireAuth() {
   return user;
 }
 
+/** Any authenticated user has customer-level capabilities — alias for requireAuth(). */
+export async function requireCustomer() {
+  return requireAuth();
+}
+
 export async function requireRole(...roles: UserRole[]) {
   const user = await requireAuth();
-  const hasRole = user.roles.some((r) => roles.includes(r));
+  const hasRole =
+    user.roles.includes("ADMIN") || user.roles.some((r) => roles.includes(r));
   if (!hasRole) {
     throw new AuthError("FORBIDDEN", "You do not have permission");
   }
   return user;
+}
+
+export async function requireHost() {
+  return requireRole("HOST");
+}
+
+export async function requireAdmin() {
+  return requireRole("ADMIN");
 }
 
 export async function requireOwnership(resourceOwnerId: string) {

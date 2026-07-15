@@ -11,8 +11,10 @@ datasource db {
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
+// GUEST is not a stored role — it represents an unauthenticated visitor
+// (no User row, no session). Every persisted User carries at least CUSTOMER.
 enum UserRole {
-  GUEST
+  CUSTOMER
   HOST
   ADMIN
 }
@@ -147,7 +149,7 @@ model User {
   lastName             String
   phone                String?
   avatarUrl            String?
-  roles                UserRole[] @default([GUEST])
+  roles                UserRole[] @default([CUSTOMER])
   dateOfBirth          DateTime? @db.Date
   bio                  String?
   responseRate         Decimal?  @db.Decimal(5, 2)
@@ -270,6 +272,8 @@ model Listing {
   avgRating       Decimal?      @db.Decimal(3, 2)
   reviewCount     Int           @default(0)
   viewCount       Int           @default(0)
+  // Generated STORED column (title weighted A, description weighted B) — see migration raw SQL.
+  searchVector    Unsupported("tsvector")?
   publishedAt     DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -339,6 +343,8 @@ model Address {
   latitude         Float?
   longitude        Float?
   formattedAddress String?
+  // Maintained by trigger `trg_address_set_location` from latitude/longitude — see migration raw SQL.
+  location         Unsupported("geography(Point, 4326)")?
 
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 

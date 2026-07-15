@@ -216,6 +216,8 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 
 **Revisit If:** The stated trigger conditions are hit, or relevance-ranking quality becomes a product complaint before the numeric trigger is reached.
 
+**Implementation Confirmation (Phase 2):** The Phase 2 migration implements the Postgres side of this decision as a `Listing.searchVector` generated `tsvector` column (title weighted `A`, description weighted `B`) with a GIN index — derived entirely from existing `Listing` columns, not a separately-maintained field. This confirms the migration path stays low-friction as designed: swapping to Meilisearch/Typesense/Algolia later means (1) standing up the external index, (2) writing a sync job (on `Listing` create/update/delete) to push documents to it, and (3) changing `searchListings(params)`'s internal implementation to query the external index instead of `Listing.searchVector` — no `Listing` table columns need to move, be renamed, or be dropped, since the generated column is additive and can simply stop being queried (or be dropped later) without touching any other field. The single `searchListings(params)` function boundary from the original decision is what makes this swap contained to one module rather than every call site that currently searches listings.
+
 ---
 
 ## ADR-014: Geo Storage as `geography(Point)` from Day One (Query Deferred)
@@ -266,6 +268,60 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 
 ---
 
+## ADR-017: Four-Tier Role Model — CUSTOMER as the Base Authenticated Role
+
+**Decision:** `UserRole` is `{CUSTOMER, HOST, ADMIN}`. `GUEST` is *not* a stored enum value — it describes an unauthenticated visitor (no `User` row, no session), which is already representable as "no session" without a database value. Every persisted `User` carries at least `CUSTOMER` in `roles`; a host carries `[CUSTOMER, HOST]` (not `HOST` alone), so host-capable users keep customer capabilities (booking as a guest of another listing, favoriting, messaging, reviewing) without special-casing. `requireRole()` treats `ADMIN` as an automatic pass regardless of which roles were requested.
+
+**Reasoning:** Client clarification: the product's role model is Guest → Customer → Host → Admin, where Guest is an anonymous visitor and Customer is the base authenticated tier (book, favorite, message, review, manage own profile), with Host *inheriting* customer capabilities rather than replacing them. Phase 2's original schema modeled `GUEST` as a stored role (matching the Domain Model Specification's `{GUEST, HOST, ADMIN}` table at the time), which conflated "anonymous visitor" with "authenticated base-tier user" — the client caught this before other modules started depending on the three-role shape.
+
+**Alternatives Considered:**
+1. Keep `GUEST` as a stored role, add `CUSTOMER` as a fourth enum value, and treat `GUEST` as a real (if minimal) row for anonymous sessions.
+2. Model the hierarchy as a single ordinal role per user (`role: UserRole` singular, ranked) instead of a non-exclusive `roles: UserRole[]` set.
+
+**Why Rejected:** 1. There is nothing to persist for an anonymous visitor — no email, no password, no session row until they authenticate — so a `GUEST` database row would either be a placeholder with no real data or would require inventing an identity for people who by definition haven't created one. The existing "no session ⇒ anonymous" check already covers this for free. 2. A singular ranked role cannot express "host who also books other hosts' listings as themself," which is exactly the inheritance behavior the client described — the non-exclusive array (already the schema's shape per the Domain Model Specification, §2.1) was the right primitive; the fix needed was the *value set* inside it, not the field's cardinality.
+
+**Trade-offs Accepted:** Host onboarding (a future module) must explicitly add `HOST` to an existing `CUSTOMER` user's `roles` array rather than assign a single replacement role — a small discipline requirement on that module's write path, not a schema risk, since `requireRole()`'s `.some()` check already treats `roles` as a set. Admin accounts as currently seeded/created carry only `["ADMIN"]`; if an admin ever needs to also transact as a customer, `CUSTOMER` must be added explicitly (deferred, since no admin-as-customer requirement exists yet).
+
+**Revisit If:** A fifth tier or a genuinely cross-cutting permission (not expressible as "which of these roles do you have") is required — at that point a dedicated permissions/capability table becomes worth the added complexity over the current role-array-plus-`ADMIN`-bypass model.
+
+---
+
+## ADR-018: Prisma Version Pin — 5.22 (Not 7.x), Documented Upgrade Path
+
+**Decision:** Prisma and `@prisma/client` are pinned to the 5.x line (5.22.0) rather than the latest major (7.x) available on npm at implementation time.
+
+**Reasoning:** Prisma 7 removed the `datasource.url` property from the schema file entirely — connection URLs now live in a separate `prisma.config.ts` and are passed to `PrismaClient` via an `adapter` (or `accelerateUrl` for Accelerate), a structural break from the "one `schema.prisma` is the source of truth" model every other Prisma-adjacent decision in this project assumes (ADR-008). More concretely, `@next-auth/prisma-adapter@1.0.7` (the NextAuth v4 Prisma adapter — see ADR-019) is written against the Prisma 4/5-era `PrismaClient` constructor and datasource shape; it has not been updated for Prisma 7's config model, so `prisma generate` failed outright (`P1012`) when first attempted against 7.8.0.
+
+**Alternatives Considered:** Adopt Prisma 7 now and hand-write a `prisma.config.ts` + custom `adapter` wiring to work around the NextAuth adapter incompatibility; pin to Prisma 6.x as a middle ground.
+
+**Why Rejected:** Working around the NextAuth adapter's incompatibility would mean patching or forking a third-party package (`@next-auth/prisma-adapter`) that isn't ours to maintain, for a major-version jump that isn't required by anything in Phase 2's scope — pure premature churn. Prisma 6 was not evaluated in depth once 5.22 was confirmed to satisfy every Phase 2 requirement (all `postgresqlExtensions` preview functionality, raw SQL migration additions, and `prisma db seed` all work identically on 5.22); there was no signal that 6 offered anything Phase 2 needed that 5 didn't.
+
+**Trade-offs Accepted:** Missing two major versions of Prisma improvements (6 and 7) — including whatever performance/DX work landed in the newer query engine — until the upgrade is deliberately scheduled. `npx prisma generate` prints an "update available" notice on every run as a standing reminder this is a deliberate pin, not an oversight.
+
+**Upgrade Path (for when this is revisited):** (1) Confirm `@next-auth/prisma-adapter` (or its replacement — see ADR-019, since a NextAuth v4→v5 upgrade would swap this package for `@auth/prisma-adapter` anyway) has shipped Prisma 7-compatible support. (2) Run `prisma migrate diff` against a scratch database to confirm no migration-history format changes are needed. (3) Introduce `prisma.config.ts` per Prisma 7's datasource model, move `DATABASE_URL` wiring there, and update `src/lib/db.ts`'s `PrismaClient` construction to the adapter-based pattern. (4) Re-run the full migration history against a clean database and diff the resulting schema against production to confirm no drift. (5) Do this as its own isolated change, not bundled with an unrelated feature, given the config-model break touches every environment (dev/CI/prod).
+
+**Revisit If:** `@next-auth/prisma-adapter` (or its Auth.js v5 successor) confirms Prisma 7 compatibility, or a Prisma 5-only bug/limitation is hit that 7 has fixed and no 5.x patch resolves it.
+
+---
+
+## ADR-019: NextAuth v4 (Not Auth.js v5) for This Phase
+
+**Decision:** Authentication uses `next-auth@4.24.14` (the credentials provider, JWT sessions, `@next-auth/prisma-adapter@1.0.7`) rather than Auth.js v5, the current major version of the same project under its renamed package.
+
+**Reasoning:** This supplements ADR-009 (which decided to keep NextAuth over switching to Lucia/Clerk/custom) with the specific major-version question, since "NextAuth" and "Auth.js v5" are no longer quite the same target: v5 changed the top-level API (`auth()` replacing `getServerSession()`), the config file convention (`auth.ts` at the project root, edge-compatible middleware), and moved the Prisma adapter to a new package (`@auth/prisma-adapter`) — enough surface area change that picking v4 vs v5 is a real decision, not an implementation detail of "using NextAuth." v4 is the version already present as a dependency in the codebase pre-Phase-2 (per ADR-009's finding), is fully stable, and its credentials-provider + JWT-session pattern is exactly what Phase 2's requirements call for (no social providers yet, per the client's explicit Phase 2 scope).
+
+**Alternatives Considered:** Adopt Auth.js v5 directly since it's the actively-developed major version and a v4→v5 migration will eventually be necessary regardless.
+
+**Why Rejected:** Not rejected on technical merit — v5 is a reasonable target — but deferred because migrating major versions and building net-new authentication functionality (registration, login, password reset, JWT role claims) in the same change conflates two different kinds of risk. v4 is battle-tested for exactly this credentials-provider/JWT use case; starting Phase 2 on v5 would mean debugging both "is my auth logic correct" and "is this new major version's API behaving as documented" simultaneously, with no Phase 2 requirement (no social providers, no edge-middleware auth) that specifically needs v5's new capabilities.
+
+**Trade-offs Accepted:** `getServerSession(authOptions)` (v4's per-call session-fetch pattern, used throughout `src/lib/auth.ts`) is the pattern that will need to change to `auth()` on a future v5 upgrade — every call site, not just the config file, is affected. This is accepted as a known, bounded future migration rather than a reason to delay Phase 2 further.
+
+**Upgrade Path (for when this is revisited):** (1) Confirm `@auth/prisma-adapter` supports the Prisma version in use at the time (see ADR-018 — if both upgrades are pending, sequence Prisma first since the adapter package changes for both reasons independently). (2) Follow Auth.js's official v4→v5 codemod/migration guide: rename `[...nextauth]/route.ts` config to root-level `auth.ts` exporting `{ handlers, auth, signIn, signOut }`. (3) Replace every `getServerSession(authOptions)` call site in `src/lib/auth.ts` (and any module code built on top of it by then) with `auth()`. (4) Re-verify the JWT callback's custom claims (`id`, `firstName`, `lastName`, `roles`, `avatarUrl`) survive the config migration, since v5's callback signatures changed shape in places. (5) Re-test the full registration → login → session → password-reset flow end-to-end before removing v4.
+
+**Revisit If:** A Phase 2+ requirement specifically needs v5 (edge-runtime middleware auth checks, or a social provider whose v4 integration has known issues) — at that point the migration is scoped and justified rather than speculative.
+
+---
+
 ## Index of Decisions
 
 | ADR | Decision |
@@ -286,3 +342,6 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 | 014 | Geo storage as `geography(Point)` from day one |
 | 015 | Background job strategy — `jobs/` folder, DB-backed at MVP |
 | 016 | Chisfis reuse strategy — visual layer kept, logic rebuilt |
+| 017 | Four-tier role model — `CUSTOMER` as base authenticated role |
+| 018 | Prisma version pin — 5.22, documented upgrade path to 7.x |
+| 019 | NextAuth v4 (not Auth.js v5) for this phase |

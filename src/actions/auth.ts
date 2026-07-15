@@ -60,7 +60,7 @@ export async function register(
       passwordHash,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
-      roles: ["GUEST"],
+      roles: ["CUSTOMER"],
     },
   });
 
