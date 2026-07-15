@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { getPaymentProvider } from "@/lib/payments/stub-provider";
+import { getPaymentProvider } from "@/lib/payments";
 import { dollarsToCents } from "@/lib/pricing-policy";
 import { canTransition } from "@/modules/bookings/status-machine";
 
@@ -131,7 +131,7 @@ async function runMonthlyRentCharges(referenceDate: Date): Promise<RentChargeRes
       bookingId: lease.id,
       payerUserId: lease.guestId,
       payeeUserId: lease.hostId,
-      type: "CHARGE",
+      paymentType: "CHARGE",
     });
 
     await prisma.payment.create({
@@ -144,14 +144,14 @@ async function runMonthlyRentCharges(referenceDate: Date): Promise<RentChargeRes
         currency: lease.currency,
         provider: "STRIPE_CONNECT",
         providerTransactionRef: result.providerTransactionRef,
-        status: result.status === "SUCCEEDED" ? "SUCCEEDED" : "FAILED",
+        status: result.status,
         failureReason: result.failureReason,
         billingPeriodStart: periodStart,
         billingPeriodEnd: periodEnd,
       },
     });
 
-    results.push({ bookingId: lease.id, charged: result.status === "SUCCEEDED" });
+    results.push({ bookingId: lease.id, charged: result.status !== "FAILED" });
   }
 
   return results;

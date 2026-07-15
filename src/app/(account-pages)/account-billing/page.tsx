@@ -1,28 +1,33 @@
-import React from "react";
-import ButtonPrimary from "@/components/ui/ButtonPrimary";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { getOnboardingStatus } from "@/modules/payments/actions";
+import PayoutOnboarding from "./PayoutOnboarding";
 
-const AccountBilling = () => {
+export const metadata = {
+  title: "Payments & Payouts",
+};
+
+const AccountBilling = async () => {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const result = await getOnboardingStatus();
+  const initialStatus = result.success ? result.data : { hasAccount: false, status: null };
+
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* HEADING */}
-      <h2 className="text-3xl font-semibold">Payments & payouts</h2>
-      <div className="w-14 border-b border-neutral-200 dark:border-neutral-700"></div>
+      <h2 className="text-3xl font-semibold">Payments &amp; Payouts</h2>
+      <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
       <div className="max-w-2xl">
-        <span className="text-xl font-semibold block">Payout methods</span>
-        <br />
-        <span className="text-neutral-700 dark:text-neutral-300 block">
-          {` When you receive a payment for a reservation, we call that payment
-              to you a "payout." Our secure payment system supports several
-              payout methods, which can be set up below. Go to FAQ.`}
-          <br />
-          <br />
-          To get paid, you need to set up a payout method Airbnb releases
-          payouts about 24 hours after a guest’s scheduled check-in time. The
-          time it takes for the funds to appear in your account depends on your
-          payout method. Learn more
+        <span className="text-xl font-semibold block">Payout account</span>
+        <span className="text-neutral-700 dark:text-neutral-300 block mt-2">
+          Connect a Stripe account to receive payouts as a host. Onboarding is
+          hosted by Stripe — we never see or store your bank details.
         </span>
-        <div className="pt-10">
-          <ButtonPrimary>Add payout mothod</ButtonPrimary>
+        <div className="pt-6">
+          <PayoutOnboarding initialStatus={initialStatus} />
         </div>
       </div>
     </div>

@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { requireAuth, requireOwnership, AuthError } from "@/lib/auth";
-import { getPaymentProvider } from "@/lib/payments/stub-provider";
+import { requireAuth, requireOwnership, requireAdmin, AuthError } from "@/lib/auth";
+import { getPaymentProvider } from "@/lib/payments";
 import {
   dollarsToCents,
   computeCancellationRefundDollars,
@@ -314,10 +314,12 @@ async function chargeBookingTx(
     bookingId: args.bookingId,
     payerUserId: args.payerUserId,
     payeeUserId: args.payeeUserId,
-    type: args.type ?? "CHARGE",
+    paymentType: args.type ?? "CHARGE",
   });
 
-  if (result.status !== "SUCCEEDED") {
+  // PENDING is a legitimate outcome (Payment lifecycle: PENDING -> SUCCEEDED once a
+  // webhook confirms — Domain Model Spec §2.14) — only a definite FAILED rolls back.
+  if (result.status === "FAILED") {
     throw new Error(result.failureReason ?? "Payment failed");
   }
 
@@ -331,7 +333,7 @@ async function chargeBookingTx(
       currency: args.currency,
       provider: "STRIPE_CONNECT",
       providerTransactionRef: result.providerTransactionRef,
-      status: "SUCCEEDED",
+      status: result.status,
     },
   });
 
@@ -347,6 +349,8 @@ async function refundBookingTx(
     amountDollars: number;
     currency: string;
     originalProviderTransactionRef: string;
+    /** The CHARGE/SECURITY_DEPOSIT_HOLD Payment row this refund applies to — required for REFUND/CHARGEBACK per Domain Model Spec §2.14 validation rules. */
+    relatedPaymentId: string;
     type?: "REFUND" | "SECURITY_DEPOSIT_RELEASE";
   },
 ) {
@@ -361,12 +365,13 @@ async function refundBookingTx(
       bookingId: args.bookingId,
       payerUserId: args.payeeUserId,
       payeeUserId: args.payerUserId,
+      relatedPaymentId: args.relatedPaymentId,
       type: args.type ?? "REFUND",
       amount: amountCents,
       currency: args.currency,
       provider: "STRIPE_CONNECT",
       providerTransactionRef: result.providerTransactionRef,
-      status: result.status === "SUCCEEDED" ? "SUCCEEDED" : "FAILED",
+      status: result.status,
       failureReason: result.failureReason,
     },
   });
@@ -571,6 +576,7 @@ export async function cancelBooking(
             amountDollars: refundDollars,
             currency: booking.currency,
             originalProviderTransactionRef: originalCharge.providerTransactionRef,
+            relatedPaymentId: originalCharge.id,
           });
         }
       }
@@ -591,6 +597,7 @@ export async function cancelBooking(
           amountDollars: Number(booking.securityDepositSnapshot),
           currency: booking.currency,
           originalProviderTransactionRef: originalHold.providerTransactionRef,
+          relatedPaymentId: originalHold.id,
           type: "SECURITY_DEPOSIT_RELEASE",
         });
       }
@@ -666,6 +673,7 @@ export async function terminateLease(
           amountDollars: refundDollars,
           currency: booking.currency,
           originalProviderTransactionRef: originalHold.providerTransactionRef,
+          relatedPaymentId: originalHold.id,
           type: "SECURITY_DEPOSIT_RELEASE",
         });
       }
@@ -686,4 +694,92 @@ export async function terminateLease(
   revalidatePath("/account-listings");
 
   return { success: true, data: { id: booking.id } };
+}
+
+/**
+ * Manual/admin-triggered host payout for one successful CHARGE payment
+ * (ADR-005: separate charges and transfers — a payout is always an
+ * explicit, separate step, never automatic on the charge itself).
+ * Deliberately not wired to the booking lifecycle: the timing policy for
+ * when a payout should fire (on check-in, on completion, after a dispute
+ * window, ...) is an open business decision, so this only builds the
+ * mechanism — whatever policy is decided later can call this directly.
+ */
+export async function payoutForPayment(paymentId: string): Promise<ActionResult<{ id: string }>> {
+  await requireAdmin();
+
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    include: { booking: { select: { rentalType: true, subtotal: true } } },
+  });
+  if (!payment || payment.type !== "CHARGE" || payment.status !== "SUCCEEDED") {
+    return {
+      success: false,
+      error: { code: "INVALID_STATE", message: "This payment is not an eligible successful charge" },
+    };
+  }
+  if (!payment.payeeUserId) {
+    return {
+      success: false,
+      error: { code: "INVALID_STATE", message: "This charge has no payee to pay out" },
+    };
+  }
+
+  const alreadyPaidOut = await prisma.payment.findFirst({
+    where: { relatedPaymentId: payment.id, type: "PAYOUT" },
+  });
+  if (alreadyPaidOut) {
+    return {
+      success: false,
+      error: { code: "CONFLICT", message: "This charge has already been paid out" },
+    };
+  }
+
+  const host = await prisma.user.findUnique({
+    where: { id: payment.payeeUserId },
+    select: { payoutAccountRef: true },
+  });
+  if (!host?.payoutAccountRef) {
+    return {
+      success: false,
+      error: { code: "INVALID_STATE", message: "Host has not completed Stripe Connect onboarding" },
+    };
+  }
+
+  // Host earns the subtotal, not the guest's totalPrice — the (short-term-only)
+  // service fee is platform revenue and never part of the host's payout.
+  const payoutAmountCents =
+    payment.booking.rentalType === "SHORT_TERM" && payment.booking.subtotal !== null
+      ? dollarsToCents(Number(payment.booking.subtotal))
+      : payment.amount;
+
+  const provider = getPaymentProvider();
+  const result = await provider.payout(host.payoutAccountRef, payoutAmountCents, payment.currency);
+
+  const payout = await prisma.payment.create({
+    data: {
+      bookingId: payment.bookingId,
+      payerUserId: null,
+      payeeUserId: payment.payeeUserId,
+      relatedPaymentId: payment.id,
+      type: "PAYOUT",
+      amount: payoutAmountCents,
+      currency: payment.currency,
+      provider: "STRIPE_CONNECT",
+      providerTransactionRef: result.providerTransactionRef,
+      status: result.status,
+      failureReason: result.failureReason,
+    },
+  });
+
+  if (result.status === "FAILED") {
+    return {
+      success: false,
+      error: { code: "PAYOUT_FAILED", message: result.failureReason ?? "Payout failed" },
+    };
+  }
+
+  revalidatePath("/account-bookings");
+
+  return { success: true, data: { id: payout.id } };
 }

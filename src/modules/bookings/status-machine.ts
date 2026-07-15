@@ -11,8 +11,12 @@ import type { BookingStatus, RentalType } from "@prisma/client";
 
 const SHORT_TERM_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
   PENDING: ["CONFIRMED", "DECLINED", "CANCELLED_BY_GUEST"],
-  CONFIRMED: ["CHECKED_IN", "CANCELLED_BY_GUEST", "CANCELLED_BY_HOST"],
-  CHECKED_IN: ["COMPLETED", "CANCELLED_BY_HOST"],
+  // CONFIRMED/CHECKED_IN -> DISPUTED: a chargeback can be filed any time after the
+  // guest's card is charged (at CONFIRMED), not only after the stay completes —
+  // Domain Model Spec §2.14: a CHARGEBACK "flags the related Booking for admin
+  // review", independent of lifecycle stage.
+  CONFIRMED: ["CHECKED_IN", "CANCELLED_BY_GUEST", "CANCELLED_BY_HOST", "DISPUTED"],
+  CHECKED_IN: ["COMPLETED", "CANCELLED_BY_HOST", "DISPUTED"],
   COMPLETED: ["DISPUTED"],
   DECLINED: [],
   CANCELLED_BY_GUEST: [],
@@ -25,7 +29,9 @@ const SHORT_TERM_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
 
 const LONG_TERM_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
   PENDING: ["CONFIRMED", "DECLINED", "CANCELLED_BY_GUEST"],
-  CONFIRMED: ["ACTIVE", "CANCELLED_BY_GUEST", "CANCELLED_BY_HOST"],
+  // CONFIRMED -> DISPUTED: a chargeback on the security-deposit hold can be filed
+  // as soon as it's charged (at CONFIRMED), before the lease is even ACTIVE.
+  CONFIRMED: ["ACTIVE", "CANCELLED_BY_GUEST", "CANCELLED_BY_HOST", "DISPUTED"],
   ACTIVE: ["COMPLETED", "TERMINATED_EARLY", "DISPUTED"],
   COMPLETED: ["DISPUTED"],
   TERMINATED_EARLY: ["DISPUTED"],

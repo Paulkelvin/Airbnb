@@ -114,3 +114,8 @@ export async function getMyBookingsAsHost(hostId: string) {
     orderBy: { createdAt: "desc" },
   });
 }
+
+/** Looked up by webhook handlers to resolve a provider event back to our Payment row. */
+export async function getPaymentByProviderTransactionRef(providerTransactionRef: string) {
+  return prisma.payment.findFirst({ where: { providerTransactionRef } });
+}

@@ -37,13 +37,14 @@ Setup notes: Postgres 15+; confirm `postgis` and `pgcrypto` show as available un
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary | Same value as `CLOUDINARY_CLOUD_NAME` | Both | Client-side — cloud name isn't sensitive. |
 | `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` | Cloudinary | Dashboard → **Settings** → **Upload** → **Upload presets** → create an **unsigned** preset, scope to a `listings/` folder, restrict to image formats | Both | Lets the browser upload directly to Cloudinary without exposing the API secret. |
 
-## Payments — Stripe (test mode)
+## Payments — Stripe Connect (test mode)
 
 | Variable | Service | Where to obtain | Required | Purpose |
 |---|---|---|---|---|
-| `STRIPE_SECRET_KEY` | Stripe | Dashboard → **Developers** → **API keys** → toggle **Test mode** → **Secret key** (`sk_test_...`) | Both, test mode | Server-side. Not consumed by any code yet — safe to add now for environment consistency ahead of the Payments phase. |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe | Same page → **Publishable key** (`pk_test_...`) | Both, test mode | Client-side, safe to expose. |
-| `STRIPE_WEBHOOK_SECRET` | Stripe | Dashboard → **Developers** → **Webhooks** → add endpoint (once a webhook route exists) → **Signing secret** (`whsec_...`) | Not required yet | No webhook route exists until the Payments phase. |
+| `PAYMENTS_PROVIDER` | Self-selected | Set to `stripe` to activate real Stripe Connect calls | Optional — defaults to `stub` | Feature flag (`src/lib/payments/index.ts`). Unset or any value other than `stripe` keeps the app on `StubPaymentProvider` (no network calls, no credentials needed) — the entire booking engine works end-to-end without this. Setting `stripe` without both variables below throws a clear startup error rather than silently falling back. |
+| `STRIPE_SECRET_KEY` | Stripe | Dashboard → **Developers** → **API keys** → toggle **Test mode** → **Secret key** (`sk_test_...`) | Required only when `PAYMENTS_PROVIDER=stripe` | Server-side only. Test mode — never a live (`sk_live_...`) key. |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe | Same page → **Publishable key** (`pk_test_...`) | Not consumed yet | Reserved for when a real Stripe Elements checkout UI replaces the current fixed test-card stand-in (see `StripeConnectProvider.createCharge`'s doc comment) — not required for this phase's server-side integration. |
+| `STRIPE_WEBHOOK_SECRET` | Stripe | Dashboard → **Developers** → **Webhooks** → add an endpoint pointing at `/api/webhooks/stripe` → **Signing secret** (`whsec_...`). For local testing, `stripe listen --forward-to localhost:3000/api/webhooks/stripe` prints a session-scoped secret instead. | Required only when `PAYMENTS_PROVIDER=stripe` | Verifies `POST /api/webhooks/stripe` request signatures (`stripe-signature` header). |
 
 ## Maps
 

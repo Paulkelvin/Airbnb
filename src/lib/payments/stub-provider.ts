@@ -3,6 +3,7 @@ import type {
   ChargeResult,
   NormalizedPaymentEvent,
   NormalizedPaymentMetadata,
+  PayeeAccountStatus,
   PaymentProvider,
   PayoutResult,
   RefundResult,
@@ -16,9 +17,9 @@ import type {
  * `providerTransactionRef` is prefixed `stub_` so it can never collide
  * with — or be mistaken for — a real Stripe reference.
  *
- * Swap this for a StripeConnectProvider implementing the same interface
- * once Phase [Payments] wires real test-mode credentials; no call site
- * outside src/lib/payments/ should need to change.
+ * Selected automatically by src/lib/payments/index.ts whenever
+ * PAYMENTS_PROVIDER isn't explicitly set to "stripe" — no call site outside
+ * src/lib/payments/ should ever need to know which adapter is active.
  */
 export class StubPaymentProvider implements PaymentProvider {
   async createCharge(
@@ -47,6 +48,18 @@ export class StubPaymentProvider implements PaymentProvider {
     return `stub_acct_${user.id}`;
   }
 
+  async createOnboardingLink(
+    payoutAccountRef: string,
+    _refreshUrl: string,
+    _returnUrl: string,
+  ): Promise<string> {
+    return `https://stub-onboarding.example.com/${payoutAccountRef}`;
+  }
+
+  async getAccountStatus(_payoutAccountRef: string): Promise<PayeeAccountStatus> {
+    return { chargesEnabled: true, payoutsEnabled: true, detailsSubmitted: true };
+  }
+
   async payout(
     _payoutAccountRef: string,
     amountCents: number,
@@ -68,14 +81,4 @@ export class StubPaymentProvider implements PaymentProvider {
   parseWebhookEvent(payload: string): NormalizedPaymentEvent {
     return JSON.parse(payload);
   }
-}
-
-let cachedProvider: PaymentProvider | null = null;
-
-/** The single place call sites obtain a PaymentProvider — swap the implementation here only. */
-export function getPaymentProvider(): PaymentProvider {
-  if (!cachedProvider) {
-    cachedProvider = new StubPaymentProvider();
-  }
-  return cachedProvider;
 }

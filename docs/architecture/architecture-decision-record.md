@@ -341,6 +341,27 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 
 ---
 
+## ADR-021: Stripe Connect Integration — Interface Extensions, Idempotency, and Deferred Payout Timing
+
+**Decision:** Four scoped additions beyond what ADR-006/007 and the Domain Model Spec §6 already fixed, made while building the real `StripeConnectProvider` adapter:
+
+1. **`PaymentProvider` gains two methods beyond the spec's original six**: `createOnboardingLink` (Stripe Express onboarding is a two-call process — create the account, then generate a Stripe-hosted Account Link — and there is no way to express "continue onboarding" without it) and `getAccountStatus` (a live `charges_enabled`/`payouts_enabled`/`details_submitted` check; never cached on `User`, preserving ADR-007's "`payoutAccountRef` is the only payout-related field on `User`").
+2. **Webhook idempotency follows the Domain Model Spec §2.14 mechanism exactly**: check whether the relevant `Payment` row already reflects the incoming outcome (e.g. already `SUCCEEDED`) and short-circuit — no separate `WebhookEvent` log table was introduced, since the spec's stated mechanism already covers it without new schema.
+3. **`Booking.status` can now reach `DISPUTED` from `CONFIRMED`/`CHECKED_IN` (short-term) and `CONFIRMED` (long-term)**, not only from `COMPLETED`/`ACTIVE` as the Domain Model Spec's simplified state diagrams draw it. A chargeback can be filed any time after a charge, not only after a stay completes — the spec's own prose ("a CHARGEBACK flags the related Booking for admin review") describes this independent of lifecycle stage even though the diagram doesn't draw every arrow.
+4. **Payout timing is explicitly *not* automated.** `payout()` (a Stripe Transfer, per ADR-005) and an admin-callable `payoutForPayment()` action exist and are fully tested, but nothing in the booking lifecycle calls them — client direction, confirmed when this was raised as an open gap: build the mechanism now, decide the timing policy (on check-in, on completion, after a dispute window, ...) as a separate, later decision.
+
+**Reasoning:** All four were things ADR-006 anticipated in the abstract ("a gateway-specific capability with no equivalent elsewhere... forces an interface extension") or gaps the existing documents were silent on, surfaced only by actually building the adapter. None change money math, fee percentages, or refund policy — those stay exactly as Phase 5 (`src/lib/pricing-policy.ts`) defined them.
+
+**Alternatives Considered:** For (2), a dedicated `WebhookEvent(provider, eventId)` table with a unique constraint, matching how some Stripe integration guides pattern webhook idempotency. For (3), leaving `DISPUTED` reachable only from `COMPLETED`/`ACTIVE` and dropping/logging a chargeback event that arrives against an earlier-stage booking instead of transitioning it. For (4), auto-triggering payout on short-term check-in — ADR-005's own literal example of a buyer-protection window.
+
+**Why Rejected:** (2) The spec already prescribes a specific, sufficient mechanism (Payment-row-status-based dedup) — adding a second, parallel idempotency system would be undocumented complexity solving an already-solved problem, and cuts against the project's stated minimalism (`domain-model-specification.md` §0: "No entities were added beyond what's needed"). (3) Silently dropping a real chargeback because the booking hadn't reached `COMPLETED` yet would mean a real dispute goes unrecorded and unreviewed — worse than widening a table already governed by one central function (`canTransition`). (4) Picking a payout-timing policy unilaterally would be exactly the kind of unconfirmed business-rule assumption the engagement has consistently avoided (see the Phase 5 pricing-tier and Phase 6 payout-timing clarifying questions) — better to ship a correct, tested mechanism and let the client's actual policy decide when it fires.
+
+**Trade-offs Accepted:** No host currently receives money automatically — every payout requires a manual/admin `payoutForPayment()` call until a timing policy is chosen and wired in. `createCharge`'s Stripe implementation stands in with a fixed Stripe test PaymentMethod (`pm_card_visa`) rather than accepting one, since no real checkout UI (Stripe Elements + SetupIntent) exists yet and the interface deliberately has no gateway-specific "payment method" parameter — swapping in a real guest-supplied payment method later requires no interface or booking-module change, only the adapter's internal call.
+
+**Revisit If:** A payout-timing policy is decided — wire it into `src/jobs/booking-lifecycle.ts` (or a new job) calling the existing `payoutForPayment()`, no payment-architecture change needed. If a second payment provider is ever added and can't express `createOnboardingLink`/`getAccountStatus` in its own terms, that's a signal those two methods encoded a Stripe-specific assumption after all, worth revisiting.
+
+---
+
 ## Index of Decisions
 
 | ADR | Decision |
@@ -365,3 +386,4 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 | 018 | Prisma version pin — 5.22, documented upgrade path to 7.x |
 | 019 | NextAuth v4 (not Auth.js v5) for this phase |
 | 020 | Listing extensibility — reference tables + typed columns, narrow JSONB, not EAV |
+| 021 | Stripe Connect integration — interface extensions, idempotency, deferred payout timing |
