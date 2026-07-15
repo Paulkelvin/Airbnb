@@ -14,47 +14,39 @@ export interface WidgetFooterMenu {
 
 const widgetMenus: WidgetFooterMenu[] = [
   {
-    id: "5",
-    title: "Getting started",
-    menus: [
-      { href: "#", label: "Installation" },
-      { href: "#", label: "Release Notes" },
-      { href: "#", label: "Upgrade Guide" },
-      { href: "#", label: "Browser Support" },
-      { href: "#", label: "Editor Support" },
-    ],
-  },
-  {
     id: "1",
     title: "Explore",
     menus: [
-      { href: "#", label: "Design features" },
-      { href: "#", label: "Prototyping" },
-      { href: "#", label: "Design systems" },
-      { href: "#", label: "Pricing" },
-      { href: "#", label: "Security" },
+      { href: "/listing-stay", label: "Browse listings" },
+      { href: "/listing-stay-map", label: "Map view" },
+      { href: "/blog", label: "Blog" },
+      { href: "/about", label: "About us" },
     ],
   },
   {
     id: "2",
-    title: "Resources",
+    title: "Hosting",
     menus: [
-      { href: "#", label: "Best practices" },
-      { href: "#", label: "Support" },
-      { href: "#", label: "Developers" },
-      { href: "#", label: "Learn design" },
-      { href: "#", label: "Releases" },
+      { href: "/add-listing/1", label: "List your property" },
+      { href: "/help", label: "Help center" },
+      { href: "/contact", label: "Contact us" },
+    ],
+  },
+  {
+    id: "3",
+    title: "Support",
+    menus: [
+      { href: "/help", label: "Help & FAQ" },
+      { href: "/contact", label: "Contact support" },
     ],
   },
   {
     id: "4",
-    title: "Community",
+    title: "Legal",
     menus: [
-      { href: "#", label: "Discussion Forums" },
-      { href: "#", label: "Code of Conduct" },
-      { href: "#", label: "Community Resources" },
-      { href: "#", label: "Contributing" },
-      { href: "#", label: "Concurrent Mode" },
+      { href: "/privacy", label: "Privacy policy" },
+      { href: "/terms", label: "Terms of service" },
+      { href: "/cookies", label: "Cookie policy" },
     ],
   },
 ];

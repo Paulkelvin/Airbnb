@@ -24,6 +24,11 @@ export const NAVIGATION_DEMO: NavItemType[] = [
   },
   {
     id: ncNanoId(),
+    href: "/blog" as Route,
+    name: "Blog",
+  },
+  {
+    id: ncNanoId(),
     href: "/add-listing/1" as Route,
     name: "List your property",
   },
