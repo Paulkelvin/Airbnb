@@ -1,8 +1,8 @@
 import StayCard from "@/components/StayCard";
 import { DEMO_STAY_LISTINGS } from "@/data/listings";
 import React, { FC } from "react";
-import ButtonPrimary from "@/shared/ButtonPrimary";
-import ButtonSecondary from "@/shared/ButtonSecondary";
+import ButtonPrimary from "@/components/ui/ButtonPrimary";
+import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import { EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { Route } from "@/routers/types";
 

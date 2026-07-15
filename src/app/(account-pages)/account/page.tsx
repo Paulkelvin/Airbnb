@@ -1,10 +1,10 @@
 import React, { FC } from "react";
 import Label from "@/components/Label";
-import Avatar from "@/shared/Avatar";
-import ButtonPrimary from "@/shared/ButtonPrimary";
-import Input from "@/shared/Input";
-import Select from "@/shared/Select";
-import Textarea from "@/shared/Textarea";
+import Avatar from "@/components/ui/Avatar";
+import ButtonPrimary from "@/components/ui/ButtonPrimary";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Textarea from "@/components/ui/Textarea";
 
 export interface AccountPageProps {}
 

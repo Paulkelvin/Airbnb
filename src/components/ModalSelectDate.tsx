@@ -4,7 +4,7 @@ import DatePicker from "react-datepicker";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import React, { FC, Fragment, useEffect, useState } from "react";
-import ButtonPrimary from "@/shared/ButtonPrimary";
+import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import DatePickerCustomHeaderTwoMonth from "./DatePickerCustomHeaderTwoMonth";
 import DatePickerCustomDay from "./DatePickerCustomDay";
 

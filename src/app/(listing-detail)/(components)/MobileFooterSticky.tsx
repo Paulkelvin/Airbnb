@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ModalSelectDate from "@/components/ModalSelectDate";
-import ButtonPrimary from "@/shared/ButtonPrimary";
+import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import converSelectedDateToString from "@/utils/converSelectedDateToString";
 import ModalReserveMobile from "./ModalReserveMobile";
 

@@ -4,12 +4,12 @@ import React, { FC, useEffect, useState } from "react";
 import AnyReactComponent from "@/components/AnyReactComponent/AnyReactComponent";
 import GoogleMapReact from "google-map-react";
 import { DEMO_STAY_LISTINGS } from "@/data/listings";
-import ButtonClose from "@/shared/ButtonClose";
-import Checkbox from "@/shared/Checkbox";
-import Pagination from "@/shared/Pagination";
+import ButtonClose from "@/components/ui/ButtonClose";
+import Checkbox from "@/components/ui/Checkbox";
+import Pagination from "@/components/ui/Pagination";
 import TabFilters from "./TabFilters";
-import Heading2 from "@/shared/Heading2";
-import StayCard2 from "@/components/StayCard2";
+import Heading from "@/components/ui/Heading";
+import StayCard from "@/components/StayCard";
 
 const DEMO_STAYS = DEMO_STAY_LISTINGS.filter((_, i) => i < 12);
 export interface SectionGridHasMapProps {}
@@ -23,7 +23,7 @@ const SectionGridHasMap: FC<SectionGridHasMapProps> = () => {
       <div className="relative flex min-h-screen">
         {/* CARDSSSS */}
         <div className="min-h-screen w-full xl:w-[60%] 2xl:w-[60%] max-w-[1184px] flex-shrink-0 xl:px-8 ">
-          <Heading2 className="!mb-8" />
+          <Heading className="!mb-8" />
           <div className="mb-8 lg:mb-11">
             <TabFilters />
           </div>
@@ -34,7 +34,7 @@ const SectionGridHasMap: FC<SectionGridHasMapProps> = () => {
                 onMouseEnter={() => setCurrentHoverID((_) => item.id)}
                 onMouseLeave={() => setCurrentHoverID((_) => -1)}
               >
-                <StayCard2 data={item} />
+                <StayCard data={item} />
               </div>
             ))}
           </div>
@@ -76,9 +76,9 @@ const SectionGridHasMap: FC<SectionGridHasMapProps> = () => {
             </div>
             <GoogleMapReact
               defaultZoom={12}
-              defaultCenter={DEMO_STAYS[0].map}
+              defaultCenter={DEMO_STAYS[0]?.map || { lat: 40.7128, lng: -74.006 }}
               bootstrapURLKeys={{
-                key: "AIzaSyAGVJfZMAKYfZ71nzL_v5i3LjTTWnCYwTY",
+                key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
               }}
               yesIWantToUseGoogleMapApiInternals
             >

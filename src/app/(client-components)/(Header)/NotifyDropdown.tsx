@@ -2,7 +2,7 @@
 
 import { Popover, Transition } from "@headlessui/react";
 import { FC, Fragment } from "react";
-import Avatar from "@/shared/Avatar";
+import Avatar from "@/components/ui/Avatar";
 import { BellIcon } from "@heroicons/react/24/outline";
 import avatar4 from "@/images/avatars/Image-4.png";
 import avatar5 from "@/images/avatars/Image-5.png";

@@ -1,12 +1,12 @@
 import React, { FC } from "react";
-import Logo from "@/shared/Logo";
-import Navigation from "@/shared/Navigation/Navigation";
-import SearchDropdown from "./SearchDropdown";
-import ButtonPrimary from "@/shared/ButtonPrimary";
-import MenuBar from "@/shared/MenuBar";
-import SwitchDarkMode from "@/shared/SwitchDarkMode";
+import Logo from "@/components/ui/Logo";
+import Navigation from "@/components/ui/Navigation/Navigation";
+import ButtonPrimary from "@/components/ui/ButtonPrimary";
+import MenuBar from "@/components/ui/MenuBar";
+import SwitchDarkMode from "@/components/ui/SwitchDarkMode";
 import HeroSearchForm2MobileFactory from "../(HeroSearchForm2Mobile)/HeroSearchForm2MobileFactory";
-import LangDropdown from "./LangDropdown";
+import NotifyDropdown from "./NotifyDropdown";
+import AvatarDropdown from "./AvatarDropdown";
 
 export interface MainNav1Props {
   className?: string;
@@ -30,7 +30,8 @@ const MainNav1: FC<MainNav1Props> = ({ className = "" }) => {
         <div className="hidden md:flex flex-shrink-0 justify-end flex-1 lg:flex-none text-neutral-700 dark:text-neutral-100">
           <div className="hidden xl:flex space-x-0.5">
             <SwitchDarkMode />
-            <SearchDropdown className="flex items-center" />
+            <NotifyDropdown />
+            <AvatarDropdown />
             <div className="px-1" />
             <ButtonPrimary className="self-center" href="/login">
               Sign up

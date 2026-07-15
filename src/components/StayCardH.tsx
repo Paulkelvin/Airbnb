@@ -5,7 +5,7 @@ import { StayDataType } from "@/data/types";
 import StartRating from "@/components/StartRating";
 import BtnLikeIcon from "@/components/BtnLikeIcon";
 import SaleOffBadge from "@/components/SaleOffBadge";
-import Badge from "@/shared/Badge";
+import Badge from "@/components/ui/Badge";
 import Link from "next/link";
 
 export interface StayCardHProps {

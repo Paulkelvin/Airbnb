@@ -1,22 +1,19 @@
 "use client";
 
 import React, { Fragment, useState } from "react";
-import { Dialog, Tab, Transition } from "@headlessui/react";
+import { Dialog, Transition } from "@headlessui/react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import ButtonSubmit from "./ButtonSubmit";
 import { useTimeoutFn } from "react-use";
 import StaySearchForm from "./(stay-search-form)/StaySearchForm";
-import CarsSearchForm from "./(car-search-form)/CarsSearchForm";
-import FlightSearchForm from "./(flight-search-form)/FlightSearchForm";
 
 const HeroSearchForm2Mobile = () => {
   const [showModal, setShowModal] = useState(false);
 
-  // FOR RESET ALL DATA WHEN CLICK CLEAR BUTTON
   const [showDialog, setShowDialog] = useState(false);
   let [, , resetIsShowingDialog] = useTimeoutFn(() => setShowDialog(true), 1);
-  //
+
   function closeModal() {
     setShowModal(false);
   }
@@ -37,7 +34,7 @@ const HeroSearchForm2Mobile = () => {
           <span className="block font-medium text-sm">Where to?</span>
           <span className="block mt-0.5 text-xs font-light text-neutral-500 dark:text-neutral-400 ">
             <span className="line-clamp-1">
-              Anywhere • Any week • Add guests
+              Anywhere &bull; Any week &bull; Add guests
             </span>
           </span>
         </div>
@@ -80,60 +77,19 @@ const HeroSearchForm2Mobile = () => {
               >
                 <Dialog.Panel className="relative h-full overflow-hidden flex-1 flex flex-col justify-between ">
                   {showDialog && (
-                    <Tab.Group manual>
+                    <>
                       <div className="absolute left-4 top-4">
                         <button className="" onClick={closeModal}>
                           <XMarkIcon className="w-5 h-5 text-black dark:text-white" />
                         </button>
                       </div>
 
-                      <Tab.List className="pt-12 flex w-full justify-center font-semibold text-sm sm:text-base text-neutral-500 dark:text-neutral-400 space-x-6 sm:space-x-8">
-                        {["Stay", "Experiences", "Cars", "Flights"].map(
-                          (item, index) => (
-                            <Tab key={index} as={Fragment}>
-                              {({ selected }) => (
-                                <div className="relative focus:outline-none focus-visible:ring-0 outline-none select-none">
-                                  <div
-                                    className={`${
-                                      selected
-                                        ? "text-black dark:text-white"
-                                        : ""
-                                    }  `}
-                                  >
-                                    {item}
-                                  </div>
-                                  {selected && (
-                                    <span className="absolute inset-x-0 top-full border-b-2 border-black dark:border-white"></span>
-                                  )}
-                                </div>
-                              )}
-                            </Tab>
-                          )
-                        )}
-                      </Tab.List>
-                      <div className="flex-1 pt-3 px-1.5 sm:px-4 flex overflow-hidden">
-                        <Tab.Panels className="flex-1 overflow-y-auto hiddenScrollbar py-4">
-                          <Tab.Panel>
-                            <div className="transition-opacity animate-[myblur_0.4s_ease-in-out]">
-                              <StaySearchForm />
-                            </div>
-                          </Tab.Panel>
-                          <Tab.Panel>
-                            <div className="transition-opacity animate-[myblur_0.4s_ease-in-out]">
-                              <StaySearchForm />
-                            </div>
-                          </Tab.Panel>
-                          <Tab.Panel>
-                            <div className="transition-opacity animate-[myblur_0.4s_ease-in-out]">
-                              <CarsSearchForm />
-                            </div>
-                          </Tab.Panel>
-                          <Tab.Panel>
-                            <div className="transition-opacity animate-[myblur_0.4s_ease-in-out]">
-                              <FlightSearchForm />
-                            </div>
-                          </Tab.Panel>
-                        </Tab.Panels>
+                      <div className="flex-1 pt-12 px-1.5 sm:px-4 flex overflow-hidden">
+                        <div className="flex-1 overflow-y-auto hiddenScrollbar py-4">
+                          <div className="transition-opacity animate-[myblur_0.4s_ease-in-out]">
+                            <StaySearchForm />
+                          </div>
+                        </div>
                       </div>
                       <div className="px-4 py-3 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 flex justify-between">
                         <button
@@ -152,7 +108,7 @@ const HeroSearchForm2Mobile = () => {
                           }}
                         />
                       </div>
-                    </Tab.Group>
+                    </>
                   )}
                 </Dialog.Panel>
               </Transition.Child>

@@ -1,7 +1,7 @@
 import React from "react";
 import I404Png from "@/images/404.png";
 import Image from "next/image";
-import ButtonPrimary from "@/shared/ButtonPrimary";
+import ButtonPrimary from "@/components/ui/ButtonPrimary";
 
 const Page404 = () => (
   <div className="nc-Page404">

@@ -3,7 +3,7 @@
 import React, { FC, Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
-import ButtonPrimary from "@/shared/ButtonPrimary";
+import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import GuestsInput from "@/app/(client-components)/(HeroSearchForm2Mobile)/GuestsInput";
 
 interface ModalSelectGuestsProps {

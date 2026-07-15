@@ -2,10 +2,8 @@
 
 import React, { FC, useEffect, useState } from "react";
 import { TaxonomyType } from "@/data/types";
-import CardCategory3 from "@/components/CardCategory3";
-import CardCategory4 from "@/components/CardCategory4";
-import CardCategory5 from "@/components/CardCategory5";
-import Heading from "@/shared/Heading";
+import CardCategoryBox1 from "@/components/CardCategoryBox1";
+import Heading from "@/components/ui/Heading";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { useSwipeable } from "react-swipeable";
 import PrevBtn from "./PrevBtn";
@@ -19,7 +17,6 @@ export interface SectionSliderNewCategoriesProps {
   heading?: string;
   subHeading?: string;
   categories?: TaxonomyType[];
-  categoryCardType?: "card3" | "card4" | "card5";
   itemPerRow?: 4 | 5;
   sliderStyle?: "style1" | "style2";
 }
@@ -106,7 +103,6 @@ const SectionSliderNewCategories: FC<SectionSliderNewCategoriesProps> = ({
   itemClassName = "",
   categories = DEMO_CATS,
   itemPerRow = 5,
-  categoryCardType = "card3",
   sliderStyle = "style1",
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -155,16 +151,7 @@ const SectionSliderNewCategories: FC<SectionSliderNewCategoriesProps> = ({
   });
 
   const renderCard = (item: TaxonomyType) => {
-    switch (categoryCardType) {
-      case "card3":
-        return <CardCategory3 taxonomy={item} />;
-      case "card4":
-        return <CardCategory4 taxonomy={item} />;
-      case "card5":
-        return <CardCategory5 taxonomy={item} />;
-      default:
-        return <CardCategory3 taxonomy={item} />;
-    }
+    return <CardCategoryBox1 taxonomy={item} />;
   };
 
   if (!numberOfItems) return null;

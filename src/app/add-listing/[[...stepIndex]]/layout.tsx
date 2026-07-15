@@ -1,7 +1,7 @@
 import React from "react";
 import { FC } from "react";
-import ButtonPrimary from "@/shared/ButtonPrimary";
-import ButtonSecondary from "@/shared/ButtonSecondary";
+import ButtonPrimary from "@/components/ui/ButtonPrimary";
+import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import { Route } from "@/routers/types";
 
 export interface CommonLayoutProps {

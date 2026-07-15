@@ -1,6 +1,6 @@
 import NcInputNumber from "@/components/NcInputNumber";
 import React, { FC } from "react";
-import Select from "@/shared/Select";
+import Select from "@/components/ui/Select";
 import FormItem from "../FormItem";
 
 export interface PageAddListing3Props {}

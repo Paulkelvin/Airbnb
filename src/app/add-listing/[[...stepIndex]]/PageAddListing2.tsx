@@ -5,9 +5,9 @@ import LocationMarker from "@/components/AnyReactComponent/LocationMarker";
 import Label from "@/components/Label";
 import GoogleMapReact from "google-map-react";
 import React, { FC } from "react";
-import ButtonSecondary from "@/shared/ButtonSecondary";
-import Input from "@/shared/Input";
-import Select from "@/shared/Select";
+import ButtonSecondary from "@/components/ui/ButtonSecondary";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import FormItem from "../FormItem";
 
 export interface PageAddListing2Props {}
@@ -62,7 +62,7 @@ const PageAddListing2: FC<PageAddListing2Props> = () => {
               <div className="rounded-xl overflow-hidden">
                 <GoogleMapReact
                   bootstrapURLKeys={{
-                    key: "AIzaSyAGVJfZMAKYfZ71nzL_v5i3LjTTWnCYwTY",
+                    key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
                   }}
                   yesIWantToUseGoogleMapApiInternals
                   defaultZoom={15}

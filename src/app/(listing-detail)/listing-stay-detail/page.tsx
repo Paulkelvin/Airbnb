@@ -6,13 +6,13 @@ import { ArrowRightIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
 import CommentListing from "@/components/CommentListing";
 import FiveStartIconForRate from "@/components/FiveStartIconForRate";
 import StartRating from "@/components/StartRating";
-import Avatar from "@/shared/Avatar";
-import Badge from "@/shared/Badge";
-import ButtonCircle from "@/shared/ButtonCircle";
-import ButtonPrimary from "@/shared/ButtonPrimary";
-import ButtonSecondary from "@/shared/ButtonSecondary";
-import ButtonClose from "@/shared/ButtonClose";
-import Input from "@/shared/Input";
+import Avatar from "@/components/ui/Avatar";
+import Badge from "@/components/ui/Badge";
+import ButtonCircle from "@/components/ui/ButtonCircle";
+import ButtonPrimary from "@/components/ui/ButtonPrimary";
+import ButtonSecondary from "@/components/ui/ButtonSecondary";
+import ButtonClose from "@/components/ui/ButtonClose";
+import Input from "@/components/ui/Input";
 import LikeSaveBtns from "@/components/LikeSaveBtns";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -382,7 +382,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({}) => {
         {/* == */}
         <div className="w-14 border-b border-neutral-200 dark:border-neutral-700"></div>
         <div>
-          <ButtonSecondary href="/author">See host profile</ButtonSecondary>
+          <ButtonSecondary href="/">See host profile</ButtonSecondary>
         </div>
       </div>
     );
@@ -449,7 +449,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({}) => {
               loading="lazy"
               allowFullScreen
               referrerPolicy="no-referrer-when-downgrade"
-              src="https://www.google.com/maps/embed/v1/place?key=AIzaSyAGVJfZMAKYfZ71nzL_v5i3LjTTWnCYwTY&q=Eiffel+Tower,Paris+France"
+              src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}&q=Eiffel+Tower,Paris+France`}
             ></iframe>
           </div>
         </div>
