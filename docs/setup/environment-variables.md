@@ -66,3 +66,16 @@ Once you confirm the Neon and Auth.js variables are populated, I will:
 4. Exercise registration → login → session on the deployed URL to confirm Auth.js + Neon connectivity end-to-end.
 
 Cloudinary and Stripe variables aren't required for the infra verification steps above — those can follow whenever, ahead of testing image upload or before the Payments phase.
+
+---
+
+## Seed Data
+
+Two separate seed scripts exist — do not confuse them:
+
+| Script | Command | Safe in production? | Contents |
+|---|---|---|---|
+| `prisma/seed.ts` | `npm run db:seed` | Yes — idempotent reference data | Property types, amenities |
+| `prisma/seed-dev-data.ts` | `ALLOW_DEV_SEED=1 npm run db:seed:dev` | **No — refuses to run** | 6 fake listings + a test host, for exercising search/filter/sort locally |
+
+`seed-dev-data.ts` hard-refuses to run unless `NODE_ENV` and `VERCEL_ENV` both look non-production **and** `ALLOW_DEV_SEED=1` is explicitly set — it will not run by accident from a CI job or a misconfigured deploy step. Never wire it into a build/deploy pipeline; it's a manual, local-only command.
