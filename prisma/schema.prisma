@@ -1,0 +1,619 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis, pgcrypto]
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  GUEST
+  HOST
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum RentalType {
+  SHORT_TERM
+  LONG_TERM
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  PAUSED
+  ARCHIVED
+  REJECTED
+}
+
+enum CancellationPolicy {
+  FLEXIBLE
+  MODERATE
+  STRICT
+}
+
+enum EarlyTerminationPolicy {
+  STANDARD
+  STRICT
+}
+
+enum PetPolicy {
+  NOT_ALLOWED
+  ALLOWED
+  CASE_BY_CASE
+}
+
+enum AvailabilityStatus {
+  BLOCKED
+  BOOKED
+}
+
+enum InquiryStatus {
+  OPEN
+  RESPONDED
+  CONVERTED
+  CLOSED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  ACTIVE
+  COMPLETED
+  TERMINATED_EARLY
+  CANCELLED_BY_GUEST
+  CANCELLED_BY_HOST
+  DECLINED
+  DISPUTED
+}
+
+enum ReviewDirection {
+  GUEST_TO_HOST
+  HOST_TO_GUEST
+}
+
+enum NotificationType {
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  NEW_MESSAGE
+  NEW_INQUIRY
+  REVIEW_RECEIVED
+  PAYOUT_SENT
+  LISTING_APPROVED
+  LISTING_REJECTED
+  RENT_DUE_REMINDER
+  PASSWORD_CHANGED
+  PAYMENT_FAILED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+}
+
+enum PaymentType {
+  CHARGE
+  REFUND
+  PAYOUT
+  SECURITY_DEPOSIT_HOLD
+  SECURITY_DEPOSIT_RELEASE
+  CHARGEBACK
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentProvider {
+  STRIPE_CONNECT
+  PAYSTACK
+  FLUTTERWAVE
+}
+
+enum AmenityCategory {
+  BASIC
+  SAFETY
+  OUTDOOR
+  KITCHEN
+  ENTERTAINMENT
+  ACCESSIBILITY
+  PARKING
+  CLIMATE
+}
+
+// ─── User ────────────────────────────────────────────────────────────────────
+
+model User {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                String    @unique
+  passwordHash         String?
+  firstName            String
+  lastName             String
+  phone                String?
+  avatarUrl            String?
+  roles                UserRole[] @default([GUEST])
+  dateOfBirth          DateTime? @db.Date
+  bio                  String?
+  responseRate         Decimal?  @db.Decimal(5, 2)
+  responseTimeMinutes  Int?
+  isVerified           Boolean   @default(false)
+  payoutAccountRef     String?
+  emailVerifiedAt      DateTime?
+  status               UserStatus @default(ACTIVE)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  // Password reset
+  passwordResetToken     String?   @unique
+  passwordResetExpiresAt DateTime?
+
+  // Relationships
+  listings              Listing[]
+  bookingsAsGuest       Booking[]  @relation("GuestBookings")
+  bookingsAsHost        Booking[]  @relation("HostBookings")
+  reviews               Review[]
+  favorites             Favorite[]
+  sentMessages          Message[]
+  conversationParticipants ConversationParticipant[]
+  inquiries             Inquiry[]
+  notifications         Notification[]
+  notificationPreferences NotificationPreference[]
+  auditLogs             AuditLog[]
+  paymentsAsPayer       Payment[]  @relation("PayerPayments")
+  paymentsAsPayee       Payment[]  @relation("PayeePayments")
+
+  // NextAuth fields
+  accounts              Account[]
+  sessions              Session[]
+
+  @@index([status])
+}
+
+// ─── NextAuth Models ─────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String  @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionToken String   @unique
+  userId       String   @db.Uuid
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── PropertyType ────────────────────────────────────────────────────────────
+
+model PropertyType {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  listings Listing[]
+}
+
+// ─── Amenity ─────────────────────────────────────────────────────────────────
+
+model Amenity {
+  id       String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String           @unique
+  slug     String           @unique
+  category AmenityCategory?
+  icon     String?
+  isActive Boolean          @default(true)
+
+  listings ListingAmenity[]
+}
+
+// ─── Listing ─────────────────────────────────────────────────────────────────
+
+model Listing {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  hostId          String        @db.Uuid
+  propertyTypeId  String        @db.Uuid
+  title           String
+  slug            String        @unique
+  description     String
+  rentalType      RentalType
+  bedrooms        Int
+  bathrooms       Decimal       @db.Decimal(3, 1)
+  maxOccupants    Int
+  sizeSqft        Int?
+  currency        String        @default("USD") @db.VarChar(3)
+  status          ListingStatus @default(DRAFT)
+  avgRating       Decimal?      @db.Decimal(3, 2)
+  reviewCount     Int           @default(0)
+  viewCount       Int           @default(0)
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Short-term fields (required when SHORT_TERM, null when LONG_TERM)
+  nightlyPrice           Decimal? @db.Decimal(10, 2)
+  cleaningFee            Decimal? @db.Decimal(10, 2)
+  minNights              Int?
+  maxNights              Int?
+  weeklyDiscountPercent  Decimal? @db.Decimal(5, 2)
+  monthlyDiscountPercent Decimal? @db.Decimal(5, 2)
+  checkInTime            String?  @db.VarChar(5)
+  checkOutTime           String?  @db.VarChar(5)
+  instantBook            Boolean?
+  cancellationPolicy     CancellationPolicy?
+
+  // Long-term fields (required when LONG_TERM, null when SHORT_TERM)
+  monthlyRent              Decimal?              @db.Decimal(10, 2)
+  securityDeposit          Decimal?              @db.Decimal(10, 2)
+  minLeaseTermMonths       Int?
+  maxLeaseTermMonths       Int?
+  availableFromDate        DateTime?             @db.Date
+  utilitiesIncluded        Boolean?
+  petPolicy                PetPolicy?
+  earlyTerminationPolicy   EarlyTerminationPolicy?
+
+  // Relationships
+  host         User           @relation(fields: [hostId], references: [id])
+  propertyType PropertyType   @relation(fields: [propertyTypeId], references: [id])
+  address      Address?
+  images       Image[]
+  amenities    ListingAmenity[]
+  availability Availability[]
+  bookings     Booking[]
+  favorites    Favorite[]
+  inquiries    Inquiry[]
+  reviews      Review[]
+
+  @@index([hostId])
+  @@index([status])
+  @@index([rentalType])
+  @@index([status, rentalType, propertyTypeId])
+}
+
+model ListingAmenity {
+  listingId String @db.Uuid
+  amenityId String @db.Uuid
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  amenity Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  @@id([listingId, amenityId])
+  @@index([amenityId])
+}
+
+// ─── Address ─────────────────────────────────────────────────────────────────
+
+model Address {
+  id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listingId        String  @unique @db.Uuid
+  line1            String
+  line2            String?
+  city             String
+  region           String
+  postalCode       String
+  country          String  @db.VarChar(2)
+  latitude         Float?
+  longitude        Float?
+  formattedAddress String?
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([city, country])
+}
+
+// ─── Image ───────────────────────────────────────────────────────────────────
+
+model Image {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listingId String   @db.Uuid
+  url       String
+  altText   String?
+  position  Int
+  isCover   Boolean  @default(false)
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, position])
+}
+
+// ─── Availability (short-term only) ──────────────────────────────────────────
+
+model Availability {
+  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listingId     String             @db.Uuid
+  date          DateTime           @db.Date
+  status        AvailabilityStatus
+  bookingId     String?            @db.Uuid
+  priceOverride Decimal?           @db.Decimal(10, 2)
+
+  listing Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id])
+
+  @@unique([listingId, date])
+  @@index([listingId, status])
+}
+
+// ─── Inquiry ─────────────────────────────────────────────────────────────────
+
+model Inquiry {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listingId       String        @db.Uuid
+  senderId        String        @db.Uuid
+  message         String
+  preferredDate   DateTime?     @db.Date
+  status          InquiryStatus @default(OPEN)
+  conversationId  String?       @unique @db.Uuid
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  listing      Listing       @relation(fields: [listingId], references: [id])
+  sender       User          @relation(fields: [senderId], references: [id])
+  conversation Conversation? @relation(fields: [conversationId], references: [id])
+
+  @@index([listingId])
+  @@index([senderId])
+  @@index([status])
+}
+
+// ─── Booking ─────────────────────────────────────────────────────────────────
+
+model Booking {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listingId         String        @db.Uuid
+  guestId           String        @db.Uuid
+  hostId            String        @db.Uuid
+  rentalType        RentalType
+  status            BookingStatus @default(PENDING)
+  currency          String        @db.VarChar(3)
+  idempotencyKey    String        @unique
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  cancelledAt       DateTime?
+  cancellationReason String?
+
+  // Short-term fields
+  checkInDate           DateTime? @db.Date
+  checkOutDate          DateTime? @db.Date
+  nights                Int?
+  guestCount            Int?
+  nightlyRateSnapshot   Decimal?  @db.Decimal(10, 2)
+  cleaningFeeSnapshot   Decimal?  @db.Decimal(10, 2)
+  subtotal              Decimal?  @db.Decimal(10, 2)
+  serviceFee            Decimal?  @db.Decimal(10, 2)
+  totalPrice            Decimal?  @db.Decimal(10, 2)
+
+  // Long-term fields
+  leaseStartDate         DateTime? @db.Date
+  leaseEndDate           DateTime? @db.Date
+  leaseTermMonths        Int?
+  monthlyRentSnapshot    Decimal?  @db.Decimal(10, 2)
+  securityDepositSnapshot Decimal? @db.Decimal(10, 2)
+  securityDepositPaid    Boolean?
+  rentDueDayOfMonth      Int?
+
+  // Relationships
+  listing        Listing        @relation(fields: [listingId], references: [id])
+  guest          User           @relation("GuestBookings", fields: [guestId], references: [id])
+  host           User           @relation("HostBookings", fields: [hostId], references: [id])
+  payments       Payment[]
+  availability   Availability[]
+  reviews        Review[]
+  conversation   Conversation?
+
+  @@index([listingId])
+  @@index([guestId])
+  @@index([status])
+  @@index([rentalType])
+  @@index([hostId, status, checkInDate])
+}
+
+// ─── Review ──────────────────────────────────────────────────────────────────
+
+model Review {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId    String          @db.Uuid
+  listingId    String          @db.Uuid
+  authorId     String          @db.Uuid
+  direction    ReviewDirection
+  rating       Int
+  subRatings   Json?
+  comment      String
+  hostResponse String?
+  isVisible    Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  publishedAt  DateTime?
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  listing Listing @relation(fields: [listingId], references: [id])
+  author  User    @relation(fields: [authorId], references: [id])
+
+  @@unique([bookingId, direction])
+  @@index([listingId])
+  @@index([authorId])
+}
+
+// ─── Favorite ────────────────────────────────────────────────────────────────
+
+model Favorite {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  listingId String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@index([listingId])
+}
+
+// ─── Conversation & Message ──────────────────────────────────────────────────
+
+model Conversation {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listingId     String?   @db.Uuid
+  bookingId     String?   @unique @db.Uuid
+  inquiryId     String?   @unique @db.Uuid
+  lastMessageAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+
+  booking      Booking?                  @relation(fields: [bookingId], references: [id])
+  inquiry      Inquiry?
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  conversationId String @db.Uuid
+  userId         String @db.Uuid
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversationId  String   @db.Uuid
+  senderId        String   @db.Uuid
+  body            String?
+  attachmentUrl   String?
+  readAt          DateTime?
+  createdAt       DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+// ─── Notification ────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String              @db.Uuid
+  type      NotificationType
+  payload   Json
+  channel   NotificationChannel
+  readAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+model NotificationPreference {
+  userId  String              @db.Uuid
+  type    NotificationType
+  channel NotificationChannel
+  enabled Boolean             @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, type, channel])
+}
+
+// ─── Payment ─────────────────────────────────────────────────────────────────
+
+model Payment {
+  id                    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId             String          @db.Uuid
+  payerUserId           String?         @db.Uuid
+  payeeUserId           String?         @db.Uuid
+  relatedPaymentId      String?         @db.Uuid
+  type                  PaymentType
+  amount                Int
+  currency              String          @db.VarChar(3)
+  provider              PaymentProvider
+  providerTransactionRef String
+  status                PaymentStatus   @default(PENDING)
+  billingPeriodStart    DateTime?       @db.Date
+  billingPeriodEnd      DateTime?       @db.Date
+  failureReason         String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  booking        Booking  @relation(fields: [bookingId], references: [id])
+  payer          User?    @relation("PayerPayments", fields: [payerUserId], references: [id])
+  payee          User?    @relation("PayeePayments", fields: [payeeUserId], references: [id])
+  relatedPayment Payment? @relation("RelatedPayments", fields: [relatedPaymentId], references: [id])
+  relatedPayments Payment[] @relation("RelatedPayments")
+
+  @@index([bookingId])
+  @@index([status])
+  @@index([provider])
+  @@index([billingPeriodStart])
+  @@index([payerUserId])
+  @@index([payeeUserId])
+  @@index([relatedPaymentId])
+}
+
+// ─── AuditLog ────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorId    String?  @db.Uuid
+  action     String
+  targetType String
+  targetId   String   @db.Uuid
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
