@@ -362,6 +362,22 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 
 ---
 
+## ADR-022: Messaging — Two Conversation-Creation Triggers, Admin Access as a Separate Audited Path
+
+**Decision:** `Conversation` creation follows two different triggers depending on its anchor, both consistent with the Domain Model Spec §2.12 lifecycle note ("created on first message"): (1) **inquiry-anchored** — `createInquiry()` creates the `Conversation` and its first `Message` eagerly, in the same transaction as the `Inquiry` row, since the inquiry's own text already *is* that thread's first message; (2) **booking-anchored** — created lazily by `sendMessage({bookingId})` the first time either party actually sends something, never at booking-creation time, so a booking with no messages never accumulates an empty conversation row. A host's reply in an inquiry-anchored thread also auto-transitions that `Inquiry` to `RESPONDED`, removing the need for a separate manual click on the common path (the manual `markInquiryResponded`/`closeInquiry` actions from Phase 5 still exist for the uncommon ones — an out-of-band reply, or closing without replying). The `ADMIN` "read for dispute resolution" permission (Domain Model Spec §2.12) is a dedicated function, `getConversationForAdmin()`, never a silent bypass folded into the normal participant-gated query — every call writes an `AuditLog` row first, and a second admin read gets its own separate row rather than being deduped.
+
+**Reasoning:** The two creation paths reflect a genuine structural difference the spec already draws: an inquiry always *has* an opening message (the inquiry text itself), a booking might never get one. Forcing both through the same lazy-on-first-message path would mean either duplicating the inquiry's text as a second, redundant "first message," or leaving the inquiry's actual content out of the thread entirely. Auto-marking `RESPONDED` is a direct reading of what "responded" means once real messaging exists — is a reasonable UX inference (not a new business rule), not a mandate anywhere in the docs. The separate audited admin path exists because the alternative — baking an `ADMIN`-bypass condition into the same function every other caller uses — makes it one code-review-missed conditional away from being an unlogged bypass; a distinct function name is the same discipline already applied to the Stripe Connect admin escape hatch (`payoutForPayment`) in ADR-021.
+
+**Alternatives Considered:** A single lazy-creation path for both anchors (skip pre-creating the inquiry's conversation, require the host's first reply to "start" it). Baking the `ADMIN` bypass directly into `getConversationById` with an `isAdmin` check.
+
+**Why Rejected:** The single-path alternative would either drop the guest's original inquiry question from the thread history or require inserting it as a synthetic duplicate message — worse in both cases than acknowledging the two anchors are genuinely different. The inline-bypass alternative was rejected for the same reason ADR-021 rejected it for payments: a permission check embedded in a general-purpose function is the kind of thing that silently stops being audited the first time that function gets refactored, whereas a distinctly-named function forces every caller to be deliberate about which path they're using.
+
+**Trade-offs Accepted:** Two different creation code paths for `Conversation` (one in `modules/inquiries/actions.ts`, one in `modules/messaging/actions.ts`) instead of one — acceptable since they're genuinely triggered by different events, not an arbitrary split. No real-time delivery (WebSockets/polling) — messages appear on next navigation/refresh only, consistent with nothing in the architecture docs requiring live delivery for MVP.
+
+**Revisit If:** A third conversation-anchor type is added (e.g., a standalone "contact host" outside any inquiry or booking) — decide then whether it's a third eager-creation path or reuses the lazy booking-style one, rather than assuming either default. If real-time delivery becomes a stated requirement, this is a documented gap to fill, not an oversight to rediscover.
+
+---
+
 ## Index of Decisions
 
 | ADR | Decision |
@@ -387,3 +403,4 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 | 019 | NextAuth v4 (not Auth.js v5) for this phase |
 | 020 | Listing extensibility — reference tables + typed columns, narrow JSONB, not EAV |
 | 021 | Stripe Connect integration — interface extensions, idempotency, deferred payout timing |
+| 022 | Messaging — two conversation-creation triggers, admin access as a separate audited path |

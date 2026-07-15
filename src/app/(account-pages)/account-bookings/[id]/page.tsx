@@ -2,7 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookingById } from "@/modules/bookings/queries";
+import { getConversationIdForBooking } from "@/modules/messaging/queries";
 import BookingDetailActions from "./BookingDetailActions";
+import BookingMessageEntry from "./BookingMessageEntry";
 import type { Route } from "@/routers/types";
 
 export const metadata = {
@@ -34,6 +36,7 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
 
   const viewerRole: "guest" | "host" = isGuest ? "guest" : "host";
   const counterparty = isGuest ? booking.host : booking.guest;
+  const conversationId = await getConversationIdForBooking(booking.id);
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -67,6 +70,11 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
           </>
         )}
         <Row label={viewerRole === "guest" ? "Host" : "Guest"} value={`${counterparty.firstName} ${counterparty.lastName}`} />
+        <BookingMessageEntry
+          bookingId={booking.id}
+          existingConversationId={conversationId}
+          counterpartyName={counterparty.firstName}
+        />
       </div>
 
       <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 space-y-3">

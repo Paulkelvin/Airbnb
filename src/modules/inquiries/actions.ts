@@ -38,18 +38,45 @@ export async function createInquiry(
     };
   }
 
-  const inquiry = await prisma.inquiry.create({
-    data: {
-      listingId: listing.id,
-      senderId: user.id,
-      message: data.message,
-      preferredDate: data.preferredDate,
-      status: "OPEN",
-    },
-    select: { id: true },
+  // Conversation created here, not lazily on first "message" — the inquiry's own
+  // text already is that thread's first message (Domain Model Spec §2.12 lifecycle).
+  const inquiry = await prisma.$transaction(async (tx) => {
+    const conversation = await tx.conversation.create({
+      data: {
+        listingId: listing.id,
+        participants: { create: [{ userId: user.id }, { userId: listing.hostId }] },
+      },
+      select: { id: true },
+    });
+
+    await tx.message.create({
+      data: { conversationId: conversation.id, senderId: user.id, body: data.message },
+    });
+
+    const created = await tx.inquiry.create({
+      data: {
+        listingId: listing.id,
+        senderId: user.id,
+        message: data.message,
+        preferredDate: data.preferredDate,
+        status: "OPEN",
+        conversationId: conversation.id,
+      },
+      select: { id: true },
+    });
+
+    // Conversation.inquiryId is a denormalized reverse pointer (no FK — same as
+    // listingId); the real relation is driven by Inquiry.conversationId above.
+    await tx.conversation.update({
+      where: { id: conversation.id },
+      data: { inquiryId: created.id },
+    });
+
+    return created;
   });
 
   revalidatePath("/account-inquiries");
+  revalidatePath("/account-messages");
 
   return { success: true, data: { id: inquiry.id } };
 }
