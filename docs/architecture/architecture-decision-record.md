@@ -322,6 +322,25 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 
 ---
 
+## ADR-020: Listing Extensibility — Reference Tables + Typed Columns, Narrow JSONB Escape Hatch (Not EAV)
+
+**Decision:** New listing attributes are added through three deliberately different mechanisms depending on shape, not one general-purpose mechanism: (1) **catalog-like, multi-select, host-toggleable characteristics** (amenities, and future analogues like view type or accessibility features) follow the existing `Amenity`/`ListingAmenity` reference-table-plus-join-table blueprint — adding a new value is an `INSERT` into the catalog table, not a migration; (2) **core fields used in filtering, sorting, pricing, or validation logic** (bedrooms, `nightlyPrice`, `rentalType`-conditional fields, etc.) stay real typed columns per ADR-002, added via normal migrations when a genuine new business-critical field is confirmed; (3) a single narrow `Listing.metadata Json?` column is the only escape hatch for genuinely long-tail, presentational-only, host-supplied extras that don't yet justify a first-class column or a new catalog table.
+
+**Reasoning:** Client guidance: property listing platforms accumulate new attributes over time (new amenities, property features, metadata), and the module should absorb that without a migration for every addition — but explicitly not via a general Entity-Attribute-Value model, and not by letting ad hoc attribute logic leak into UI components. The three-mechanism split matches each attribute shape to the structure that's actually correct for it, rather than forcing all future attributes through one mechanism that's wrong for most of them: catalog-like toggles need referential integrity and query indexability (`WHERE amenity = 'pool'`), core business fields need type safety and constraint enforcement (ADR-002's `CHECK` constraints depend on real columns), and only the genuine remainder — informational extras nobody filters or sorts on — needs schema flexibility at all.
+
+**Alternatives Considered:**
+1. A general `EntityAttribute`/`AttributeValue` EAV model covering all current and future listing attributes uniformly.
+2. A single unstructured `Listing.attributes Json` blob with no column reserved specifically for amenities (i.e., folding the existing `Amenity`/`ListingAmenity` pattern into the same generic bag as everything else).
+3. No flexibility mechanism at all — every new attribute, including cosmetic/informational ones, goes through a full migration.
+
+**Why Rejected:** 1. EAV was explicitly ruled out by the client and independently disqualifying on its own merits here: it loses foreign-key integrity, makes every attribute query a self-join against a generic value table, defeats Postgres's type system and indexing (every value stored as text or a handful of typed columns on the EAV row), and is the textbook anti-pattern this decision exists to avoid — the amenities catalog already proves a reference table does the same job (fast, zero-migration additions) without any of that cost. 2. Folding amenities into a generic JSON bag would give up exactly what makes amenities work well today — referential integrity (`ListingAmenity.amenityId` FK), indexable filtering (`WHERE amenityId = X`), and category-based grouping (`AmenityCategory` enum) — for no benefit, since the reference-table pattern already solves the "add new values without a migration" problem for this shape of attribute. 3. Rejecting all flexibility would mean a real, if minor, listing-metadata addition (a one-off note, a rarely-queried flag) forces a migration and a `CHECK` constraint conversation every time — disproportionate ceremony for genuinely low-stakes, non-business-critical fields.
+
+**Trade-offs Accepted:** `Listing.metadata` must be governed by explicit discipline to avoid becoming EAV-by-another-name: it is validated by a single versioned Zod schema living in the listings module (not read/written ad hoc from UI components, consistent with ADR-012's module-boundary rule), documented with an explicit allowlist of known keys in one place, and — critically — is presentational/informational only. Any metadata key that starts being used in a `WHERE` clause, a sort, or a validation rule is a signal it should graduate to a real column or catalog table via a normal migration, not stay in `metadata` because that's easier. This graduation discipline is enforced by code review, not the type system — the same category of accepted risk as ADR-012's module-boundary rule.
+
+**Revisit If:** `Listing.metadata` starts accumulating keys that are actually being filtered/sorted/validated on in practice (a sign the boundary is being violated) — at that point, audit its contents and graduate the offending keys to real columns rather than adding query logic against JSON. If an entirely new *class* of catalog-like attribute emerges that doesn't fit the amenity-style binary "has/doesn't have" shape (e.g., something inherently numeric-range or free-text per listing), design its own typed structure rather than defaulting either into `metadata` or into a forced fit of the amenity pattern.
+
+---
+
 ## Index of Decisions
 
 | ADR | Decision |
@@ -345,3 +364,4 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 | 017 | Four-tier role model — `CUSTOMER` as base authenticated role |
 | 018 | Prisma version pin — 5.22, documented upgrade path to 7.x |
 | 019 | NextAuth v4 (not Auth.js v5) for this phase |
+| 020 | Listing extensibility — reference tables + typed columns, narrow JSONB, not EAV |

@@ -6,6 +6,7 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
+  directUrl  = env("DATABASE_URL_UNPOOLED")
   extensions = [postgis, pgcrypto]
 }
 
@@ -269,6 +270,10 @@ model Listing {
   sizeSqft        Int?
   currency        String        @default("USD") @db.VarChar(3)
   status          ListingStatus @default(DRAFT)
+  // Presentational/informational extras only — see ADR-020. Never filtered,
+  // sorted, or validated against; anything that needs that graduates to a
+  // real column. Governed by a single Zod schema in the listings module.
+  metadata        Json?
   avgRating       Decimal?      @db.Decimal(3, 2)
   reviewCount     Int           @default(0)
   viewCount       Int           @default(0)
