@@ -10,11 +10,14 @@ import Pagination from "@/components/ui/Pagination";
 import TabFilters from "./TabFilters";
 import Heading from "@/components/ui/Heading";
 import StayCard from "@/components/StayCard";
+import type { StayDataType } from "@/data/types";
 
 const DEMO_STAYS = DEMO_STAY_LISTINGS.filter((_, i) => i < 12);
-export interface SectionGridHasMapProps {}
+export interface SectionGridHasMapProps {
+  data?: StayDataType[];
+}
 
-const SectionGridHasMap: FC<SectionGridHasMapProps> = () => {
+const SectionGridHasMap: FC<SectionGridHasMapProps> = ({ data = DEMO_STAYS }) => {
   const [currentHoverID, setCurrentHoverID] = useState<string | number>(-1);
   const [showFullMapFixed, setShowFullMapFixed] = useState(false);
 
@@ -28,7 +31,7 @@ const SectionGridHasMap: FC<SectionGridHasMapProps> = () => {
             <TabFilters />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 2xl:gap-x-6 gap-y-8">
-            {DEMO_STAYS.map((item) => (
+            {data.map((item) => (
               <div
                 key={item.id}
                 onMouseEnter={() => setCurrentHoverID((_) => item.id)}
@@ -76,13 +79,13 @@ const SectionGridHasMap: FC<SectionGridHasMapProps> = () => {
             </div>
             <GoogleMapReact
               defaultZoom={12}
-              defaultCenter={DEMO_STAYS[0]?.map || { lat: 40.7128, lng: -74.006 }}
+              defaultCenter={data[0]?.map || { lat: 40.7128, lng: -74.006 }}
               bootstrapURLKeys={{
                 key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
               }}
               yesIWantToUseGoogleMapApiInternals
             >
-              {DEMO_STAYS.map((item) => (
+              {data.map((item) => (
                 <AnyReactComponent
                   isSelected={currentHoverID === item.id}
                   key={item.id}

@@ -1,10 +1,12 @@
-import React, { FC } from "react";
 import SectionGridFilterCard from "../SectionGridFilterCard";
+import { getPublishedListings } from "@/modules/listings/queries";
+import { toCardViewModel } from "@/modules/listings/types";
 
-export interface ListingStayPageProps {}
+export const dynamic = "force-dynamic";
 
-const ListingStayPage: FC<ListingStayPageProps> = () => {
-  return <SectionGridFilterCard className="container pb-24 lg:pb-28" />;
-};
+export default async function ListingStayPage() {
+  const { items } = await getPublishedListings({ limit: 24 });
+  const data = items.map(toCardViewModel);
 
-export default ListingStayPage;
+  return <SectionGridFilterCard className="container pb-24 lg:pb-28" data={data} />;
+}

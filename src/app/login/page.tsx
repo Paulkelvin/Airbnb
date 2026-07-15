@@ -1,9 +1,39 @@
-import React, { FC } from "react";
+"use client";
+
+import React, { useState, useTransition } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Input from "@/components/ui/Input";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import Link from "next/link";
 
-const PageLogin: FC = () => {
+const PageLogin = () => {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(async () => {
+      const result = await signIn("credentials", {
+        email: formData.get("email"),
+        password: formData.get("password"),
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Invalid email or password");
+        return;
+      }
+
+      router.push("/account-listings");
+      router.refresh();
+    });
+  }
+
   return (
     <div className={`nc-PageLogin`}>
       <div className="container mb-24 lg:mb-32">
@@ -11,27 +41,27 @@ const PageLogin: FC = () => {
           Login
         </h2>
         <div className="max-w-md mx-auto space-y-6">
-          <form className="grid grid-cols-1 gap-6" action="#" method="post">
+          {error && (
+            <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">{error}</div>
+          )}
+          <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
             <label className="block">
-              <span className="text-neutral-800 dark:text-neutral-200">
-                Email address
-              </span>
+              <span className="text-neutral-800 dark:text-neutral-200">Email address</span>
               <Input
+                name="email"
                 type="email"
                 placeholder="example@example.com"
+                required
                 className="mt-1"
               />
             </label>
             <label className="block">
-              <span className="flex justify-between items-center text-neutral-800 dark:text-neutral-200">
-                Password
-                <Link href="/login" className="text-sm underline font-medium">
-                  Forgot password?
-                </Link>
-              </span>
-              <Input type="password" className="mt-1" />
+              <span className="text-neutral-800 dark:text-neutral-200">Password</span>
+              <Input name="password" type="password" required className="mt-1" />
             </label>
-            <ButtonPrimary type="submit">Continue</ButtonPrimary>
+            <ButtonPrimary type="submit" loading={isPending} disabled={isPending}>
+              Continue
+            </ButtonPrimary>
           </form>
 
           <span className="block text-center text-neutral-700 dark:text-neutral-300">

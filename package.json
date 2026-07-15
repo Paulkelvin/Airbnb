@@ -34,7 +34,7 @@
     "eslint-config-next": "^13.4.3",
     "framer-motion": "^10.12.16",
     "google-map-react": "^2.2.1",
-    "next": "^13.4.3",
+    "next": "^13.5.11",
     "next-auth": "^4.24.14",
     "prisma": "^5.22.0",
     "rc-slider": "^10.1.1",

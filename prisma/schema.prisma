@@ -362,6 +362,8 @@ model Image {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   listingId String   @db.Uuid
   url       String
+  // Cloudinary public_id — needed to delete the asset from storage when the image is removed.
+  publicId  String?
   altText   String?
   position  Int
   isCover   Boolean  @default(false)
