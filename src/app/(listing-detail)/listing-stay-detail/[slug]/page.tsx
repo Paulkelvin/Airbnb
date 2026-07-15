@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getListingBySlug } from "@/modules/listings/queries";
+import { getBlockedDatesForListing } from "@/modules/bookings/queries";
 import { getCurrentUser } from "@/lib/auth";
 import { toDetailViewModel } from "@/modules/listings/types";
 import ListingDetailView from "./ListingDetailView";
@@ -26,6 +27,15 @@ export default async function ListingStayDetailPage({
 
   const viewModel = toDetailViewModel(listing);
   const isOwner = user?.id === listing.hostId;
+  const blockedDates =
+    listing.rentalType === "SHORT_TERM" ? await getBlockedDatesForListing(listing.id) : [];
 
-  return <ListingDetailView listing={viewModel} isOwner={isOwner} />;
+  return (
+    <ListingDetailView
+      listing={viewModel}
+      isOwner={isOwner}
+      isAuthenticated={Boolean(user)}
+      blockedDates={blockedDates}
+    />
+  );
 }

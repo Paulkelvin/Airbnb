@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/jobs/booking-lifecycle",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

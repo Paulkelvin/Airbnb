@@ -10,8 +10,8 @@ import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import LikeSaveBtns from "@/components/LikeSaveBtns";
 import ListingImageGallery from "@/components/listing-image-gallery/ListingImageGallery";
-import StayDatesRangeInput from "../StayDatesRangeInput";
-import GuestsInput from "../GuestsInput";
+import BookingWidget from "./BookingWidget";
+import InquiryForm from "./InquiryForm";
 import type { ListingDetailViewModel } from "@/modules/listings/types";
 import type { Route } from "@/routers/types";
 
@@ -29,9 +29,13 @@ const AMENITY_CATEGORY_LABELS: Record<string, string> = {
 export default function ListingDetailView({
   listing,
   isOwner,
+  isAuthenticated,
+  blockedDates,
 }: {
   listing: ListingDetailViewModel;
   isOwner: boolean;
+  isAuthenticated: boolean;
+  blockedDates: string[];
 }) {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
@@ -272,6 +276,11 @@ export default function ListingDetailView({
                 <span className="block text-xl font-medium">{listing.host.name}</span>
               </div>
             </div>
+            {!isOwner && (
+              <div className="pt-2">
+                <InquiryForm listingId={listing.id} isAuthenticated={isAuthenticated} />
+              </div>
+            )}
           </div>
 
           {/* SECTION 6: REVIEWS */}
@@ -334,14 +343,14 @@ export default function ListingDetailView({
                   Manage listing
                 </ButtonPrimary>
               ) : (
-                <>
-                  <form className="flex flex-col border border-neutral-200 dark:border-neutral-700 rounded-3xl">
-                    <StayDatesRangeInput className="flex-1 z-[11]" />
-                    <div className="w-full border-b border-neutral-200 dark:border-neutral-700" />
-                    <GuestsInput className="flex-1" />
-                  </form>
-                  <ButtonPrimary href={"/checkout" as Route}>Reserve</ButtonPrimary>
-                </>
+                <BookingWidget
+                  listingId={listing.id}
+                  currency={listing.currency}
+                  maxOccupants={listing.maxOccupants}
+                  isAuthenticated={isAuthenticated}
+                  pricing={listing.pricing}
+                  blockedDates={blockedDates}
+                />
               )}
             </div>
           </div>

@@ -51,6 +51,12 @@ Setup notes: Postgres 15+; confirm `postgis` and `pgcrypto` show as available un
 |---|---|---|---|---|
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Google Cloud | Console → **APIs & Services** → **Credentials** → create a key restricted to **Maps JavaScript API** and your Vercel domain(s) | Both | Powers listing map embeds (referenced in 3 components). |
 
+## Background Jobs
+
+| Variable | Service | Where to obtain | Required | Purpose |
+|---|---|---|---|---|
+| `CRON_SECRET` | Self-generated | Generate with `openssl rand -base64 32` | Both, distinct value per environment | Bearer-token auth for `/api/jobs/booking-lifecycle` (date-driven check-in/checkout/lease transitions + monthly rent charging — ADR-015), triggered daily by the `crons` entry in `vercel.json`. Named `CRON_SECRET` specifically because Vercel auto-attaches it as the `Authorization: Bearer` header on its own Cron Job requests — no manual header wiring needed once this variable is set. |
+
 ## Provided automatically — no action needed
 
 `VERCEL_URL`, `VERCEL_ENV`, `NODE_ENV` are set by the platform itself.
