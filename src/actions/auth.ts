@@ -2,7 +2,9 @@
 
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import {
   registerSchema,
   forgotPasswordSchema,
@@ -13,9 +15,25 @@ import {
 const SALT_ROUNDS = 12;
 const RESET_TOKEN_EXPIRY_HOURS = 1;
 
+/** No session exists yet at signup, so the limiter key is IP-based, not user-based. */
+function clientIp(): string {
+  return headers().get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+}
+
 export async function register(
   formData: FormData,
 ): Promise<ActionResult<{ userId: string }>> {
+  const rateLimit = await checkRateLimit(`signup:${clientIp()}`, RATE_LIMITS.SIGNUP);
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: `Too many signup attempts. Please try again in ${rateLimit.retryAfterSeconds}s.`,
+      },
+    };
+  }
+
   const raw = {
     email: formData.get("email"),
     password: formData.get("password"),

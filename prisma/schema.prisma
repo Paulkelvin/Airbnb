@@ -630,3 +630,18 @@ model AuditLog {
   @@index([targetType, targetId])
   @@index([createdAt])
 }
+
+// ─── RateLimitHit ────────────────────────────────────────────────────────────
+// DB-backed sliding-window rate limiting (ADR-023) — MVP implementation of
+// the Redis-backed limiter the Platform Architecture Blueprint calls for on
+// signup, Inquiry creation, Message creation, and Review submission. No
+// relation to any other model on purpose: `key` is an opaque caller-defined
+// string (e.g. "signup:<ip>", "review:<userId>"), never a foreign key.
+
+model RateLimitHit {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}

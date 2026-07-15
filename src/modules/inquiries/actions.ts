@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { createInquirySchema, inquiryIdSchema, type CreateInquiryInput, type InquiryIdInput } from "@/lib/validations/inquiry";
 import type { ActionResult } from "@/lib/validations/auth";
 
@@ -10,6 +11,17 @@ export async function createInquiry(
   input: CreateInquiryInput,
 ): Promise<ActionResult<{ id: string }>> {
   const user = await requireAuth();
+
+  const rateLimit = await checkRateLimit(`inquiry:${user.id}`, RATE_LIMITS.INQUIRY_CREATE);
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: `Too many inquiries sent. Please try again in ${rateLimit.retryAfterSeconds}s.`,
+      },
+    };
+  }
 
   const parsed = createInquirySchema.safeParse(input);
   if (!parsed.success) {

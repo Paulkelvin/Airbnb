@@ -3,8 +3,10 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { getBookingById } from "@/modules/bookings/queries";
 import { getConversationIdForBooking } from "@/modules/messaging/queries";
+import { getReviewByBookingAndDirection } from "@/modules/reviews/queries";
 import BookingDetailActions from "./BookingDetailActions";
 import BookingMessageEntry from "./BookingMessageEntry";
+import ReviewPrompt from "./ReviewPrompt";
 import type { Route } from "@/routers/types";
 
 export const metadata = {
@@ -37,6 +39,11 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
   const viewerRole: "guest" | "host" = isGuest ? "guest" : "host";
   const counterparty = isGuest ? booking.host : booking.guest;
   const conversationId = await getConversationIdForBooking(booking.id);
+
+  const isReviewable = booking.status === "COMPLETED" || booking.status === "TERMINATED_EARLY";
+  const reviewDirection = isGuest ? "GUEST_TO_HOST" : isHost ? "HOST_TO_GUEST" : null;
+  const myReview =
+    isReviewable && reviewDirection ? await getReviewByBookingAndDirection(booking.id, reviewDirection) : null;
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -76,6 +83,18 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
           counterpartyName={counterparty.firstName}
         />
       </div>
+
+      {isReviewable && (isGuest || isHost) && (
+        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 space-y-3">
+          <h3 className="font-medium text-lg">Review</h3>
+          <ReviewPrompt
+            bookingId={booking.id}
+            counterpartyName={counterparty.firstName}
+            isGuest={isGuest}
+            alreadyReviewed={Boolean(myReview)}
+          />
+        </div>
+      )}
 
       <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 space-y-3">
         <h3 className="font-medium text-lg">Price breakdown</h3>

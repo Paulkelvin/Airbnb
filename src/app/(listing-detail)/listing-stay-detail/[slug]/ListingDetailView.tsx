@@ -8,10 +8,11 @@ import Avatar from "@/components/ui/Avatar";
 import Badge from "@/components/ui/Badge";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
-import LikeSaveBtns from "@/components/LikeSaveBtns";
 import ListingImageGallery from "@/components/listing-image-gallery/ListingImageGallery";
 import BookingWidget from "./BookingWidget";
 import InquiryForm from "./InquiryForm";
+import FavoriteButton from "./FavoriteButton";
+import ReviewsSection, { type ListingReview } from "./ReviewsSection";
 import type { ListingDetailViewModel } from "@/modules/listings/types";
 import type { Route } from "@/routers/types";
 
@@ -31,11 +32,15 @@ export default function ListingDetailView({
   isOwner,
   isAuthenticated,
   blockedDates,
+  reviews,
+  isFavorited,
 }: {
   listing: ListingDetailViewModel;
   isOwner: boolean;
   isAuthenticated: boolean;
   blockedDates: string[];
+  reviews: ListingReview[];
+  isFavorited: boolean;
 }) {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
@@ -125,7 +130,11 @@ export default function ListingDetailView({
           <div className="listingSection__wrap !space-y-6">
             <div className="flex justify-between items-center">
               <Badge name={listing.propertyType.name} />
-              <LikeSaveBtns />
+              <FavoriteButton
+                listingId={listing.id}
+                isAuthenticated={isAuthenticated}
+                initiallyFavorited={isFavorited}
+              />
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold">{listing.title}</h2>
             <div className="flex items-center space-x-4">
@@ -284,17 +293,12 @@ export default function ListingDetailView({
           </div>
 
           {/* SECTION 6: REVIEWS */}
-          <div className="listingSection__wrap">
-            <h2 className="text-2xl font-semibold">Reviews ({listing.reviewCount})</h2>
-            <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
-            {listing.reviewCount === 0 ? (
-              <p className="text-neutral-500">No reviews yet.</p>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <StartRating point={listing.avgRating} reviewCount={listing.reviewCount} />
-              </div>
-            )}
-          </div>
+          <ReviewsSection
+            reviews={reviews}
+            avgRating={listing.avgRating}
+            reviewCount={listing.reviewCount}
+            isOwner={isOwner}
+          />
 
           {/* SECTION 7: LOCATION */}
           {listing.address && (

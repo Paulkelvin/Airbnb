@@ -378,6 +378,41 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 
 ---
 
+## ADR-023: Rate Limiting — DB-Backed Sliding Window at MVP, Retrofitted Across All Four Required Endpoints
+
+**Decision:** A lightweight Postgres-backed sliding-window rate limiter (`RateLimitHit` model, `src/lib/rate-limit.ts`) is wired into all four endpoints the Platform Architecture Blueprint calls for: signup (IP-keyed), Inquiry creation, Message creation, and Review submission (the latter three user-ID-keyed). `RateLimitHit` is deliberately a standalone table with no foreign key to any other model — `key` is an opaque caller-defined string (e.g. `"signup:<ip>"`, `"review:<userId>"`) — so the limiter has zero coupling to what it's protecting. Redis/Upstash is the named, not-yet-triggered graduation path, matching ADR-015's job-queue precedent exactly.
+
+**Reasoning:** Found mid-Phase-8 (Reviews and Favorites) that the blueprint requires rate limiting on four specific write endpoints, but three of them (signup, Inquiry creation, Message creation) had already shipped across Phases 2/5/7 with no limiter at all — a real structural gap, not a naming preference, discovered only because Review submission (this phase's fourth endpoint) forced the question. Raised to the client rather than assumed, since it spanned already-approved phases and introduced a new infrastructure question (DB-backed vs. Redis) not previously decided anywhere.
+
+**Alternatives Considered:**
+1. Redis/Upstash-backed limiter now, built alongside the DB-backed job queue's own eventual Redis migration.
+2. DB-backed limiter on Review submission only (this phase's endpoint), leaving the three already-shipped endpoints unlimited until a separate remediation pass.
+3. No rate limiting at all until a concrete abuse incident justifies the engineering cost.
+
+**Why Rejected:** 1. No Redis/Upstash infrastructure exists anywhere in this project yet — introducing it solely for rate limiting, when a DB-backed limiter is sufficient at current traffic levels (mirrors the exact reasoning ADR-015 already applied to the job queue), would be scope creep unrelated to Phase 8's actual deliverable. 2. Leaving three already-shipped, unauthenticated-reachable endpoints (signup in particular) unlimited while fixing only the newest one would mean knowingly shipping Phase 8 with a documented gap still open — directly contrary to the standing instruction to reconcile discovered inconsistencies immediately rather than deferring them. 3. Signup and message-spam abuse vectors are real and blueprint-mandated, not speculative; deferring indefinitely isn't consistent with the architecture already calling for this.
+
+**Trade-offs Accepted:** A DB-backed sliding window costs one `COUNT` query (plus, on the fast path, a `findFirst` + a two-statement transaction) per rate-limited request — more write load than an in-memory/Redis counter would add, acceptable at current traffic and explicitly the same category of accepted MVP simplification ADR-015 already made for jobs. `RateLimitHit` rows accumulate outside their own window until the next `checkRateLimit` call for that same `key` prunes stale rows (deletion is opportunistic, tied to the next hit on that key, not a separate sweep job) — acceptable since abandoned keys (e.g., an IP that never returns) cost only storage, not correctness.
+
+**Revisit If:** Traffic volume makes the per-request `COUNT`/transaction cost measurable, or multi-instance/serverless deployment makes a shared, sub-millisecond counter genuinely necessary — at that point Redis/Upstash is the named next step, swapped in behind the same `checkRateLimit(key, config)` signature so call sites don't change.
+
+---
+
+## ADR-024: Review Eligibility — `COMPLETED` or `TERMINATED_EARLY`, Reconciling the Blueprint Against the Domain Model Spec
+
+**Decision:** A booking is reviewable once `status` is `COMPLETED` **or** `TERMINATED_EARLY`, enforced server-side in `createReview()`. The Platform Architecture Blueprint §8 (which said "only bookings with `status = Completed`") has been corrected to match; the Domain Model Specification §2.10 ("`bookingId.status` must be `COMPLETED` or `TERMINATED_EARLY`") was already correct and is the rule actually implemented.
+
+**Reasoning:** Found while implementing `createReview()` in Phase 8 that the two source documents disagreed. The project's own documented authority ordering (ADR > domain-model-spec > blueprint > pre-implementation-review, per `docs/project-status.md`'s Developer Notes) already resolves this in favor of the domain-model-spec, and the domain-model-spec's version is also the more defensible business rule on its own terms: a long-term lease terminated early (breach, mutual agreement) still produced a real, reviewable stay — excluding it would mean a tenant who lived somewhere for eight months of a twelve-month lease can never review it, solely because the lease didn't run to its natural end.
+
+**Alternatives Considered:** Follow the blueprint's narrower "`Completed` only" wording and treat `TERMINATED_EARLY` bookings as permanently unreviewable.
+
+**Why Rejected:** Would contradict the domain-model-spec's explicit validation rule (§2.10, which is more specific and was written to cover exactly this case) for no stated business reason — the blueprint's phrasing reads as an MVP-level simplification ("Completed" as shorthand for "the stay/lease is over"), not a deliberate exclusion of terminated-early leases. Silently picking the narrower rule without reconciling the two documents would also have left the discrepancy undocumented for the next engineer or AI session to rediscover.
+
+**Trade-offs Accepted:** None beyond the normal cost of a documentation correction — no code changes were required since `createReview()` was written against the domain-model-spec's rule from the start; only the blueprint's prose and this record needed to catch up.
+
+**Revisit If:** A future rental-type addition introduces a third "ended early" status with genuinely different reviewability semantics (e.g., a status representing fraud/abuse termination where a review shouldn't be allowed) — at that point, the eligibility check should branch on the specific termination reason, not just `status`, which the current schema doesn't yet distinguish.
+
+---
+
 ## Index of Decisions
 
 | ADR | Decision |
@@ -404,3 +439,5 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 | 020 | Listing extensibility — reference tables + typed columns, narrow JSONB, not EAV |
 | 021 | Stripe Connect integration — interface extensions, idempotency, deferred payout timing |
 | 022 | Messaging — two conversation-creation triggers, admin access as a separate audited path |
+| 023 | Rate limiting — DB-backed sliding window at MVP, retrofitted across all four required endpoints |
+| 024 | Review eligibility — `COMPLETED` or `TERMINATED_EARLY`, reconciling the blueprint against the domain model spec |

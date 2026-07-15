@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireAdmin } from "@/lib/auth";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { sendMessageSchema, conversationIdSchema, type SendMessageInput, type ConversationIdInput } from "@/lib/validations/messaging";
 import { isConversationParticipant, getConversationByIdUnchecked } from "./queries";
 import type { ActionResult } from "@/lib/validations/auth";
@@ -17,6 +18,17 @@ import type { ActionResult } from "@/lib/validations/auth";
  */
 export async function sendMessage(input: SendMessageInput): Promise<ActionResult<{ conversationId: string }>> {
   const user = await requireAuth();
+
+  const rateLimit = await checkRateLimit(`message:${user.id}`, RATE_LIMITS.MESSAGE_SEND);
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: `Too many messages sent. Please try again in ${rateLimit.retryAfterSeconds}s.`,
+      },
+    };
+  }
 
   const parsed = sendMessageSchema.safeParse(input);
   if (!parsed.success) {

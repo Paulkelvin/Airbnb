@@ -152,9 +152,9 @@ PaymentProvider (interface)
 ## 8. Review System
 
 - **Two-sided, double-blind**: guest reviews the listing/host, host reviews the guest. Neither is visible to the other party (or publicly) until **both** have submitted, or a 14-day window expires — standard marketplace pattern that reduces retaliatory/biased reviews. This is a deliberate design choice, not present in Chisfis at all (which has no submission form, only hardcoded display).
-- **Eligibility**: only bookings with `status = Completed` can be reviewed; enforced server-side, not just hidden in the UI.
+- **Eligibility**: bookings with `status = Completed` or `TerminatedEarly` can be reviewed (a terminated-early lease still had a real, reviewable stay); enforced server-side, not just hidden in the UI. See domain-model-specification.md §2.10 and ADR-024.
 - **Rating shape**: overall rating (1–5) plus optional sub-ratings (cleanliness, accuracy, communication, location, value) for guest→listing reviews; a single overall rating for host→guest reviews.
-- **Aggregation**: `Listing.avgRating` / `Listing.reviewCount` are denormalized fields, recalculated on review write — avoids an aggregate query on every listing-card render.
+- **Aggregation**: `Listing.avgRating` / `Listing.reviewCount` are denormalized fields, recalculated only when a review's visibility actually changes (publish-on-match, publish-on-expiry, or admin-hide) — never on raw submission, so a still-hidden review can't leak the pre-reveal rating into the listing card.
 - **Host response**: one public reply per review, host-authored, permanently attached.
 - **Moderation**: admin can soft-hide a review that violates content policy; action is audit-logged (§11), never a silent hard delete.
 
