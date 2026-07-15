@@ -1,0 +1,288 @@
+# Architecture Decision Record (ADR)
+
+**Status:** Frozen alongside the Platform Architecture Blueprint and Domain Model Specification. This is the historical record of *why* the architecture looks the way it does — the other two documents state the decisions; this one preserves the reasoning, the alternatives that lost, and the conditions under which a decision should be revisited. When implementation raises a question already answered here, the answer is here — don't re-derive it.
+
+Each entry follows: Decision · Reasoning · Alternatives Considered · Why Rejected · Trade-offs Accepted · Revisit If.
+
+---
+
+## ADR-001: Single Vertical — Property Rentals Only
+
+**Decision:** The platform supports residential and commercial property rentals only. No cars, experiences, flights, or other Chisfis-template verticals.
+
+**Reasoning:** The original Chisfis technical assessment found that supporting five listing verticals (Stay/Car/Experience/Flight/RealEstate) was the direct cause of nearly all type and component duplication in the template (four parallel `DataType` interfaces, four near-identical card components, no shared abstraction). Narrowing scope removes the duplication at its root instead of managing it.
+
+**Alternatives Considered:** Keep all Chisfis verticals and build a generic multi-vertical listing engine.
+
+**Why Rejected:** No confirmed business need for non-property verticals. A generic engine flexible enough for cars *and* real estate *and* experiences would need to abstract over fundamentally different domains (VIN numbers vs. square footage vs. group size) — pure speculative generality with no current requirement driving it.
+
+**Trade-offs Accepted:** If the business ever expands into a genuinely different vertical (e.g. equipment rental), that's a new listing type requiring new modeling work, not a flag flip — this was accepted deliberately over pre-building a generic engine for verticals that don't exist yet.
+
+**Revisit If:** A second, genuinely different vertical becomes a confirmed business requirement — at that point, re-evaluate whether `Listing`'s `rentalType` pattern (ADR-002) extends to a third discriminator value or whether the new vertical needs its own model entirely.
+
+---
+
+## ADR-002: Unified `Listing` Model with `rentalType`-Conditional Fields
+
+**Decision:** One `Listing` table serves both short-term and long-term rentals via a `rentalType` enum (`SHORT_TERM` | `LONG_TERM`) plus two groups of conditionally-required/forbidden fields on the same row, validated by a Zod discriminated union at the application layer and a DB `CHECK` constraint as a safety net.
+
+**Reasoning:** Client's explicit instruction: build a single, unified Property Listing model; avoid premature abstraction or polymorphic designs for transaction types not being implemented. Shared fields (title, description, images, amenities, address) genuinely are identical across both rental types — only pricing/terms differ.
+
+**Alternatives Considered:**
+1. Separate `ShortTermListing`/`LongTermListing` tables (or a shared base with per-type detail tables).
+2. A fully generic/polymorphic `Listing` with a JSON `attributes` blob for type-specific fields.
+
+**Why Rejected:**
+1. Reintroduces a join on every listing read/write for no query benefit, and drifts toward the table-per-type inheritance pattern explicitly ruled out by the client.
+2. A JSON attributes blob loses schema validation, type safety, and indexability on the very fields (`nightlyPrice`, `monthlyRent`) that need to be filtered and sorted on in search — the worst of both worlds for a field set that's actually small and well-known (not truly dynamic/user-defined).
+
+**Trade-offs Accepted:** Every row has ~13 nullable columns that are irrelevant to it (short-term columns are null on long-term listings and vice versa) — a normalization purist's objection, accepted because the alternative costs more in practice than it saves. More significantly: nothing at the database level stops application code from reading a long-term-only field on a short-term listing (it'll just be `null`, silently) — this is real, accepted technical debt, mitigated by requiring a TypeScript discriminated union (not the raw Prisma flat type) at every point business logic branches on `rentalType`.
+
+**Revisit If:** The nullable-column count grows uncomfortably large (a third rental type would roughly double it), or a field genuinely needs per-row dynamic shape (not just "one of two known sets") — at that point, per-type detail tables become the better trade.
+
+---
+
+## ADR-003: Unified `Booking` Model, Same Pattern as `Listing`
+
+**Decision:** One `Booking` entity covers both a short-term reservation and a long-term lease, with `rentalType` snapshotted from the listing at creation and the same conditional-field pattern as ADR-002.
+
+**Reasoning:** Consistency with ADR-002's rationale — the shared lifecycle scaffolding (Pending → Confirmed → Cancelled, payment linkage, guest/host relationship) is identical regardless of rental type; only the date semantics and a handful of fields (nights vs. lease term, nightly rate vs. monthly rent) differ.
+
+**Alternatives Considered:** Separate `Booking` and `Lease` entities, sharing a common base via inheritance or a shared interface only.
+
+**Why Rejected:** Would duplicate the payment-linkage, cancellation, and dispute-handling logic across two entities, or require the exact polymorphic base the client ruled out for `Listing`. `rentalType` is snapshotted (not a live FK-derived value) specifically so a later listing edit can never retroactively change an existing booking's rules — this was a deliberate design choice, not an oversight.
+
+**Trade-offs Accepted:** Same discriminated-union discipline requirement as ADR-002. Status enum has type-specific valid subsets (`CHECKED_IN` only makes sense for short-term, `ACTIVE`/`TERMINATED_EARLY` only for long-term) enforced by application logic, not the schema — a state-machine bug here is a correctness risk, mitigated by centralizing all transitions through one `canTransition(current, next, rentalType)` function, never ad hoc status writes scattered across modules.
+
+**Revisit If:** Same trigger as ADR-002.
+
+---
+
+## ADR-004: Short-Term + Long-Term Rental Support, Confirmed Scope
+
+**Decision:** The platform supports exactly two transaction types — short-term (nightly/weekly, availability calendar) and long-term (monthly/annual lease, recurring rent) — and no others (no property sales, no commercial-lease-specific terms beyond what long-term already covers).
+
+**Reasoning:** Direct client decision after an explicit clarifying question, made because guessing the business model would have meant rebuilding the Booking/Payment/pricing model rather than refining it.
+
+**Alternatives Considered:** Single rental type only (short-term or long-term, not both); full multi-model support including sales and commercial leasing.
+
+**Why Rejected:** Single-type was rejected by the client directly — both are genuine business requirements. Full multi-model (including sales/commercial) was explicitly ruled out by the client as premature — "do not build generic support for... business models we are not implementing."
+
+**Trade-offs Accepted:** See ADR-002/003 — this decision is what makes the conditional-field pattern necessary in the first place, rather than a simple single-purpose `Listing`/`Booking`.
+
+**Revisit If:** Property sales or commercial leasing become confirmed requirements — re-open ADR-002/003's "revisit if" conditions at the same time, since a third transaction type is exactly the point where the flat conditional-field pattern stops paying for itself.
+
+---
+
+## ADR-005: Stripe Connect — Separate Charges and Transfers (Not Destination Charges)
+
+**Decision:** Guest payments are charged to the platform's own Stripe balance; the platform explicitly initiates a `transfer`/`payout` to the host's connected account on a configurable schedule, rather than using Stripe's destination-charge model (atomic split at charge time).
+
+**Reasoning:** Found during the pre-implementation review that this decision had never actually been made explicit, despite the `PaymentProvider` interface already implying it (a standalone `payout()` method only makes sense in this model). Destination charges move funds to the connected account immediately and cannot be held — incompatible with any buyer-protection policy (e.g., "hold payout until check-in," or holding long-term rent through a dispute window).
+
+**Alternatives Considered:** Stripe destination charges (`transfer_data.destination` + `application_fee_amount` on the PaymentIntent).
+
+**Why Rejected:** Simpler to implement, but structurally cannot support delayed/held payouts — the funds are gone from the platform's control the instant the charge succeeds. Since payout-timing flexibility is a stated design goal (referenced in the Booking Lifecycle's cancellation/refund handling), this was disqualifying, not just a minor trade-off.
+
+**Trade-offs Accepted:** More integration code than destination charges (explicit transfer calls, tracking platform balance, handling transfer failures) in exchange for payout-timing control. The platform temporarily holds guest funds in its own Stripe balance, which carries slightly more operational responsibility (e.g., ensuring available balance before initiating transfers) than the hands-off destination-charge model.
+
+**Revisit If:** The business decides payout timing never needs to be held/delayed for any policy reason — at that point destination charges would be a legitimate simplification. Unlikely given marketplace buyer-protection norms, but recorded as a real alternative, not a strawman.
+
+---
+
+## ADR-006: `PaymentProvider` Abstraction Interface
+
+**Decision:** All booking/payment business logic calls a `PaymentProvider` interface (`createCharge`, `refund`, `createPayeeAccount`, `payout`, `verifyWebhookSignature`, `parseWebhookEvent`) with a normalized `metadata` contract; concrete gateways are adapters behind it. Only the Stripe Connect adapter is built at MVP — Paystack/Flutterwave remain named in the `Payment.provider` enum but are not implemented until a real requirement exists.
+
+**Reasoning:** Explicit client requirement: booking/payment logic must not be tightly coupled to one gateway, so providers like Paystack or Flutterwave can be added later "with minimal changes."
+
+**Alternatives Considered:** Call the Stripe SDK directly from booking/payment business logic; build all three adapters (Stripe, Paystack, Flutterwave) now.
+
+**Why Rejected:** Direct SDK calls would violate the client's explicit requirement and make a future second provider a rewrite, not an addition. Building three adapters now against one confirmed provider is speculative effort with no current payoff — pure YAGNI violation in the other direction.
+
+**Trade-offs Accepted:** The interface must stay deliberately small and gateway-agnostic in its method names and parameter shapes (already a discipline requirement — see the "abstraction leak" fix in the pre-implementation review, where an unconstrained `metadata` bag was tightened to a normalized shape). This constrains how provider-specific features can be exposed — a gateway-specific capability with no equivalent elsewhere either doesn't get used, or forces an interface extension, both deliberate friction to keep the abstraction honest.
+
+**Revisit If:** A second payment provider becomes a real, scheduled requirement — implement its adapter against the existing interface first, and only widen the interface if the new provider genuinely can't be expressed through it (a signal the abstraction was wrong, not just unused).
+
+---
+
+## ADR-007: Stripe Connect Account Type — Express
+
+**Decision:** Hosts onboard via Stripe Express connected accounts.
+
+**Reasoning:** Stripe-hosted onboarding (Account Links / Embedded Components) means the platform never collects or stores KYC data (SSN, DOB, bank account details) itself — this is what makes `User.payoutAccountRef` sufficient as the only payout-related field on `User`, with no separate KYC storage or compliance surface.
+
+**Alternatives Considered:** Stripe Standard (host manages their own full Stripe dashboard/relationship), Stripe Custom (platform fully controls onboarding UI and owns more liability/compliance surface).
+
+**Why Rejected:** Standard is slower to onboard casual hosts and gives the platform less control over the host experience (host effectively has their own independent Stripe relationship). Custom would require the platform to build its own KYC collection UI and take on materially more compliance liability — disproportionate for the current stage.
+
+**Trade-offs Accepted:** Less UI/branding control over the onboarding flow than Custom would allow (Express onboarding is Stripe-hosted, with limited platform customization). Accepted in exchange for materially lower compliance burden and faster time-to-first-host.
+
+**Revisit If:** The platform reaches a scale/maturity where full white-labeled onboarding UX becomes a competitive requirement, and the team is prepared to take on the associated KYC/compliance responsibility of Custom accounts.
+
+---
+
+## ADR-008: PostgreSQL + Prisma
+
+**Decision:** PostgreSQL as the database, Prisma as the ORM.
+
+**Reasoning:** Matches the DB-readiness recommendation from the original Chisfis technical assessment; Next.js App Router (Server Components/Server Actions) pairs naturally with Prisma's generated client; Postgres has first-class support for everything the domain model needs (full-text search via `tsvector`, `CHECK` constraints, partial indexes, PostGIS for geo).
+
+**Alternatives Considered:** MySQL, a document store (MongoDB), Supabase-managed Postgres specifically (vs. self-managed/other-hosted Postgres), a lighter query builder (Drizzle, Kysely) instead of Prisma.
+
+**Why Rejected:** MySQL lacks the same maturity for partial indexes, `CHECK` constraints on complex conditions, and native geo support (PostGIS) that several Domain Model decisions rely on directly (ADR-002's `CHECK` constraint, ADR-011's concurrency mechanism, ADR-014's geo storage). A document store fights against a domain that is genuinely relational (bookings, payments, and reviews all have real foreign-key integrity requirements — the two-sided review uniqueness constraint in particular depends on this). Prisma vs. Drizzle/Kysely was closer, but Prisma's schema-as-source-of-truth model and generated types match the "schema defines the contract" approach used throughout the Domain Model Specification more directly; a lighter query builder becomes more attractive if raw query performance ever becomes a bottleneck Prisma can't tune around.
+
+**Trade-offs Accepted:** Prisma's generated flat types are exactly what ADR-002/003 require discriminated-union wrapping around — an accepted, ongoing discipline cost, not a one-time one.
+
+**Revisit If:** A specific query pattern proves un-tunable through Prisma (rare, but possible for very hot paths at large scale) — the fix there is typically a targeted raw query for that one path, not a wholesale ORM swap.
+
+---
+
+## ADR-009: NextAuth (Auth.js) for Authentication
+
+**Decision:** Keep NextAuth as the authentication library; fix its Chisfis-era misconfiguration (relocate from the Pages Router-style dead file to a proper App Router `route.ts` handler) rather than replace it.
+
+**Reasoning:** Already a dependency with a real, working provider configuration (Google + GitHub OAuth) sitting in the Chisfis codebase — the defect is purely structural (wrong file location/convention), not a fault in the library choice itself.
+
+**Alternatives Considered:** Replace with Lucia, Clerk, or a fully custom session implementation.
+
+**Why Rejected:** No functional deficiency in NextAuth was found that would justify a swap — the existing provider config is reusable once relocated. Clerk introduces a third-party hosted dependency and recurring cost for functionality NextAuth already provides for free; a fully custom implementation is pure reinvention with no stated requirement driving it.
+
+**Trade-offs Accepted:** NextAuth's session/role model needs to be extended for this platform's non-exclusive multi-role `User.roles` design (ADR from Domain Model §2.1) — NextAuth doesn't natively model "roles as a set" out of the box, so this is custom logic layered on top, not a NextAuth built-in.
+
+**Revisit If:** NextAuth's App Router support or session model proves genuinely inadequate for the multi-role requirement once implementation starts — currently assessed as sufficient, not yet proven insufficient.
+
+---
+
+## ADR-010: Cursor-Based Pagination (Not Offset/Limit)
+
+**Decision:** Search and listing endpoints use cursor-based pagination (an indexed sort key, e.g. `(createdAt, id)`) from the start, not offset/limit.
+
+**Reasoning:** Found during the pre-implementation review that the original draft deferred this as an "if volume demands it later" concern — but pagination strategy is part of the URL/API contract. Offset pagination also degrades non-linearly as the table grows (`OFFSET N` scans and discards N rows), unlike cursor pagination.
+
+**Alternatives Considered:** Offset/limit pagination, deferred to cursor-based only once listing volume actually demands it.
+
+**Why Rejected:** Switching pagination strategy later isn't an internal refactor — every URL a client (browser tab, bookmark, shared link) has open uses the old param shape, and cursor pagination's implementation cost on day one is nearly identical to offset's. There's no genuine "simpler now, harder later" trade-off here — cursor is close to free at this stage and offset gets more expensive to leave in place the longer it ships.
+
+**Trade-offs Accepted:** Cursor pagination doesn't support "jump to page 7" UX patterns as naturally as offset does (no direct random access to an arbitrary page number) — acceptable, since infinite-scroll/"load more" is the more common pattern for a listing search results grid anyway.
+
+**Revisit If:** A confirmed product requirement needs numbered-page jump navigation specifically — at that point, a hybrid (cursor internally, with an approximate page-number UI layered on top) is the more likely fix, not a full reversion to offset.
+
+---
+
+## ADR-011: Availability Concurrency Strategy — Transactional Insert Against a Unique Constraint
+
+**Decision:** Short-term booking creation runs inside a single database transaction that attempts to `INSERT` one `Availability` row (`status = BOOKED`) per night of the stay; the existing `unique(listingId, date)` constraint is the atomicity guarantee — a violation aborts the whole transaction and fails the booking cleanly. Long-term booking exclusivity is enforced by a partial unique index (`unique(listingId) WHERE rentalType = 'LONG_TERM' AND status IN ('CONFIRMED','ACTIVE')`).
+
+**Reasoning:** Found during the pre-implementation review that "enforced server-side" was stated without specifying the actual mechanism — a plain "check availability, then insert booking" is a textbook time-of-check-to-time-of-use race condition: two concurrent requests can both pass the check before either commits, double-booking the same dates.
+
+**Alternatives Considered:** Application-level "check then insert" without a DB constraint backstop; a Postgres exclusion constraint using `daterange` overlap (`EXCLUDE USING gist`) instead of per-night rows; pessimistic row-level locking (`SELECT ... FOR UPDATE`) on the listing during booking creation.
+
+**Why Rejected:** Check-then-insert alone is racy by construction, full stop. The `daterange` exclusion constraint is arguably more elegant for pure overlap prevention, but the sparse per-night row design (ADR from Domain Model §2.7) was already chosen for a second reason — per-night price overrides — and switching to range-based exclusion would give up that capability or require maintaining both structures. Row-level locking works but serializes all booking attempts on a listing even for non-conflicting date ranges, which the constraint-based approach avoids (only actually-conflicting inserts fail).
+
+**Trade-offs Accepted:** Requires application code to always insert per-night rows inside a proper transaction and treat a unique-constraint violation as an expected, handleable outcome ("dates unavailable"), not an unexpected database error — a discipline requirement for anyone writing booking-creation code, not automatic.
+
+**Revisit If:** Per-night price overrides are ever removed as a feature, at which point the `daterange` exclusion constraint alternative becomes worth reconsidering purely on overlap-prevention elegance.
+
+---
+
+## ADR-012: Folder Architecture — `modules/` by Domain, `app/` as Thin Routing
+
+**Decision:** `src/app/` contains only routing (role-based route groups: `(guest)/`, `(host)/`, `(admin)/`) with no business logic; `src/modules/` holds one folder per domain (listings, booking, payments, messaging, etc.), each exposing only its `actions.ts`/`queries.ts` as a public surface that other modules must call through rather than reaching into another module's Prisma model directly. A `src/jobs/` folder (added during the pre-implementation review) owns scheduled/background task orchestration.
+
+**Reasoning:** Keeps each domain module independently reasoned-about and makes a future service extraction (e.g., pulling search or payments into its own service) a boundary that already exists in the code, rather than one that has to be carved out under pressure later. Route-group-per-role replaces Chisfis's route-group-per-listing-category pattern, consistent with ADR-001's single-vertical decision (no more need for a routing structure organized around five listing types).
+
+**Alternatives Considered:** Chisfis's original route-group-per-category structure retained; a flatter structure with no `modules/` layer (business logic living directly in `app/` route handlers/components); a fully layered architecture (separate `domain/`, `application/`, `infrastructure/` folders per module, DDD-style).
+
+**Why Rejected:** Category-based routing has no meaning once there's one listing type with a rental-type flag, not five categories. A flat structure with logic in `app/` was rejected because it's exactly the pattern that made Chisfis hard to reason about — no enforced boundary between "what a page does" and "what the domain does." A fully layered DDD structure was considered too heavy for the project's current size — the module-boundary rule already gets most of the benefit (independent reasoning, clear ownership) without the ceremony of enforcing distinct domain/application/infrastructure layers inside every module.
+
+**Trade-offs Accepted:** The module-boundary rule ("never import another module's Prisma model directly") is a convention enforced by discipline and code review, not by the type system or a build-time check — it can be violated silently unless actively watched for.
+
+**Revisit If:** The module count or team size grows to where boundary violations become a recurring real problem — at that point, a lint rule (e.g., dependency-cruiser or similar) enforcing the module-boundary rule mechanically becomes worth the setup cost.
+
+---
+
+## ADR-013: Search Architecture — URL as Source of Truth, Postgres First, `rentalType` as a Primary Facet
+
+**Decision:** All search/filter state lives in URL query parameters, parsed server-side (never client `useState` driving results); `rentalType` is a required top-level parameter that determines which secondary filters render and which query branch runs, both resolving through one `searchListings(params)` function. Postgres (full-text `tsvector` + GIN index, standard B-tree/partial indexes, `geography(Point)` column with GIST index) is the search engine at MVP; a dedicated engine (Meilisearch/Typesense/Algolia) is a documented, not-yet-triggered scale path behind the same function signature.
+
+**Reasoning:** Directly fixes Chisfis's search defect, where every input held isolated local state that never reached the results grid — URL-as-source-of-truth makes search state shareable, bookmarkable, and back-button-safe by construction, not just "connected." Short-term and long-term rentals have fundamentally different search semantics (date range vs. move-in date, per-night vs. per-month price) requiring `rentalType` to gate which filters even apply.
+
+**Alternatives Considered:** Client-side state (React Context or a client store) as the source of truth for search filters, syncing to the URL as a side effect; building on a dedicated search engine from day one instead of Postgres.
+
+**Why Rejected:** Client-state-as-source-of-truth is exactly the inversion that made Chisfis's search decorative — the URL becomes a lossy mirror of "real" state instead of the state itself, and server-rendering/SEO/shareability all suffer. A dedicated search engine from day one is unjustified operational complexity (a service to run, an index to keep in sync) for the stated listing volumes (hundreds to low hundreds-of-thousands) — Postgres is sufficient and the migration path was deliberately kept low-friction (one function boundary) specifically so this isn't a costly deferral.
+
+**Trade-offs Accepted:** Postgres full-text search has weaker relevance ranking and no built-in typo tolerance compared to a dedicated engine — acceptable at current scale, with an explicit, concrete trigger (p95 latency > ~300ms, or > ~50k active listings in one metro area) for when this stops being true, added during the pre-implementation review specifically so "later" has a real definition, not a vague feeling.
+
+**Revisit If:** The stated trigger conditions are hit, or relevance-ranking quality becomes a product complaint before the numeric trigger is reached.
+
+---
+
+## ADR-014: Geo Storage as `geography(Point)` from Day One (Query Deferred)
+
+**Decision:** `Address.location` is stored as a PostGIS `geography(Point, 4326)` column with a GIST index from the initial schema, even though radius-based ("near me") search queries are not built at MVP.
+
+**Reasoning:** Found during the pre-implementation review that treating geo-indexing as fully deferrable ("not required at MVP") conflated two different costs: enabling the PostGIS extension and choosing the right column type costs nothing today, while backfilling a geo column across what could be a million-row `Address` table later is a real, costly migration. Splitting the decision — storage shape now, query logic later — captures the cheap part immediately and defers only the genuinely deferrable part.
+
+**Alternatives Considered:** Two plain `decimal` columns (`latitude`, `longitude`) with a standard B-tree or bounding-box approach, upgrading to PostGIS only if/when radius search is actually built.
+
+**Why Rejected:** The bounding-box approach on plain decimals is a legitimate MVP shortcut for the *query*, but choosing it also means choosing the storage shape, and changing storage shape later (decimal columns → geography type) on a large, live table is the expensive migration this decision specifically avoids by not being deferred.
+
+**Trade-offs Accepted:** Slightly more setup complexity now (enabling the PostGIS extension, using a geography type the team may not be immediately writing queries against) for a feature not yet built — a small, deliberate front-loading of cost.
+
+**Revisit If:** Never expected to need reversal — this is a "pay the cheap part early" decision, not a provisional one.
+
+---
+
+## ADR-015: Background Job Strategy — Explicit `jobs/` Home, DB-Backed Queue at MVP
+
+**Decision:** Scheduled/recurring work (listing status date-transitions, monthly rent charging, review double-blind window expiry, stale-inquiry expiry) lives in a dedicated `src/jobs/` folder, each file orchestrating calls into the relevant module's existing actions. At MVP, job execution can be as simple as a DB-backed job table; BullMQ+Redis is the documented graduation path once volume/reliability needs exceed that.
+
+**Reasoning:** Found during the pre-implementation review that both other documents referenced "a scheduled job" repeatedly with no folder or module owning the concern — a real structural gap, not a naming preference. Keeping job files as thin orchestrators (not business logic) preserves the ADR-012 module-boundary rule instead of creating a second, inconsistent home for domain logic.
+
+**Alternatives Considered:** Business logic for scheduled transitions living inside the relevant module directly (e.g., `modules/booking` schedules its own rent charges internally); a full external workflow engine (Temporal, or similar) from day one.
+
+**Why Rejected:** Embedding scheduling logic inside each module blurs "what does this module do when called" with "what triggers this module to be called on a schedule" — two different concerns that are easier to reason about (and test) separately. A full workflow engine is significant operational overhead unjustified at current scale and job complexity — none of the jobs listed have the long-running, multi-step-with-compensation complexity that workflow engines exist to solve.
+
+**Trade-offs Accepted:** A DB-backed job table is less robust (retry/backoff, dead-letter handling, observability) than a purpose-built queue — an accepted MVP simplification, explicitly flagged as needing monitoring/alerting attention once the monthly-rent-charging job (ADR-004/005's real-money consequence) actually ships, not before.
+
+**Revisit If:** Job volume, failure-retry sophistication needs, or cross-job orchestration complexity outgrow a simple DB-backed table — BullMQ+Redis is the next step, already named as the graduation path rather than something to be decided fresh later.
+
+---
+
+## ADR-016: Chisfis Reuse Strategy — Visual Layer Kept, Logic Layer Rebuilt
+
+**Decision:** Chisfis's `src/shared/` primitives (buttons, inputs, nav, modal), Tailwind/CSS-variable theming, and several self-contained UI modules (`GallerySlider`, `listing-image-gallery/*`, date-picker customizations) are reused with minimal change. Category-duplicated components (`StayCard`/`CarCard`/`ExperiencesCard`) are rewritten into one generic component; anything with fake/decorative logic (search forms, checkout, booking state) keeps its visual shell but has its logic fully replaced. Non-property verticals, marketing/demo pages, the duplicate icon font, and dead/insecure code (leaked API key, dead NextAuth file, Airbnb-branded copy) are removed outright.
+
+**Reasoning:** The original Chisfis technical assessment established that Chisfis is a front-end-only UI template — its visual layer is professionally built and directly reusable, but virtually none of its "functionality" (search, booking, payment, auth) is real, so treating it as a design-system donor rather than a functional starting point was the accurate read of what it actually is.
+
+**Alternatives Considered:** Build the entire frontend from scratch, ignoring Chisfis entirely; keep Chisfis's category-based architecture and try to adapt it incrementally rather than replacing the logic layer wholesale.
+
+**Why Rejected:** Discarding Chisfis entirely throws away genuinely reusable, already-built UI work (the client's own framing: "use Chisfis only as a starting point... a UI and frontend architecture template, not the final product") for no benefit — the visual layer isn't the part that's wrong. Incrementally adapting the category-based architecture was rejected because the architecture itself (not just the missing logic) doesn't fit a single-vertical, two-rental-type platform — patching it in place would fight the structure at every step rather than replacing the parts that don't fit.
+
+**Trade-offs Accepted:** A meaningful amount of Chisfis code (all non-property routes/components, the entire fake booking/payment/search logic layer) is deleted rather than adapted — more deletion than a lighter-touch customization approach would produce, accepted because keeping non-functional or wrong-shape code "just in case" is the template-baggage outcome this whole restructuring exists to avoid.
+
+**Revisit If:** Not expected to be revisited — this was a one-time foundational assessment, not an ongoing policy each future module needs to re-derive.
+
+---
+
+## Index of Decisions
+
+| ADR | Decision |
+|---|---|
+| 001 | Single vertical: property rentals only |
+| 002 | Unified `Listing` model, `rentalType`-conditional fields |
+| 003 | Unified `Booking` model, same pattern |
+| 004 | Short-term + long-term rental support, confirmed scope |
+| 005 | Stripe Connect — separate charges and transfers |
+| 006 | `PaymentProvider` abstraction interface |
+| 007 | Stripe Connect account type — Express |
+| 008 | PostgreSQL + Prisma |
+| 009 | NextAuth (Auth.js) |
+| 010 | Cursor-based pagination |
+| 011 | Availability concurrency strategy |
+| 012 | Folder architecture — `modules/` by domain |
+| 013 | Search architecture — URL as source of truth |
+| 014 | Geo storage as `geography(Point)` from day one |
+| 015 | Background job strategy — `jobs/` folder, DB-backed at MVP |
+| 016 | Chisfis reuse strategy — visual layer kept, logic rebuilt |
