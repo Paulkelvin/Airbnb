@@ -87,6 +87,24 @@ function wrap(firstName: string, bodyHtml: string, bodyText: string): RenderedEm
   return `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;"><p>Hi ${firstName},</p>${bodyHtml}<p style="color:#888;font-size:12px;">— Potomac</p></div>`;
 }
 
+/**
+ * Password-reset link email — not a `NotificationType` (it's a
+ * security-sensitive one-time link, not something a user should see
+ * re-listed in their in-app notification history), so it's rendered
+ * directly by `forgotPassword()` rather than going through `notify()`/
+ * `renderEmailTemplate()` above. Lives alongside the other email copy for
+ * discoverability.
+ */
+export function renderPasswordResetEmail(resetUrl: string, firstName: string): RenderedEmail {
+  const text = `We received a request to reset your password. Reset it here: ${resetUrl}\n\nThis link expires in 1 hour. If you didn't request this, you can safely ignore this email.`;
+  const html = wrap(
+    firstName,
+    `<p>We received a request to reset your password.</p><p><a href="${resetUrl}" style="color:#4f46e5;">Reset your password</a></p><p style="color:#888;font-size:12px;">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>`,
+    text,
+  );
+  return { subject: "Reset your Potomac password", html, text };
+}
+
 export function renderEmailTemplate<T extends NotificationType>(
   type: T,
   payload: NotificationPayloads[T],

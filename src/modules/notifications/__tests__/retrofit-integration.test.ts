@@ -90,6 +90,11 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // Fixed test UUIDs mean the rate-limit keys below are shared across every
+  // run of this file — without this cleanup, repeated `npm test` runs within
+  // the same hour eventually exhaust INQUIRY_CREATE/MESSAGE_SEND's real caps
+  // and this file starts failing with RATE_LIMITED, not a real regression.
+  await prisma.rateLimitHit.deleteMany({ where: { key: { in: [`inquiry:${GUEST_ID}`, `message:${HOST_ID}`] } } });
   await prisma.notification.deleteMany({ where: { userId: { in: [HOST_ID, GUEST_ID, ADMIN_ID] } } });
   await prisma.message.deleteMany({ where: { conversation: { listingId } } });
   await prisma.conversationParticipant.deleteMany({ where: { conversation: { listingId } } });

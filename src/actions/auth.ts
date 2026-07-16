@@ -14,6 +14,9 @@ import {
   type ActionResult,
 } from "@/lib/validations/auth";
 import { notify } from "@/modules/notifications/notify";
+import { getEmailProvider } from "@/lib/notifications";
+import { renderPasswordResetEmail } from "@/lib/notifications/templates";
+import { getSiteUrl } from "@/lib/site-url";
 
 const SALT_ROUNDS = 12;
 const RESET_TOKEN_EXPIRY_HOURS = 1;
@@ -91,6 +94,17 @@ export async function register(
 export async function forgotPassword(
   formData: FormData,
 ): Promise<ActionResult<{ message: string }>> {
+  const rateLimit = await checkRateLimit(`forgot-password:${clientIp()}`, RATE_LIMITS.FORGOT_PASSWORD);
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      error: {
+        code: "RATE_LIMITED",
+        message: `Too many reset attempts. Please try again in ${rateLimit.retryAfterSeconds}s.`,
+      },
+    };
+  }
+
   const raw = { email: formData.get("email") };
 
   const parsed = forgotPasswordSchema.safeParse(raw);
@@ -133,9 +147,17 @@ export async function forgotPassword(
     },
   });
 
-  // TODO: Send email with reset link containing `token` (not hashedToken)
-  // The reset URL would be: ${NEXTAUTH_URL}/reset-password?token=${token}
-  console.log(`[DEV] Password reset token for ${user.email}: ${token}`);
+  const resetUrl = `${getSiteUrl()}/reset-password?token=${token}`;
+  const email = renderPasswordResetEmail(resetUrl, user.firstName);
+  try {
+    await getEmailProvider().send({ to: user.email, subject: email.subject, html: email.html, text: email.text });
+  } catch (err) {
+    // Same accepted trade-off as notify()'s own email dispatch (ADR-026): a
+    // delivery failure is logged, never thrown — the response shape must stay
+    // identical whether or not the email actually sent, to avoid leaking
+    // account existence via error behavior.
+    console.error("Failed to send password reset email", err);
+  }
 
   return {
     success: true,

@@ -4,10 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { getPaymentProvider, type PayeeAccountStatus } from "@/lib/payments";
 import type { ActionResult } from "@/lib/validations/auth";
-
-function getAppUrl(): string {
-  return process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-}
+import { getSiteUrl as getAppUrl } from "@/lib/site-url";
 
 /**
  * Creates (or reuses) the user's Stripe Express account and returns a fresh

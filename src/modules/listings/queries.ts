@@ -119,3 +119,14 @@ export async function getPublishedListings(
     nextCursor: hasMore ? page[page.length - 1].id : null,
   };
 }
+
+/** Slug + last-modified for every published listing — feeds `src/app/sitemap.ts`. */
+export async function getPublishedListingSlugsForSitemap(): Promise<
+  { slug: string; updatedAt: Date }[]
+> {
+  return prisma.listing.findMany({
+    where: { status: "PUBLISHED" },
+    select: { slug: true, updatedAt: true },
+    orderBy: { publishedAt: "desc" },
+  });
+}

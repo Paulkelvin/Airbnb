@@ -26,7 +26,11 @@ const PageLogin = () => {
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
+        setError(
+          result.error === "RATE_LIMITED"
+            ? "Too many login attempts. Please try again in a few minutes."
+            : "Invalid email or password",
+        );
         return;
       }
 
@@ -60,6 +64,9 @@ const PageLogin = () => {
             <label className="block">
               <span className="text-neutral-800 dark:text-neutral-200">Password</span>
               <Input name="password" type="password" required className="mt-1" />
+              <Link href="/forgot-password" className="text-sm underline mt-1 inline-block">
+                Forgot password?
+              </Link>
             </label>
             <ButtonPrimary type="submit" loading={isPending} disabled={isPending}>
               Continue

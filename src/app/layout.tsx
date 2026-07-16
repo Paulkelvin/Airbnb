@@ -8,6 +8,7 @@ import "rc-slider/assets/index.css";
 import Footer from "@/components/Footer";
 import FooterNav from "@/components/FooterNav";
 import AuthSessionProvider from "./AuthSessionProvider";
+import { getSiteUrl } from "@/lib/site-url";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -16,6 +17,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "Potomac — Property Rentals & Stays",
     template: "%s | Potomac",

@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import type { UserRole } from "@prisma/client";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 declare module "next-auth" {
   interface Session {
@@ -52,13 +53,24 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
+        const ip = (req.headers?.["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ?? "unknown";
+        const email = credentials.email.toLowerCase().trim();
+
+        const [ipLimit, emailLimit] = await Promise.all([
+          checkRateLimit(`login-ip:${ip}`, RATE_LIMITS.LOGIN_IP),
+          checkRateLimit(`login-email:${email}`, RATE_LIMITS.LOGIN_EMAIL),
+        ]);
+        if (!ipLimit.allowed || !emailLimit.allowed) {
+          throw new Error("RATE_LIMITED");
+        }
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
+          where: { email },
         });
 
         if (!user || !user.passwordHash) {

@@ -1,4 +1,7 @@
+"use client";
+
 import React, { FC } from "react";
+import { useSession } from "next-auth/react";
 import Logo from "@/components/ui/Logo";
 import Navigation from "@/components/ui/Navigation/Navigation";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
@@ -13,6 +16,8 @@ export interface MainNav1Props {
 }
 
 const MainNav1: FC<MainNav1Props> = ({ className = "" }) => {
+  const { status } = useSession();
+
   return (
     <div className={`nc-MainNav1 relative z-10 ${className}`}>
       <div className="px-4 lg:container h-20 relative flex justify-between">
@@ -32,10 +37,14 @@ const MainNav1: FC<MainNav1Props> = ({ className = "" }) => {
             <SwitchDarkMode />
             <NotifyDropdown />
             <AvatarDropdown />
-            <div className="px-1" />
-            <ButtonPrimary className="self-center" href="/login">
-              Sign up
-            </ButtonPrimary>
+            {status !== "authenticated" && (
+              <>
+                <div className="px-1" />
+                <ButtonPrimary className="self-center" href="/signup">
+                  Sign up
+                </ButtonPrimary>
+              </>
+            )}
           </div>
 
           <div className="flex xl:hidden items-center">

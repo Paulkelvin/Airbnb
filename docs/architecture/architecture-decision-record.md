@@ -459,6 +459,32 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 
 ---
 
+## ADR-027: Release Hardening — Security Headers, Rate Limiting Extension, Password-Reset Delivery, File-Convention SEO Metadata
+
+**Decision:** Five scoped decisions for the release-readiness milestone (`docs/release-readiness-plan.md` §1, §4, §7), all code-only — no external credentials required:
+
+1. **Password-reset email sends through the existing `EmailProvider`, not through `notify()`.** `forgotPassword()` (`src/actions/auth.ts`) now calls `getEmailProvider().send()` directly with a dedicated `renderPasswordResetEmail()` template (`src/lib/notifications/templates.ts`), instead of `console.log`-ing the raw token. It deliberately bypasses `notify()`/the `Notification` table — a password-reset link is a security-sensitive one-time credential, not an event a user should see re-listed in their in-app notification history (same reasoning ADR-026 used to keep `PASSWORD_CHANGED` as a `notify()` call while treating the reset *link* itself differently). A send failure is logged and swallowed, matching ADR-026's accepted trade-off, so a delivery hiccup can't change the endpoint's response shape and leak account existence.
+
+2. **Login gets a two-key DB-backed rate limiter, extending ADR-023's pattern rather than replacing it.** `RATE_LIMITS.LOGIN_IP` (20/15min) and `RATE_LIMITS.LOGIN_EMAIL` (5/15min) are checked together inside the NextAuth credentials provider's `authorize()` (`src/lib/auth-options.ts`); either being exceeded throws `Error("RATE_LIMITED")`, which NextAuth's credentials flow propagates verbatim as `result.error` to a `redirect:false` `signIn()` call, letting `/login`'s client code show a distinct message. Two keys (not one) because an IP-only limit misses distributed credential stuffing against one target account, and an email-only limit misses one attacker spraying many accounts from one source. `forgotPassword()` gets its own new `RATE_LIMITS.FORGOT_PASSWORD` (5/hour, IP-keyed) preset, closing the last of the blueprint's rate-limit-relevant public endpoints that had none.
+
+3. **A real baseline CSP plus standard security headers, applied globally via `next.config.js`'s `headers()`.** Sources are scoped to what the app actually loads today: Cloudinary/Pexels/Unsplash images, the Google Maps iframe embed plus `google-map-react`'s script/tile requests, and `js.stripe.com`/`api.stripe.com` pre-wired for when real Stripe Elements replaces the current test-card stand-in. `'unsafe-eval'` is included in `script-src` only when `NODE_ENV !== "production"` (Next's webpack HMR needs it locally; the production bundle does not) — this is the one place CSP strictness differs by environment. `HSTS`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and a conservative `Permissions-Policy` are applied unconditionally.
+
+4. **A shared `getSiteUrl()` helper (`src/lib/site-url.ts`) is now the one place the app's own absolute origin is computed**, reused by the password-reset link, `metadataBase`, `sitemap.ts`, and `robots.ts` — replacing a private duplicate that had grown up ad hoc in `modules/payments/actions.ts`. It reuses `NEXTAUTH_URL` (already required to exactly match the app's own origin per `docs/setup/environment-variables.md`) rather than introducing a second "what's my domain" variable, falling back to `VERCEL_URL` then `localhost:3000`.
+
+5. **`sitemap.ts`, `robots.ts`, and `opengraph-image.tsx` replace static files, using Next.js 13's file-convention metadata routes instead of hand-maintained static assets in `public/`.** `public/robots.txt` (which hardcoded a placeholder domain and predated the admin dashboard) is removed in favor of `src/app/robots.ts`, generated from `getSiteUrl()` and now also disallowing `/admin*`. `sitemap.ts` lists static marketing routes plus every `PUBLISHED` listing via a new lightweight `getPublishedListingSlugsForSitemap()` query (`modules/listings/queries.ts` — slug + `updatedAt` only, not the full `listingInclude` shape `getPublishedListings()` returns, since a sitemap has no use for image/amenity data). `opengraph-image.tsx` generates a branded default OG image at request time via `next/server`'s `ImageResponse` (edge runtime) — no binary asset from the client was needed to close the "no `og:image` anywhere" blocker.
+
+**Reasoning:** Every decision here either extends an already-established pattern (ADR-023's rate limiter, ADR-026's `EmailProvider`) or fills a gap the release-readiness plan named explicitly, rather than introducing new abstractions. None required a schema migration or a new gateway integration.
+
+**Alternatives Considered:** (1) Nonce-based CSP instead of `'unsafe-inline'` for script/style. (2) A single combined IP+email rate-limit key for login instead of two independent checks. (3) Keeping `public/robots.txt`/a hardcoded `og:image` static asset and just fixing the domain string.
+
+**Why Rejected:** (1) A nonce-based CSP requires per-request nonce plumbing through Next's App Router rendering pipeline and every inline style Tailwind/Headless UI produce — a real, larger effort appropriate for a dedicated hardening pass, not this milestone's minimum bar of "a real CSP exists and is scoped to actual sources." (2) A combined key under-protects against exactly the two attack shapes described in decision #2 above — the two-key design directly addresses both without added infrastructure (same `checkRateLimit()` call site, just twice). (3) A static `og:image` binary can't be authored in-session without a design tool or client-supplied asset, and a hardcoded domain string in `robots.txt` was exactly the bug being fixed — a generated, environment-aware version costs nothing extra and can't drift.
+
+**Trade-offs Accepted:** CSP's `'unsafe-inline'` for `script-src`/`style-src` is a known gap (documented above, not an oversight) — a nonce-based policy is the natural follow-up if a stricter CSP is ever required (e.g., for a compliance requirement). The default OG image is site-wide, not per-listing — per-listing dynamic OG images (using a listing's title/photo) remain a named, not-yet-built enhancement (`docs/release-readiness-plan.md` §7).
+
+**Revisit If:** A compliance or security requirement demands a stricter, nonce-based CSP; or per-listing OG images become a priority for social-share conversion once real listing photos and traffic exist.
+
+---
+
 ## Index of Decisions
 
 | ADR | Decision |
@@ -489,3 +515,4 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 | 024 | Review eligibility — `COMPLETED` or `TERMINATED_EARLY`, reconciling the blueprint against the domain model spec |
 | 025 | Admin dashboard — conditional listing moderation, key-value platform settings, polymorphic audit targeting |
 | 026 | Notifications — `EmailProvider` abstraction, two-row-per-channel dispatch, critical-type email override |
+| 027 | Release hardening — security headers, rate limiting extension, password-reset delivery, file-convention SEO metadata |

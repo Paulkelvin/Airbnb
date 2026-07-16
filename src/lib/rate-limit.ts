@@ -30,6 +30,11 @@ export const RATE_LIMITS = {
   INQUIRY_CREATE: { limit: 10, windowSeconds: 60 * 60 } satisfies RateLimitConfig,
   MESSAGE_SEND: { limit: 30, windowSeconds: 5 * 60 } satisfies RateLimitConfig,
   REVIEW_SUBMIT: { limit: 10, windowSeconds: 24 * 60 * 60 } satisfies RateLimitConfig,
+  /** Keyed by IP — catches one source credential-stuffing across many accounts. */
+  LOGIN_IP: { limit: 20, windowSeconds: 15 * 60 } satisfies RateLimitConfig,
+  /** Keyed by email — catches distributed brute-force against one target account. */
+  LOGIN_EMAIL: { limit: 5, windowSeconds: 15 * 60 } satisfies RateLimitConfig,
+  FORGOT_PASSWORD: { limit: 5, windowSeconds: 60 * 60 } satisfies RateLimitConfig,
 };
 
 /**
