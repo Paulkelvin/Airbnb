@@ -8,6 +8,7 @@ const avatarColors = [
 ];
 import avatar1 from "@/images/avatars/Image-1.png";
 import Image, { StaticImageData } from "next/image";
+import { CheckIcon } from "@heroicons/react/24/solid";
 
 export interface AvatarProps {
   containerClassName?: string;
@@ -55,7 +56,7 @@ const Avatar: FC<AvatarProps> = ({
         <span
           className={` bg-teal-500 rounded-full text-white text-xs flex items-center justify-center absolute  ${hasCheckedClass}`}
         >
-          <i className="las la-check"></i>
+          <CheckIcon className="w-2/3 h-2/3" />
         </span>
       )}
     </div>

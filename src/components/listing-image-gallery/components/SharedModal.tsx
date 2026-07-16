@@ -55,6 +55,7 @@ export default function SharedModal({
         changePhotoId(index - 1);
       }
     },
+    preventScrollOnSwipe: true,
     trackMouse: true,
   });
 

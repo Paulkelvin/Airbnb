@@ -30,10 +30,8 @@ const StaySearchForm: React.FC<StaySearchFormProps> = ({ onValuesChange }) => {
     guestChildren: 0,
     guestInfants: 0,
   });
-  const [startDate, setStartDate] = useState<Date | null>(
-    new Date("2023/02/06")
-  );
-  const [endDate, setEndDate] = useState<Date | null>(new Date("2023/02/23"));
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   //
 
   const onChangeDate = (dates: [Date | null, Date | null]) => {
@@ -99,7 +97,11 @@ const StaySearchForm: React.FC<StaySearchFormProps> = ({ onValuesChange }) => {
             </span>
           </button>
         ) : (
-          <DatesRangeInput />
+          <DatesRangeInput
+            startDate={startDate}
+            endDate={endDate}
+            onChange={onChangeDate}
+          />
         )}
       </div>
     );

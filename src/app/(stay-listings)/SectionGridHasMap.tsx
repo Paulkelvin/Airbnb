@@ -15,6 +15,7 @@ import { loadMoreListings } from "@/modules/listings/search-actions";
 import type { StayDataType } from "@/data/types";
 import type { SortOption } from "@/lib/validations/search";
 import { buildSearchUrl } from "./searchParamsUtil";
+import { MapIcon } from "@heroicons/react/24/outline";
 
 export interface SectionGridHasMapProps {
   items: StayDataType[];
@@ -127,7 +128,7 @@ const SectionGridHasMap: FC<SectionGridHasMapProps> = ({
             className="flex xl:hidden items-center justify-center fixed bottom-16 md:bottom-8 left-1/2 transform -translate-x-1/2 px-6 py-2 bg-neutral-900 text-white shadow-2xl rounded-full z-30 space-x-3 text-sm cursor-pointer"
             onClick={() => setShowFullMapFixed(true)}
           >
-            <i className="text-lg las la-map"></i>
+            <MapIcon className="w-5 h-5" />
             <span>Show map</span>
           </div>
         )}

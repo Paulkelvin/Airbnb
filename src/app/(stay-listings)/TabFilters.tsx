@@ -10,6 +10,7 @@ import ButtonClose from "@/components/ui/ButtonClose";
 import Checkbox from "@/components/ui/Checkbox";
 import Slider from "rc-slider";
 import convertNumbThousand from "@/utils/convertNumbThousand";
+import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { buildSearchUrl } from "./searchParamsUtil";
 
 export interface TabFiltersProps {
@@ -131,7 +132,7 @@ const TabFilters: React.FC<TabFiltersProps> = ({ propertyTypes, amenities }) => 
                 navigate({ propertyType: undefined });
               })
             ) : (
-              <i className="las la-angle-down ml-2" />
+              <ChevronDownIcon className="w-4 h-4 ml-2" />
             )}
           </Popover.Button>
           <Transition
@@ -187,7 +188,7 @@ const TabFilters: React.FC<TabFiltersProps> = ({ propertyTypes, amenities }) => 
             className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border border-neutral-300 dark:border-neutral-700 focus:outline-none`}
           >
             <span>Rooms</span>
-            <i className="las la-angle-down ml-2" />
+            <ChevronDownIcon className="w-4 h-4 ml-2" />
           </Popover.Button>
           <Transition
             as={Fragment}

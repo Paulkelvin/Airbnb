@@ -1,4 +1,5 @@
 import React, { FC } from "react";
+import { FacebookIcon, TwitterIcon, InstagramIcon } from "@/components/ui/MiscIcons";
 
 export interface SocialType {
   name: string;
@@ -12,11 +13,17 @@ export interface SocialsListProps {
   socials?: SocialType[];
 }
 
+const ICONS_BY_NAME: Record<string, FC<React.SVGProps<SVGSVGElement>>> = {
+  Facebook: FacebookIcon,
+  Twitter: TwitterIcon,
+  Instagram: InstagramIcon,
+};
+
 // TODO: replace with final Potomac social media URLs
 const socialsDemo: SocialType[] = [
-  { name: "Facebook", icon: "lab la-facebook-square", href: "#" },
-  { name: "Twitter", icon: "lab la-twitter", href: "#" },
-  { name: "Instagram", icon: "lab la-instagram", href: "#" },
+  { name: "Facebook", icon: "facebook", href: "#" },
+  { name: "Twitter", icon: "twitter", href: "#" },
+  { name: "Instagram", icon: "instagram", href: "#" },
 ];
 
 const SocialsList: FC<SocialsListProps> = ({
@@ -26,21 +33,24 @@ const SocialsList: FC<SocialsListProps> = ({
 }) => {
   return (
     <nav
-      className={`nc-SocialsList flex space-x-2.5 text-2xl text-neutral-6000 dark:text-neutral-300 ${className}`}
+      className={`nc-SocialsList flex space-x-2.5 text-neutral-6000 dark:text-neutral-300 ${className}`}
       data-nc-id="SocialsList"
     >
-      {socials.map((item, i) => (
-        <a
-          key={i}
-          className={`${itemClass}`}
-          href={item.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={item.name}
-        >
-          <i className={item.icon}></i>
-        </a>
-      ))}
+      {socials.map((item, i) => {
+        const Icon = ICONS_BY_NAME[item.name];
+        return (
+          <a
+            key={i}
+            className={`${itemClass}`}
+            href={item.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={item.name}
+          >
+            {Icon && <Icon className="w-5 h-5" />}
+          </a>
+        );
+      })}
     </nav>
   );
 };

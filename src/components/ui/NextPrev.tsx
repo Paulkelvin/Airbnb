@@ -2,6 +2,7 @@
 
 import React, { FC } from "react";
 import twFocusClass from "@/utils/twFocusClass";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 
 export interface NextPrevProps {
   className?: string;
@@ -30,24 +31,26 @@ const NextPrev: FC<NextPrevProps> = ({
     >
       {!onlyNext && (
         <button
+          type="button"
           className={`${btnClassName} ${
             !onlyPrev ? "mr-[6px]" : ""
-          } bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-6000 dark:hover:border-neutral-500 rounded-full flex items-center justify-center hover:border-neutral-300 ${twFocusClass()}`}
+          } bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-6000 dark:hover:border-neutral-500 rounded-full flex items-center justify-center hover:border-neutral-300 transition-colors ${twFocusClass()}`}
           onClick={onClickPrev}
           title="Prev"
           data-glide-dir="<"
         >
-          <i className="las la-angle-left"></i>
+          <ChevronLeftIcon className="w-1/2 h-1/2" />
         </button>
       )}
       {!onlyPrev && (
         <button
-          className={`${btnClassName} bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-6000 dark:hover:border-neutral-500 rounded-full flex items-center justify-center hover:border-neutral-300 ${twFocusClass()}`}
+          type="button"
+          className={`${btnClassName} bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-6000 dark:hover:border-neutral-500 rounded-full flex items-center justify-center hover:border-neutral-300 transition-colors ${twFocusClass()}`}
           onClick={onClickNext}
           title="Next"
           data-glide-dir=">"
         >
-          <i className="las la-angle-right"></i>
+          <ChevronRightIcon className="w-1/2 h-1/2" />
         </button>
       )}
     </div>

@@ -10,6 +10,7 @@ import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import ListingImageGallery from "@/components/listing-image-gallery/ListingImageGallery";
 import BookingWidget from "./BookingWidget";
+import MobileBookingBar from "./MobileBookingBar";
 import InquiryForm from "./InquiryForm";
 import FavoriteButton from "./FavoriteButton";
 import ReviewsSection, { type ListingReview } from "./ReviewsSection";
@@ -52,7 +53,7 @@ export default function ListingDetailView({
   const priceUnit = listing.pricing.rentalType === "SHORT_TERM" ? "/night" : "/month";
 
   return (
-    <div className="nc-ListingStayDetailPage">
+    <div className="nc-ListingStayDetailPage pb-36 lg:pb-0">
       {listing.status !== "PUBLISHED" && isOwner && (
         <div className="mb-6 rounded-xl bg-yellow-50 text-yellow-800 px-4 py-3 text-sm">
           This listing is <strong>{listing.status.replace("_", " ").toLowerCase()}</strong> and
@@ -360,6 +361,17 @@ export default function ListingDetailView({
           </div>
         </div>
       </main>
+
+      <MobileBookingBar
+        listingId={listing.id}
+        listingTitle={listing.title}
+        currency={listing.currency}
+        maxOccupants={listing.maxOccupants}
+        isAuthenticated={isAuthenticated}
+        isOwner={isOwner}
+        pricing={listing.pricing}
+        blockedDates={blockedDates}
+      />
     </div>
   );
 }

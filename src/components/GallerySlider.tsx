@@ -56,6 +56,7 @@ export default function GallerySlider({
       }
     },
     trackMouse: true,
+    preventScrollOnSwipe: true,
   });
 
   let currentImage = images[index];

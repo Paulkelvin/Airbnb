@@ -148,6 +148,10 @@ const SectionSliderNewCategories: FC<SectionSliderNewCategoriesProps> = ({
       }
     },
     trackMouse: true,
+    // Without this, a horizontal swipe on a touch device also lets the
+    // browser's native vertical scroll engage at the same time, which is
+    // exactly the "page nudges up/down while sliding" symptom.
+    preventScrollOnSwipe: true,
   });
 
   const renderCard = (item: TaxonomyType) => {

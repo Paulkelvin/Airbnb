@@ -7,6 +7,8 @@ import BtnLikeIcon from "@/components/BtnLikeIcon";
 import SaleOffBadge from "@/components/SaleOffBadge";
 import Badge from "@/components/ui/Badge";
 import Link from "next/link";
+import { UserIcon, NoSymbolIcon, HomeIcon } from "@heroicons/react/24/outline";
+import { BedIcon, BathIcon, WifiIcon } from "@/components/ui/MiscIcons";
 
 export interface StayCardHProps {
   className?: string;
@@ -54,13 +56,13 @@ const StayCardH: FC<StayCardHProps> = ({
       <div className="hidden sm:grid grid-cols-3 gap-2">
         <div className="space-y-3">
           <div className="flex items-center space-x-3">
-            <i className="las la-user text-lg"></i>
+            <UserIcon className="w-5 h-5" />
             <span className="text-sm text-neutral-500 dark:text-neutral-400">
               6 guests
             </span>
           </div>
           <div className="flex items-center space-x-3">
-            <i className="las la-bed text-lg"></i>
+            <BedIcon className="w-5 h-5" />
             <span className="text-sm text-neutral-500 dark:text-neutral-400">
               6 beds
             </span>
@@ -68,13 +70,13 @@ const StayCardH: FC<StayCardHProps> = ({
         </div>
         <div className="space-y-3">
           <div className="flex items-center space-x-3">
-            <i className="las la-bath text-lg"></i>
+            <BathIcon className="w-5 h-5" />
             <span className="text-sm text-neutral-500 dark:text-neutral-400">
               3 baths
             </span>
           </div>
           <div className="flex items-center space-x-3">
-            <i className="las la-smoking-ban text-lg"></i>
+            <NoSymbolIcon className="w-5 h-5" />
             <span className="text-sm text-neutral-500 dark:text-neutral-400">
               No smoking
             </span>
@@ -82,13 +84,13 @@ const StayCardH: FC<StayCardHProps> = ({
         </div>
         <div className="space-y-3">
           <div className="flex items-center space-x-3">
-            <i className="las la-door-open text-lg"></i>
+            <HomeIcon className="w-5 h-5" />
             <span className="text-sm text-neutral-500 dark:text-neutral-400">
               6 bedrooms
             </span>
           </div>
           <div className="flex items-center space-x-3">
-            <i className="las la-wifi text-lg"></i>
+            <WifiIcon className="w-5 h-5" />
             <span className="text-sm text-neutral-500 dark:text-neutral-400">
               Wifi
             </span>
