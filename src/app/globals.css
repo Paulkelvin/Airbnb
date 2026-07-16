@@ -1,3 +1,48 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Prevent iOS Safari from zooming into inputs with font-size < 16px */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  @media (min-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="search"],
+    input[type="date"],
+    select,
+    textarea {
+      font-size: inherit !important;
+    }
+  }
+}
+
+@layer components {
+  /* Smooth transitions for interactive elements */
+  a,
+  button,
+  [role="button"] {
+    @apply transition-colors duration-200;
+  }
+
+  /* Smooth dropdown / collapsible transitions */
+  [data-headlessui-state] {
+    @apply transition-all duration-200 ease-out;
+  }
+}

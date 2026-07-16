@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import imagePng from "@/images/hero-right.png";
+import imagePng from "@/images/hero-right-new.png";
 import HeroSearchForm from "../(client-components)/(HeroSearchForm)/HeroSearchForm";
 import Image from "next/image";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
@@ -27,7 +27,12 @@ const SectionHero: FC<SectionHeroProps> = ({ className = "" }) => {
           </ButtonPrimary>
         </div>
         <div className="flex-grow">
-          <Image className="w-full" src={imagePng} alt="hero" priority />
+          <Image
+            className="w-full rounded-2xl"
+            src={imagePng}
+            alt="Luxury property interior"
+            priority
+          />
         </div>
       </div>
 

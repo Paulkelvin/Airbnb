@@ -61,14 +61,14 @@ const PageSignUp = () => {
             <div className="grid grid-cols-2 gap-4">
               <label className="block">
                 <span className="text-neutral-800 dark:text-neutral-200">First name</span>
-                <Input name="firstName" required className="mt-1" />
+                <Input name="firstName" placeholder="First name" required className="mt-1" />
                 {fieldErrors?.firstName && (
                   <span className="text-xs text-red-600">{fieldErrors.firstName[0]}</span>
                 )}
               </label>
               <label className="block">
                 <span className="text-neutral-800 dark:text-neutral-200">Last name</span>
-                <Input name="lastName" required className="mt-1" />
+                <Input name="lastName" placeholder="Last name" required className="mt-1" />
                 {fieldErrors?.lastName && (
                   <span className="text-xs text-red-600">{fieldErrors.lastName[0]}</span>
                 )}
@@ -89,14 +89,14 @@ const PageSignUp = () => {
             </label>
             <label className="block">
               <span className="text-neutral-800 dark:text-neutral-200">Password</span>
-              <Input name="password" type="password" required className="mt-1" />
+              <Input name="password" type="password" placeholder="Create a password" required className="mt-1" />
               {fieldErrors?.password && (
                 <span className="text-xs text-red-600">{fieldErrors.password[0]}</span>
               )}
             </label>
             <label className="block">
               <span className="text-neutral-800 dark:text-neutral-200">Confirm password</span>
-              <Input name="confirmPassword" type="password" required className="mt-1" />
+              <Input name="confirmPassword" type="password" placeholder="Confirm your password" required className="mt-1" />
               {fieldErrors?.confirmPassword && (
                 <span className="text-xs text-red-600">{fieldErrors.confirmPassword[0]}</span>
               )}

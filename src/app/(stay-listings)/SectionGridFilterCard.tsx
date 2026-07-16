@@ -3,7 +3,6 @@ import type { StayDataType } from "@/data/types";
 import TabFilters from "./TabFilters";
 import SortSelect from "./SortSelect";
 import LoadMoreResults from "./LoadMoreResults";
-import Heading from "@/components/ui/Heading";
 import type { SortOption } from "@/lib/validations/search";
 
 export interface SectionGridFilterCardProps {
@@ -29,8 +28,6 @@ const SectionGridFilterCard: FC<SectionGridFilterCardProps> = ({
 }) => {
   return (
     <div className={`nc-SectionGridFilterCard ${className}`} data-nc-id="SectionGridFilterCard">
-      <Heading />
-
       <div className="mb-8 lg:mb-11 flex flex-wrap items-center justify-between gap-4">
         <TabFilters propertyTypes={propertyTypes} amenities={amenities} />
         <SortSelect availableSorts={AVAILABLE_SORTS} />

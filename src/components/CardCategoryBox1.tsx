@@ -1,6 +1,5 @@
 import React, { FC } from "react";
 import { TaxonomyType } from "@/data/types";
-import Badge from "@/components/ui/Badge";
 import convertNumbThousand from "@/utils/convertNumbThousand";
 import Link from "next/link";
 import Image from "next/image";
@@ -18,29 +17,22 @@ const CardCategoryBox1: FC<CardCategoryBox1Props> = ({
   return (
     <Link
       href={href}
-      className={`nc-CardCategoryBox1 relative flex items-center p-3 sm:p-6 [ nc-box-has-hover ] [ nc-dark-box-bg-has-hover ]  ${className}`}
+      className={`nc-CardCategoryBox1 group relative flex flex-col ${className}`}
     >
-      <Badge
-        className="absolute right-2 top-2"
-        color="gray"
-        name={convertNumbThousand(count)}
-      />
-
-      <div className="relative flex-shrink-0 w-24 h-24 rounded-full overflow-hidden">
+      <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden">
         <Image
           src={thumbnail || ""}
           fill
-          alt=""
-          sizes="(max-width: 400px) 100vw, 400px"
+          alt={name}
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
       </div>
-      <div className="ml-4 flex-grow overflow-hidden">
-        <h2 className="text-base font-medium">
+      <div className="mt-3">
+        <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
           <span className="line-clamp-1">{name}</span>
         </h2>
-        <span
-          className={`block mt-2 text-sm text-neutral-500 dark:text-neutral-400`}
-        >
+        <span className="block mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
           {convertNumbThousand(count)} properties
         </span>
       </div>

@@ -7,7 +7,6 @@ import GoogleMapReact from "google-map-react";
 import ButtonClose from "@/components/ui/ButtonClose";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import Checkbox from "@/components/ui/Checkbox";
-import Heading from "@/components/ui/Heading";
 import StayCard from "@/components/StayCard";
 import TabFilters from "./TabFilters";
 import SortSelect from "./SortSelect";
@@ -90,7 +89,7 @@ const SectionGridHasMap: FC<SectionGridHasMapProps> = ({
     <div>
       <div className="relative flex min-h-screen">
         <div className="min-h-screen w-full xl:w-[60%] 2xl:w-[60%] max-w-[1184px] flex-shrink-0 xl:px-8 ">
-          <Heading className="!mb-8" />
+          <div className="mb-8" />
           <div className="mb-8 lg:mb-11 flex flex-wrap items-center justify-between gap-4">
             <TabFilters propertyTypes={propertyTypes} amenities={amenities} />
             <SortSelect availableSorts={AVAILABLE_SORTS} />
