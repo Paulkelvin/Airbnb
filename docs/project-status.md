@@ -2,7 +2,7 @@
 
 **This is the canonical, single source of truth for implementation progress.** Read this file first in any new session before touching code or asking the client about status — it is kept current at the end of every completed phase and should never fall out of sync with the codebase or `docs/architecture/architecture-decision-record.md`.
 
-Last updated: **2026-07-16**, Phase 8 (Reviews and Favorites) plus the client-approved role-aware post-login redirect fix.
+Last updated: **2026-07-16**, Phase 8 (Reviews and Favorites) plus the client-approved role-aware post-login redirect fix, plus a branding audit before Phase 9.
 
 ---
 
@@ -30,9 +30,9 @@ Last updated: **2026-07-16**, Phase 8 (Reviews and Favorites) plus the client-ap
 
 ## Current Status
 
-- **Current phase:** Phase 8 (Reviews and Favorites) complete, including the client-approved post-approval redirect fix below. Phase 9 (Admin Dashboard) not yet started.
+- **Current phase:** Phase 8 complete (Reviews and Favorites), plus post-login redirect fix and branding audit. Phase 9 (Admin Dashboard) not yet started.
 - **Current branch:** `claude/booking-platform-overhaul-j2unm6`
-- **Latest commit:** `1deaf86` — "Make post-login/signup redirect role-aware" (2026-07-16)
+- **Latest commit:** (see git log — branding audit commit pending)
 - **Build status:** ✅ Clean. `npx next build` succeeds with no errors (30 routes, all typed routes resolve — the one new route this phase is `/api/jobs/review-expiry`; `/account-savelists` already existed as a route, only its data source changed). Last verified 2026-07-16.
 - **Test status:** ✅ Clean. `npm test` (Vitest): 54/54 passing across 7 files (added `src/lib/__tests__/{rate-limit,dashboard-path}.test.ts`, `src/modules/reviews/__tests__/reviews.test.ts`, `src/modules/favorites/__tests__/favorites.test.ts`). `node_modules/.bin/tsc --noEmit`: zero errors. Additionally verified with real Playwright browser passes against a production build (`npm run build && npm run start`): (Phase 8) guest review submission, double-blind hide-until-counterpart behavior, host counterpart review + publish-on-match, host response, favorite toggle on/off, and `account-savelists` reflecting real favorites; (redirect fix) a CUSTOMER-only login lands on `/account-bookings`, a HOST (who also carries CUSTOMER) lands on `/account-listings`, and an ADMIN lands on `/account` — all against the real local database, Playwright uninstalled afterward per the established non-persistent-devDependency convention.
 - **Working tree:** Clean, fully pushed to origin.
@@ -92,6 +92,32 @@ Two-sided, double-blind reviews (`Review.direction`, one row per direction, `isV
 ### Phase 8 Follow-up — Role-Aware Post-Login Redirect
 Client-requested fix, approved alongside Phase 8 and completed before Phase 9 began. Post-login/post-signup navigation always pushed to `/account-listings` (the host dashboard) regardless of role — flagged as a Known Issue at the end of Phase 8. Replaced with `getDefaultDashboardPath(roles)` (`src/lib/dashboard-path.ts`), a single lookup used by both `/login` and `/signup`: role-priority `ADMIN > HOST > CUSTOMER` (a `HOST` always also carries `CUSTOMER` per ADR-017, so priority order matters), routing to `/account-bookings` (CUSTOMER), `/account-listings` (HOST), or `/account` (ADMIN — temporary placeholder; no dedicated `/admin` route exists until the Admin Dashboard phase ships one, tracked with a `TODO` in the file). Deliberately a single centralized function (not inlined in each page) so a future "remember the user's last active dashboard" feature is a one-place change.
 **Files:** `src/lib/dashboard-path.ts` (new), `src/app/login/page.tsx`, `src/app/signup/page.tsx`, `src/lib/__tests__/dashboard-path.test.ts` (new).
+
+### Pre-Phase 9 — Branding Audit
+Repository-wide audit to verify no legacy Chisfis/template branding remains on any user-facing surface. All user-facing branding confirmed as Potomac.
+**Changes made:**
+- Removed unused Next.js boilerplate files from `public/` (`next.svg`, `thirteen.svg`, `vercel.svg`).
+- Created `public/robots.txt` — disallows crawling of `/api/`, `/account*`, `/add-listing*`, `/checkout*`.
+- Created `public/manifest.json` — Potomac-branded PWA manifest.
+- Created `public/favicon.svg` — Potomac location-pin icon (SVG favicon, matches the logo's pin motif); referenced in root layout metadata alongside the existing `.ico` fallback.
+- Updated `src/app/layout.tsx` metadata to include SVG favicon, `.ico` fallback, and manifest link.
+- Fixed typo in `SectionSliderNewCategories.tsx` default subHeading ("recommends" → "recommended").
+**Audit findings — no action needed:**
+- All "Chisfis" references are confined to architecture documentation (`chisfis-technical-assessment.md`, ADRs, blueprint, pre-implementation-review.md`) — historical context, correctly left in place per client instruction.
+- No "ciseco", "codely", or other template-author names found anywhere.
+- No "airbnb" string in `src/`.
+- No lorem ipsum text.
+- `data-nc-id` HTML attributes on ~16 components are a leftover naming convention from the template's CSS framework — not user-visible, harmless.
+- `DEMO_CATS` in `SectionSliderNewCategories.tsx` (used on the home page) contains placeholder category cards with stock photos and fabricated counts — these are visual placeholders for an unbuilt feature (home page category browsing wired to real `PropertyType` data). Names are generic property types (Nature House, Farm House, etc.), not template-branded.
+- `DEMO_DATA` default props in `StayCard.tsx`, `StayCardH.tsx`, `CommentListing.tsx` are empty-array or never-rendered fallbacks — real data is always passed by the calling pages.
+**Intentional placeholders still requiring client-provided information:**
+- `src/app/contact/page.tsx`: support email (`support@potomac.com`) and phone (`(202) 555-0100`) have `TODO` comments noting they need final values from the client.
+- `src/components/ui/SocialsList.tsx`: social media URLs are `#` placeholders with a `TODO` comment noting they need final Potomac social media URLs.
+- `public/robots.txt`: `Sitemap:` URL uses `https://potomac.com/sitemap.xml` — needs the real production domain once known.
+- `public/manifest.json`: `theme_color` uses a default indigo (`#4f46e5`) — can be updated to match the client's brand color.
+- `public/favicon.ico`: still the default Next.js favicon (binary, not editable in-session) — the new SVG favicon takes precedence in modern browsers, but the `.ico` should be replaced with a Potomac-branded version for legacy browser support.
+- OG image: no `og:image` is set in metadata — the client should provide a branded image for social sharing previews.
+**Files:** `public/{robots.txt,manifest.json,favicon.svg}` (new), `src/app/layout.tsx`, `src/components/SectionSliderNewCategories.tsx`.
 
 ---
 

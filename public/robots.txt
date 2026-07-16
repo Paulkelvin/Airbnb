@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /account*
+Disallow: /add-listing*
+Disallow: /checkout*
+
+Sitemap: https://potomac.com/sitemap.xml

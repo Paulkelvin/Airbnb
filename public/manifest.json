@@ -1,0 +1,16 @@
+{
+  "name": "Potomac",
+  "short_name": "Potomac",
+  "description": "Find your next stay or long-term lease on Potomac.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ]
+}

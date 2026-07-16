@@ -22,6 +22,13 @@ export const metadata: Metadata = {
   },
   description:
     "Find your next stay or long-term lease on Potomac. Browse short-term rentals and monthly leases from verified hosts.",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32" },
+    ],
+  },
+  manifest: "/manifest.json",
   openGraph: {
     siteName: "Potomac",
     type: "website",
