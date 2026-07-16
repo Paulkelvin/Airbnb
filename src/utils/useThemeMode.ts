@@ -38,10 +38,10 @@ export const useThemeMode = () => {
   };
 
   function _toogleDarkMode() {
-    if (localStorage.theme === "light") {
-      toDark();
-    } else {
+    if (isDarkMode) {
       toLight();
+    } else {
+      toDark();
     }
   }
 

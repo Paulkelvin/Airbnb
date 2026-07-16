@@ -4,6 +4,8 @@ import BgGlassmorphism from "@/components/BgGlassmorphism";
 import SectionSliderNewCategories from "@/components/SectionSliderNewCategories";
 import SectionFeaturedStays from "@/components/SectionFeaturedStays";
 import SectionWhyBookWithUs from "@/components/SectionWhyBookWithUs";
+import SectionBlogHighlights from "@/components/SectionBlogHighlights";
+import SectionFaqHighlights from "@/components/SectionFaqHighlights";
 import { searchListings } from "@/modules/listings/search";
 import { searchParamsSchema } from "@/lib/validations/search";
 import { getTopCities } from "@/modules/listings/queries";
@@ -31,6 +33,10 @@ async function PageHome() {
         <SectionWhyBookWithUs />
 
         <SectionFeaturedStays listings={featuredListings} cities={topCities} />
+
+        <SectionBlogHighlights />
+
+        <SectionFaqHighlights />
       </div>
     </main>
   );

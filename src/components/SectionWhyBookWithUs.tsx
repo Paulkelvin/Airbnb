@@ -31,14 +31,17 @@ const REASONS = [
 
 const SectionWhyBookWithUs = () => {
   return (
-    <div className="nc-SectionWhyBookWithUs relative">
-      <div className="absolute inset-0 -z-10 rounded-[2.5rem] bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-neutral-800 dark:via-neutral-900 dark:to-neutral-800" />
-      <div className="px-6 py-16 sm:px-12 sm:py-20 lg:py-24 rounded-[2.5rem]">
+    <div className="nc-SectionWhyBookWithUs relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary-6000 via-primary-700 to-secondary-6000">
+      {/* Decorative glow accents */}
+      <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -right-16 w-80 h-80 rounded-full bg-secondary-500/30 blur-3xl pointer-events-none" />
+
+      <div className="relative px-6 py-16 sm:px-12 sm:py-20 lg:py-24">
         <div className="max-w-2xl mx-auto text-center mb-14">
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-neutral-900 dark:text-neutral-50">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-white">
             Why book with Potomac
           </h2>
-          <p className="mt-3 text-neutral-500 dark:text-neutral-400">
+          <p className="mt-3 text-primary-50">
             We handle the details so you can focus on the trip.
           </p>
         </div>
@@ -46,15 +49,15 @@ const SectionWhyBookWithUs = () => {
           {REASONS.map((reason) => (
             <div
               key={reason.title}
-              className="group bg-white/70 dark:bg-neutral-900/60 backdrop-blur-sm rounded-3xl p-6 lg:p-7 border border-white/60 dark:border-neutral-700/60 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+              className="group bg-white/10 backdrop-blur-md rounded-3xl p-6 lg:p-7 border border-white/20 shadow-lg hover:bg-white/15 hover:-translate-y-1 transition-all duration-300"
             >
-              <div className="w-12 h-12 rounded-2xl bg-primary-6000 text-white flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+              <div className="w-12 h-12 rounded-2xl bg-white text-primary-700 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
                 <reason.icon className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-50 mb-2">
+              <h3 className="text-base font-semibold text-white mb-2">
                 {reason.title}
               </h3>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              <p className="text-sm text-primary-50/90 leading-relaxed">
                 {reason.desc}
               </p>
             </div>

@@ -3,7 +3,7 @@
 import React from "react";
 import ButtonClose from "@/components/ui/ButtonClose";
 import Logo from "@/components/ui/Logo";
-import { Disclosure } from "@headlessui/react";
+import { Disclosure, Transition } from "@headlessui/react";
 import { NavItemType } from "./NavigationItem";
 import { NAVIGATION_DEMO } from "@/data/navigation";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
@@ -55,7 +55,18 @@ const NavMobile: React.FC<NavMobileProps> = ({
               )}
             </Link>
             {i.children && (
-              <Disclosure.Panel>{_renderMenuChild(i)}</Disclosure.Panel>
+              <Transition
+                enter="transition-all duration-200 ease-out"
+                enterFrom="opacity-0 max-h-0"
+                enterTo="opacity-100 max-h-96"
+                leave="transition-all duration-150 ease-in"
+                leaveFrom="opacity-100 max-h-96"
+                leaveTo="opacity-0 max-h-0"
+              >
+                <Disclosure.Panel className="overflow-hidden">
+                  {_renderMenuChild(i)}
+                </Disclosure.Panel>
+              </Transition>
             )}
           </Disclosure>
         ))}
@@ -96,7 +107,18 @@ const NavMobile: React.FC<NavMobileProps> = ({
           )}
         </Link>
         {item.children && (
-          <Disclosure.Panel>{_renderMenuChild(item)}</Disclosure.Panel>
+          <Transition
+            enter="transition-all duration-200 ease-out"
+            enterFrom="opacity-0 max-h-0"
+            enterTo="opacity-100 max-h-96"
+            leave="transition-all duration-150 ease-in"
+            leaveFrom="opacity-100 max-h-96"
+            leaveTo="opacity-0 max-h-0"
+          >
+            <Disclosure.Panel className="overflow-hidden">
+              {_renderMenuChild(item)}
+            </Disclosure.Panel>
+          </Transition>
         )}
       </Disclosure>
     );

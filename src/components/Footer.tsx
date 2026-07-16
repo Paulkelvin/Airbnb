@@ -27,7 +27,7 @@ const widgetMenus: WidgetFooterMenu[] = [
     title: "Hosting",
     menus: [
       { href: "/add-listing/1", label: "List your property" },
-      { href: "/help", label: "Help center" },
+      { href: "/faq", label: "Help center" },
       { href: "/contact", label: "Contact us" },
     ],
   },
@@ -35,7 +35,7 @@ const widgetMenus: WidgetFooterMenu[] = [
     id: "3",
     title: "Support",
     menus: [
-      { href: "/help", label: "Help & FAQ" },
+      { href: "/faq", label: "Help & FAQ" },
       { href: "/contact", label: "Contact support" },
     ],
   },
