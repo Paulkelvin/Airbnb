@@ -14,6 +14,7 @@ export const Nav = () => {
     "/account-messages",
     "/account-listings",
     "/account-savelists",
+    "/account-notifications",
     "/account-password",
     "/account-billing",
   ];

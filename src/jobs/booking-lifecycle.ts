@@ -2,6 +2,9 @@ import { prisma } from "@/lib/db";
 import { getPaymentProvider } from "@/lib/payments";
 import { dollarsToCents } from "@/lib/pricing-policy";
 import { canTransition } from "@/modules/bookings/status-machine";
+import { notify } from "@/modules/notifications/notify";
+
+const RENT_REMINDER_DAYS_BEFORE = 3;
 
 /**
  * Date-driven booking lifecycle transitions (ADR-015: jobs are thin
@@ -151,10 +154,64 @@ async function runMonthlyRentCharges(referenceDate: Date): Promise<RentChargeRes
       },
     });
 
+    if (result.status === "FAILED") {
+      await notify(lease.guestId, "PAYMENT_FAILED", {
+        paymentId: "",
+        bookingId: lease.id,
+        amount: amountCents,
+        currency: lease.currency,
+        failureReason: result.failureReason,
+      });
+    }
+
     results.push({ bookingId: lease.id, charged: result.status !== "FAILED" });
   }
 
   return results;
+}
+
+/**
+ * Reminds each ACTIVE lease's guest RENT_REMINDER_DAYS_BEFORE days ahead of
+ * that month's rent due date — mirrors runMonthlyRentCharges' due-day-of-
+ * month math but checks N days earlier instead of the due day itself.
+ */
+async function runRentDueReminders(referenceDate: Date): Promise<number> {
+  const year = referenceDate.getUTCFullYear();
+  const month = referenceDate.getUTCMonth();
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+
+  const activeLeases = await prisma.booking.findMany({
+    where: { rentalType: "LONG_TERM", status: "ACTIVE" },
+    select: {
+      id: true,
+      guestId: true,
+      listingId: true,
+      currency: true,
+      rentDueDayOfMonth: true,
+      monthlyRentSnapshot: true,
+    },
+  });
+
+  let reminded = 0;
+  for (const lease of activeLeases) {
+    if (!lease.rentDueDayOfMonth || !lease.monthlyRentSnapshot) continue;
+    const dueDay = Math.min(lease.rentDueDayOfMonth, daysInMonth);
+    const reminderDay = dueDay - RENT_REMINDER_DAYS_BEFORE;
+    if (reminderDay < 1 || referenceDate.getUTCDate() !== reminderDay) continue;
+
+    const listing = await prisma.listing.findUnique({ where: { id: lease.listingId }, select: { title: true } });
+    const dueDate = new Date(Date.UTC(year, month, dueDay));
+    await notify(lease.guestId, "RENT_DUE_REMINDER", {
+      bookingId: lease.id,
+      listingTitle: listing?.title ?? "your rental",
+      amount: dollarsToCents(Number(lease.monthlyRentSnapshot)),
+      currency: lease.currency,
+      dueDate: dueDate.toISOString().slice(0, 10),
+    });
+    reminded += 1;
+  }
+
+  return reminded;
 }
 
 export interface BookingLifecycleJobSummary {
@@ -163,19 +220,21 @@ export interface BookingLifecycleJobSummary {
   leasesActivated: number;
   leasesCompleted: number;
   rentCharges: RentChargeResult[];
+  rentReminders: number;
 }
 
 export async function runBookingLifecycleJob(
   referenceDate: Date = new Date(),
 ): Promise<BookingLifecycleJobSummary> {
-  const [checkedIn, checkedOut, leasesActivated, leasesCompleted, rentCharges] =
+  const [checkedIn, checkedOut, leasesActivated, leasesCompleted, rentCharges, rentReminders] =
     await Promise.all([
       runCheckInTransitions(referenceDate),
       runCheckOutTransitions(referenceDate),
       runLeaseActivations(referenceDate),
       runLeaseCompletions(referenceDate),
       runMonthlyRentCharges(referenceDate),
+      runRentDueReminders(referenceDate),
     ]);
 
-  return { checkedIn, checkedOut, leasesActivated, leasesCompleted, rentCharges };
+  return { checkedIn, checkedOut, leasesActivated, leasesCompleted, rentCharges, rentReminders };
 }

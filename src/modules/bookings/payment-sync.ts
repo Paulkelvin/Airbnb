@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { canTransition } from "./status-machine";
+import { notify } from "@/modules/notifications/notify";
 
 /**
  * Called by the webhook handler (modules/payments) once it has verified and
@@ -43,7 +44,7 @@ export async function syncChargeFailed(
     return { processed: false, reason: "Already FAILED (duplicate delivery)" };
   }
 
-  await prisma.$transaction(async (tx) => {
+  const cancelledBooking: { id: string; listingId: string } | null = await prisma.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: payment.id },
       data: { status: "FAILED", failureReason: failureReason ?? payment.failureReason },
@@ -52,11 +53,11 @@ export async function syncChargeFailed(
     // A failed CHARGE or SECURITY_DEPOSIT_HOLD that was standing in for a CONFIRMED
     // booking means the booking is no longer actually paid for — cancel it and
     // release the dates, same as a host-initiated cancellation.
-    if (payment.type !== "CHARGE" && payment.type !== "SECURITY_DEPOSIT_HOLD") return;
+    if (payment.type !== "CHARGE" && payment.type !== "SECURITY_DEPOSIT_HOLD") return null;
 
     const booking = await tx.booking.findUnique({ where: { id: payment.bookingId } });
-    if (!booking || booking.status !== "CONFIRMED") return;
-    if (!canTransition(booking.status, "CANCELLED_BY_HOST", booking.rentalType)) return;
+    if (!booking || booking.status !== "CONFIRMED") return null;
+    if (!canTransition(booking.status, "CANCELLED_BY_HOST", booking.rentalType)) return null;
 
     if (booking.rentalType === "SHORT_TERM") {
       await tx.availability.deleteMany({ where: { bookingId: booking.id } });
@@ -70,7 +71,28 @@ export async function syncChargeFailed(
         cancellationReason: `Payment failed: ${failureReason ?? "unknown reason"}`,
       },
     });
+    return { id: booking.id, listingId: booking.listingId };
   });
+
+  if (payment.payerUserId) {
+    await notify(payment.payerUserId, "PAYMENT_FAILED", {
+      paymentId: payment.id,
+      bookingId: payment.bookingId,
+      amount: payment.amount,
+      currency: payment.currency,
+      failureReason,
+    });
+
+    if (cancelledBooking) {
+      const listing = await prisma.listing.findUnique({ where: { id: cancelledBooking.listingId }, select: { title: true } });
+      await notify(payment.payerUserId, "BOOKING_CANCELLED", {
+        bookingId: cancelledBooking.id,
+        listingTitle: listing?.title ?? "your listing",
+        cancelledBy: "SYSTEM",
+        reason: `Payment failed: ${failureReason ?? "unknown reason"}`,
+      });
+    }
+  }
 
   return { processed: true };
 }

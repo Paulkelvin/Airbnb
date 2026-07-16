@@ -46,6 +46,14 @@ Setup notes: Postgres 15+; confirm `postgis` and `pgcrypto` show as available un
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe | Same page → **Publishable key** (`pk_test_...`) | Not consumed yet | Reserved for when a real Stripe Elements checkout UI replaces the current fixed test-card stand-in (see `StripeConnectProvider.createCharge`'s doc comment) — not required for this phase's server-side integration. |
 | `STRIPE_WEBHOOK_SECRET` | Stripe | Dashboard → **Developers** → **Webhooks** → add an endpoint pointing at `/api/webhooks/stripe` → **Signing secret** (`whsec_...`). For local testing, `stripe listen --forward-to localhost:3000/api/webhooks/stripe` prints a session-scoped secret instead. | Required only when `PAYMENTS_PROVIDER=stripe` | Verifies `POST /api/webhooks/stripe` request signatures (`stripe-signature` header). |
 
+## Notifications — Resend (email)
+
+| Variable | Service | Where to obtain | Required | Purpose |
+|---|---|---|---|---|
+| `NOTIFICATIONS_PROVIDER` | Self-selected | Set to `resend` to activate real email sends | Optional — defaults to `stub` | Feature flag (`src/lib/notifications/index.ts`), mirrors `PAYMENTS_PROVIDER`. Unset or any value other than `resend` keeps the app on `StubEmailProvider` (logs to console, no network calls, no credentials needed) — the entire notification pipeline (in-app rows, preference gating, retrofit call sites) works end-to-end without this. Setting `resend` without both variables below throws a clear startup error rather than silently falling back. |
+| `RESEND_API_KEY` | Resend | Dashboard → **API Keys** → create key | Required only when `NOTIFICATIONS_PROVIDER=resend` | Server-side only. |
+| `RESEND_FROM_EMAIL` | Resend | A verified sending domain/address in the Resend dashboard | Required only when `NOTIFICATIONS_PROVIDER=resend` | The `from` address on every transactional email — must belong to a domain verified in Resend or sends will fail. |
+
 ## Maps
 
 | Variable | Service | Where to obtain | Required | Purpose |

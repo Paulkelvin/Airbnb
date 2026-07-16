@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import type { BookingStatus } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
+import { notify } from "@/modules/notifications/notify";
 
 type ActionResult<T> = { success: true; data: T } | { success: false; error: { code: string; message: string } };
 
@@ -56,7 +57,7 @@ export async function verifyUser(userId: string): Promise<ActionResult<{ id: str
 
 export async function approveListing(listingId: string): Promise<ActionResult<{ id: string }>> {
   const admin = await requireAdmin();
-  const listing = await prisma.listing.findUnique({ where: { id: listingId }, select: { id: true, status: true, slug: true } });
+  const listing = await prisma.listing.findUnique({ where: { id: listingId }, select: { id: true, status: true, slug: true, title: true, hostId: true } });
   if (!listing) return { success: false, error: { code: "NOT_FOUND", message: "Listing not found" } };
   if (listing.status !== "PENDING_REVIEW") {
     return { success: false, error: { code: "INVALID_STATE", message: "Listing is not pending review" } };
@@ -67,6 +68,7 @@ export async function approveListing(listingId: string): Promise<ActionResult<{ 
     data: { status: "PUBLISHED", publishedAt: new Date() },
   });
   await auditLog(admin.id, "listing.approve", "Listing", listingId);
+  await notify(listing.hostId, "LISTING_APPROVED", { listingId, listingTitle: listing.title, listingSlug: listing.slug });
   revalidatePath("/admin/listings");
   revalidatePath("/listing-stay");
   revalidatePath(`/listing-stay-detail/${listing.slug}`);
@@ -75,7 +77,7 @@ export async function approveListing(listingId: string): Promise<ActionResult<{ 
 
 export async function rejectListing(listingId: string, reason?: string): Promise<ActionResult<{ id: string }>> {
   const admin = await requireAdmin();
-  const listing = await prisma.listing.findUnique({ where: { id: listingId }, select: { id: true, status: true } });
+  const listing = await prisma.listing.findUnique({ where: { id: listingId }, select: { id: true, status: true, title: true, hostId: true } });
   if (!listing) return { success: false, error: { code: "NOT_FOUND", message: "Listing not found" } };
   if (listing.status !== "PENDING_REVIEW") {
     return { success: false, error: { code: "INVALID_STATE", message: "Listing is not pending review" } };
@@ -83,6 +85,7 @@ export async function rejectListing(listingId: string, reason?: string): Promise
 
   await prisma.listing.update({ where: { id: listingId }, data: { status: "REJECTED" } });
   await auditLog(admin.id, "listing.reject", "Listing", listingId, reason ? { reason } : undefined);
+  await notify(listing.hostId, "LISTING_REJECTED", { listingId, listingTitle: listing.title, reason });
   revalidatePath("/admin/listings");
   return { success: true, data: { id: listingId } };
 }

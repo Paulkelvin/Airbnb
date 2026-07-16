@@ -14,6 +14,7 @@ import {
 } from "@/lib/validations/review";
 import type { ActionResult } from "@/lib/validations/auth";
 import { recomputeListingRating } from "./rating";
+import { notify } from "@/modules/notifications/notify";
 
 /**
  * Submits one side of a two-sided, double-blind review (Domain Model Spec
@@ -103,7 +104,7 @@ export async function createReview(input: CreateReviewInput): Promise<ActionResu
 
     const counterpart = await tx.review.findUnique({
       where: { bookingId_direction: { bookingId: booking.id, direction: counterpartDirection } },
-      select: { id: true },
+      select: { id: true, rating: true },
     });
 
     if (counterpart) {
@@ -115,13 +116,35 @@ export async function createReview(input: CreateReviewInput): Promise<ActionResu
       await recomputeListingRating(tx, booking.listingId);
     }
 
-    return created;
+    return { created, counterpart };
   });
+
+  if (review.counterpart) {
+    const listing = await prisma.listing.findUnique({ where: { id: booking.listingId }, select: { title: true } });
+    const listingTitle = listing?.title ?? "your listing";
+    const hostReviewId = direction === "GUEST_TO_HOST" ? review.created.id : review.counterpart.id;
+    const hostRating = direction === "GUEST_TO_HOST" ? data.rating : review.counterpart.rating;
+    const guestReviewId = direction === "HOST_TO_GUEST" ? review.created.id : review.counterpart.id;
+    const guestRating = direction === "HOST_TO_GUEST" ? data.rating : review.counterpart.rating;
+
+    await notify(booking.hostId, "REVIEW_RECEIVED", {
+      reviewId: hostReviewId,
+      bookingId: booking.id,
+      listingTitle,
+      rating: hostRating,
+    });
+    await notify(booking.guestId, "REVIEW_RECEIVED", {
+      reviewId: guestReviewId,
+      bookingId: booking.id,
+      listingTitle,
+      rating: guestRating,
+    });
+  }
 
   revalidatePath(`/listing-stay-detail`);
   revalidatePath("/account-bookings");
 
-  return { success: true, data: { id: review.id } };
+  return { success: true, data: { id: review.created.id } };
 }
 
 /** One public reply per GUEST_TO_HOST review, host-authored only (Domain Model Spec §2.10). */

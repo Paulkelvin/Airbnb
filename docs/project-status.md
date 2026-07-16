@@ -2,7 +2,7 @@
 
 **This is the canonical, single source of truth for implementation progress.** Read this file first in any new session before touching code or asking the client about status — it is kept current at the end of every completed phase and should never fall out of sync with the codebase or `docs/architecture/architecture-decision-record.md`.
 
-Last updated: **2026-07-16**, Phase 9 (Admin Dashboard) complete.
+Last updated: **2026-07-16**, Phase 10 (Notifications) complete. **This was the last core platform module** — the project has now transitioned from feature development into release readiness. See `docs/release-readiness-plan.md`.
 
 ---
 
@@ -23,6 +23,7 @@ Last updated: **2026-07-16**, Phase 9 (Admin Dashboard) complete.
 | Validation | Zod 4.4 |
 | Payments | Stripe SDK 22.3 (`stripe` npm package), Stripe Connect Express, separate-charges-and-transfers model (ADR-005) |
 | Media | Cloudinary 2.10 (unsigned client upload, signed server-side delete) |
+| Notifications | Resend (`resend` npm package) for transactional email, `EmailProvider` abstraction (ADR-026), feature-flagged (`NOTIFICATIONS_PROVIDER`, stub default) |
 | Testing | Vitest 4.1 (unit/integration, DI-mocked adapters); Playwright (E2E, installed/uninstalled per session — not a persistent devDependency) |
 | Deployment target | Vercel (not yet deployed — see Infrastructure) |
 
@@ -30,11 +31,11 @@ Last updated: **2026-07-16**, Phase 9 (Admin Dashboard) complete.
 
 ## Current Status
 
-- **Current phase:** Phase 9 complete (Admin Dashboard).
+- **Current phase:** Phase 10 complete (Notifications) — **the last core platform module.** The project is now in release readiness — see `docs/release-readiness-plan.md`.
 - **Current branch:** `claude/booking-platform-overhaul-j2unm6`
 - **Latest commit:** (see git log)
-- **Build status:** ✅ Clean. `npx next build` succeeds with no errors (37 routes total — 7 new admin routes: `/admin`, `/admin/users`, `/admin/listings`, `/admin/bookings`, `/admin/taxonomy`, `/admin/audit-log`, `/admin/settings`). Last verified 2026-07-16.
-- **Test status:** ✅ Clean. `npm test` (Vitest): 74/74 passing across 8 files (added `src/modules/admin/__tests__/admin-actions.test.ts` — 20 tests covering user management, listing moderation, booking dispute resolution, taxonomy CRUD, and platform settings). `npx tsc --noEmit`: zero errors.
+- **Build status:** ✅ Clean. `npx next build` succeeds with no errors (38 routes total — added `/account-notifications`). Last verified 2026-07-16.
+- **Test status:** ✅ Clean. `npm test` (Vitest): 94/94 passing across 14 files (added notification-focused test files: `src/lib/notifications/__tests__/resend-provider.test.ts`, `src/modules/notifications/__tests__/{notify,actions,retrofit-integration}.test.ts`, `src/jobs/__tests__/booking-lifecycle-rent-reminder.test.ts`, `src/actions/__tests__/change-password.test.ts`; extended `src/modules/reviews/__tests__/reviews.test.ts` with a REVIEW_RECEIVED assertion; fixed a pre-existing bug in `src/modules/bookings/__tests__/payout.test.ts`, see Bugs found/fixed below). `npx tsc --noEmit`: zero errors.
 - **Working tree:** Clean, fully pushed to origin.
 
 ---
@@ -111,6 +112,36 @@ Complete admin dashboard with 7 routes under `/admin/`, gated by `ADMIN` role ch
 **ADRs:** 025 (conditional listing moderation, key-value platform settings, polymorphic audit targeting).
 **Files:** `src/modules/admin/{actions,queries,settings}.ts`, `src/app/admin/{layout,page}.tsx`, `src/app/admin/{users,listings,bookings,taxonomy,audit-log,settings}/*`, `src/lib/dashboard-path.ts` (updated ADMIN path), `prisma/migrations/20260716140000_add_platform_setting/`, `prisma/migrations/20260716150000_audit_log_targetid_text/`.
 
+### Phase 9 Follow-up — Security Audit and Hardening
+Client-requested audit, approved alongside Phase 9 and completed before Phase 10 began. Verified seven security properties: (1) no `/admin/*` page accessible by non-admins — confirmed, layout-level `ADMIN` role check; (2) no Server Action callable by bypassing the UI — confirmed, every exported action independently authorizes; (3) all admin actions require `requireAdmin()` — confirmed; (4) every privileged action creates an `AuditLog` entry; (5) no privilege escalation via modified requests — confirmed, roles are never client-supplied; (6) IDs cannot be enumerated to expose other users' data — confirmed, queries are scoped to the caller or admin-gated; (7) hidden/rejected listings aren't reachable via direct URL without permission — confirmed.
+**Gaps found and fixed:**
+1. `src/modules/admin/settings.ts` had a stray `"use server"` directive, making `getSetting()`, `isListingModerationEnabled()`, and `getServiceFeePercent()` — internal config helpers with no auth check — callable directly from the client. Removed the directive; these are now plain server-side imports, unreachable from client code.
+2. Four taxonomy mutations (`createPropertyType`, `updatePropertyType`, `createAmenity`, `updateAmenity` in `src/modules/admin/actions.ts`) called `requireAdmin()` but discarded the returned admin identity and never wrote an `AuditLog` row — violated property (4) above. Fixed: all four now capture the admin and audit-log the mutation.
+3. **Most critical:** `payoutForPayment()` (`src/modules/bookings/actions.ts`) — an admin-triggered financial disbursement — had the same discarded-identity, no-audit-log gap. Fixed: now writes an `AuditLog` entry recording actor, charge payment id, booking, payee, amount, currency, and payout status.
+**Files:** `src/modules/admin/{actions,settings}.ts`, `src/modules/bookings/actions.ts`.
+
+### Phase 10 — Notifications
+**The last core platform module per the blueprint's roadmap** (§17 step 12/13). Builds the `notify()` emission primitive (confirmed in Phase 9's audit to not exist anywhere in the codebase, despite the `Notification`/`NotificationPreference` schema existing since Phase 2), email delivery via Resend behind a gateway-agnostic `EmailProvider` interface, in-app notification list + email preferences UI, and retrofits `notify()` into every domain action the blueprint's notification matrix names.
+**`EmailProvider` abstraction (ADR-026):** `src/lib/notifications/{provider,stub-provider,resend-provider,index}.ts` — mirrors ADR-006's `PaymentProvider` pattern exactly. `getEmailProvider()` is feature-flagged via `NOTIFICATIONS_PROVIDER` (`stub` default — logs to console, no credentials needed / `resend` — real sends, requires `RESEND_API_KEY` + `RESEND_FROM_EMAIL`).
+**`notify()` primitive:** `src/modules/notifications/notify.ts`. Always writes an IN_APP `Notification` row (always-on unread badge, never preference-gated). Writes an EMAIL row and sends real email only if that notification type's email is enabled — opt-out model, default enabled, except four `CRITICAL_EMAIL_TYPES` (`BOOKING_CONFIRMED`, `BOOKING_CANCELLED`, `PAYMENT_FAILED`, `PASSWORD_CHANGED`) which always email regardless of preference, enforced server-side. Email send is awaited but wrapped in try/catch — a delivery failure is logged, never thrown, so it can't fail or roll back the caller's own action.
+**Retrofit call sites (all ten `NotificationType` values wired):**
+- `BOOKING_CONFIRMED` — instant-book creation and host-accept (`src/modules/bookings/actions.ts`: `createShortTermBooking`, `confirmBooking`).
+- `BOOKING_CANCELLED` — host decline, guest/host/admin cancellation, early lease termination, and payment-failure auto-cancellation (`declineBooking`, `cancelBooking`, `terminateLease` in `bookings/actions.ts`; `syncChargeFailed` in `bookings/payment-sync.ts`).
+- `NEW_MESSAGE` — `sendMessage` (`modules/messaging/actions.ts`), notifies every other `ConversationParticipant`.
+- `NEW_INQUIRY` — `createInquiry` (`modules/inquiries/actions.ts`), notifies the listing's host.
+- `REVIEW_RECEIVED` — both publish-on-match (`createReview`, `modules/reviews/actions.ts`) and publish-on-expiry (`runReviewExpiryJob`, `jobs/review-expiry.ts`) paths.
+- `PAYOUT_SENT` — `payoutForPayment` (`bookings/actions.ts`), notifies the payee host on success only.
+- `LISTING_APPROVED` / `LISTING_REJECTED` — `approveListing`/`rejectListing` (`modules/admin/actions.ts`), notifies the listing's host.
+- `RENT_DUE_REMINDER` — new `runRentDueReminders` function added to `jobs/booking-lifecycle.ts`, fires 3 days ahead of each ACTIVE lease's monthly due date (mirrors `runMonthlyRentCharges`' due-day-of-month math). Also added a `PAYMENT_FAILED` notify to a pre-existing gap in `runMonthlyRentCharges` itself — a failed monthly rent charge previously created a FAILED `Payment` row with no notification at all, since it bypasses the webhook-driven `syncChargeFailed` path entirely.
+- `PASSWORD_CHANGED` — `resetPassword` (forgot-password flow, pre-existing) and a newly built authenticated `changePassword` action (`src/actions/auth.ts`) wired to a previously-static, unwired `/account-password` page.
+**In-app UI:** `/account-notifications` (new route) — recent-activity list with unread highlighting and mark-read/mark-all-read, plus an email-preferences section listing every toggleable (non-critical) type with a live toggle. Added to the account nav (`(components)/Nav.tsx`).
+**Schema changes:** None — `Notification`/`NotificationPreference` existed since Phase 2, unused until this phase.
+**Bugs found/fixed:**
+1. `src/modules/bookings/__tests__/payout.test.ts` mocked `requireAdmin()` to return a non-UUID actor id (`"admin-test"`), which had silently worked until the Phase 9 Follow-up added a real `AuditLog.create()` call to `payoutForPayment()` — `AuditLog.actorId` is `@db.Uuid`, so the test started failing with a Postgres UUID-parse error. Fixed by using a real UUID and upserting a matching `User` row, consistent with every other test file's convention.
+2. `runMonthlyRentCharges` (pre-existing, Phase 5) never notified the guest when a monthly rent charge failed — a real gap independent of this phase's own scope, found while wiring `PAYMENT_FAILED`. Fixed alongside the `RENT_DUE_REMINDER` addition since both touch the same function.
+**ADRs:** 026 (`EmailProvider` abstraction, two-row-per-channel dispatch, critical-type email override).
+**Files:** `src/lib/notifications/*` (new), `src/modules/notifications/*` (new), `src/app/(account-pages)/account-notifications/*` (new), `src/app/(account-pages)/account-password/page.tsx` (rewritten as a wired client form), `src/actions/auth.ts` (`changePassword` added), `src/lib/validations/auth.ts` (`changePasswordSchema` added), `src/modules/bookings/{actions,payment-sync}.ts`, `src/modules/messaging/actions.ts`, `src/modules/inquiries/actions.ts`, `src/modules/reviews/actions.ts`, `src/modules/admin/actions.ts`, `src/jobs/{booking-lifecycle,review-expiry}.ts`, `(components)/Nav.tsx`.
+
 ### Pre-Phase 9 — Branding Audit
 Repository-wide audit to verify no legacy Chisfis/template branding remains on any user-facing surface. All user-facing branding confirmed as Potomac.
 **Changes made:**
@@ -141,13 +172,11 @@ Repository-wide audit to verify no legacy Chisfis/template branding remains on a
 
 ## Remaining Roadmap
 
-Per `docs/architecture/platform-architecture-blueprint.md` §17 (the authoritative sequencing, re-checked before Phase 8 began):
+**Core platform feature development is complete as of Phase 10.** All modules named in `docs/architecture/platform-architecture-blueprint.md` §17 are built: auth/authorization, listings, search, bookings, payments (Stripe Connect), messaging, reviews/favorites, rate limiting, admin dashboard, and notifications. Per the client's explicit direction, the project has now transitioned from feature development into release readiness — see **`docs/release-readiness-plan.md`** for the full plan (remaining essential items, infrastructure verification, deployment/security/performance/accessibility/SEO/monitoring/backup checklists, final E2E testing, and the launch checklist, each item marked as a launch blocker or a safe-to-ship-after-launch enhancement).
 
-1. **Notifications** *(next)* — email delivery + in-app preferences UI, **and** the emission primitive itself. The blueprint's roadmap describes a minimal `notify()` primitive (writes a `Notification` row, no delivery) as shared infrastructure meant to exist since the auth phase so later phases could call it — confirmed on 2026-07-15 that **no such function exists anywhere in the codebase yet** (verified via full-codebase search). The `Notification`/`NotificationPreference` tables exist in the schema (unused, zero rows written to them by any code path so far) but this phase needs to build the emission primitive from scratch, not just the delivery/UI layer on top of one that already exists.
-2. **Performance Optimization** — load testing and query tuning under real traffic. Per the blueprint, explicitly **not** a catch-up phase for indexes that should already exist (they were front-loaded in Phase 2).
-3. **Final Testing and Production Readiness** — the last blueprint phase; real-credential verification (see Infrastructure below) belongs here at the latest, likely earlier once the client supplies credentials.
+The blueprint's remaining named phases — Performance Optimization and Final Testing/Production Readiness — are release-readiness activities, not new features, and are folded into the Release Readiness Plan rather than tracked as separate "phases" here.
 
-Note: the blueprint sequences Messaging/Reviews *before* Payments; this project did Payments first (client-approved reordering) — no conflict, just a recorded deviation. The blueprint has no dedicated SEO phase; fold SEO concerns into step 5 unless the client asks for a dedicated slot.
+Note: the blueprint sequences Messaging/Reviews *before* Payments; this project did Payments first (client-approved reordering) — no conflict, just a recorded deviation.
 
 ---
 
@@ -165,7 +194,7 @@ No other unresolved business-rule gaps are currently known. If Admin (dispute-re
 
 Accepted limitations, technical debt, and deferred work — none block the next phase, all are worth a glance before touching adjacent code:
 
-- **Empty scaffold module folders from Phase 1** don't match real implementation locations: `src/modules/booking` (singular, empty) vs. the real `src/modules/bookings` (plural); `src/modules/auth`, `src/modules/users`, `src/modules/search` are empty — that logic actually lives in `src/lib/auth.ts`/`src/actions/auth.ts` and `src/modules/listings/search.ts`. `src/modules/reviews`, `src/modules/favorites`, and `src/modules/admin` are now real, implemented modules — no longer empty scaffolds. `src/modules/notifications` remains an empty scaffold waiting for its phase. **Don't create new files in the empty `booking`/`auth`/`search`/`users` folders** — they're stale scaffolding, not the real location.
+- **Empty scaffold module folders from Phase 1** don't match real implementation locations: `src/modules/booking` (singular, empty) vs. the real `src/modules/bookings` (plural); `src/modules/auth`, `src/modules/users`, `src/modules/search` are empty — that logic actually lives in `src/lib/auth.ts`/`src/actions/auth.ts` and `src/modules/listings/search.ts`. `src/modules/reviews`, `src/modules/favorites`, `src/modules/admin`, and `src/modules/notifications` are now real, implemented modules — no longer empty scaffolds. **Don't create new files in the empty `booking`/`auth`/`search`/`users` folders** — they're stale scaffolding, not the real location.
 - **`Conversation.listingId` and `Conversation.inquiryId` are plain columns with no FK/relation** (pre-existing schema design from before this session, not introduced by Phase 7) — populated manually at creation time, never joinable via Prisma `include`. Any query needing listing context from a `Conversation` must batch-fetch `Listing` separately (see `modules/messaging/queries.ts`'s `attachListing` helper for the established pattern).
 - **No real-time message delivery.** Messages appear on next navigation/`router.refresh()` only — no WebSockets or polling. Not a bug; no architecture doc requires live delivery for MVP. Flag as a gap if the client asks for it.
 - **`StripeConnectProvider.createCharge` uses a hardcoded Stripe test PaymentMethod** (`pm_card_visa`) since no real checkout UI (Stripe Elements + SetupIntent) exists yet — test-mode only, by design, per client direction. Swapping in a real guest-supplied payment method later requires no interface or booking-module change, only the adapter's internal call.
@@ -173,6 +202,10 @@ Accepted limitations, technical debt, and deferred work — none block the next 
 - **`RateLimitHit` pruning is opportunistic, not a sweep job.** Stale rows for a given `key` are deleted only the next time that same key is checked (see `src/lib/rate-limit.ts`) — a key that's never hit again (e.g. an abandoned signup IP) leaves its rows in the table indefinitely. Cheap at current volume (storage only, no correctness impact); revisit if the table grows large enough to matter (ADR-023's "Revisit If").
 - **`BtnLikeIcon` (used by `StayCard` across search results, home page sections, and related-listings grids) is still local-only UI state**, not wired to the real `Favorite` model — only the listing detail page's dedicated `FavoriteButton` and the `account-savelists` page are backed by real data. Toggling the heart icon on a search-results card doesn't persist. Out of scope for Phase 8 (which specifically named the listing detail page's save button and the saved-listings page); wiring every `StayCard` instance to `toggleFavorite()`/`isFavorited()` is a small follow-up, not a redesign, whenever it's prioritized.
 - **~~Post-login redirect always targets `/account-listings` regardless of role~~ — fixed** (Phase 8 Follow-up). **~~ADMIN landing page was `/account` placeholder~~ — fixed** (Phase 9): ADMIN now lands on `/admin`, the real admin dashboard.
+- **The header's `AvatarDropdown` (`src/app/(client-components)/(Header)/AvatarDropdown.tsx`) is not wired to real session state** — no `useSession()` call anywhere in it, despite `AuthSessionProvider` being mounted at the root layout. It renders the same static menu regardless of whether anyone is logged in, and its "Log out" link just navigates to `/login` rather than calling `signOut()`. Pre-existing since before this session (not introduced by Phase 10) — surfaced while deciding where to put an unread-notification badge, deliberately not fixed here since it's a separate, unrelated architectural gap (wiring the whole header to auth state) rather than a notifications-scoped change. **Flagged as a release-readiness blocker** — see `docs/release-readiness-plan.md`.
+- **No unread-notification badge in the header**, as a direct consequence of the item above — `/account-notifications` is the only place unread count is currently visible. Once `AvatarDropdown` is wired to real session state, adding a badge is a small follow-up (`getUnreadNotificationCount()` already exists in `modules/notifications/queries.ts`).
+- **Email delivery failures are silent** (ADR-026's accepted trade-off) — a failed Resend send is logged server-side only; there's no retry, dead-letter queue, or admin-visible delivery-failure indicator. Acceptable at MVP scale (documented, not an oversight) — revisit per ADR-026's "Revisit If" if it becomes a real problem.
+- **The `forgotPassword` flow still only logs the reset token to the console** (`src/actions/auth.ts`, pre-existing `TODO` from before this session) rather than emailing it — this is a distinct gap from `PASSWORD_CHANGED` (Phase 10 wires the *confirmation* notification correctly; the *reset link itself* was never wired to real delivery in any phase, and isn't a `NotificationType` in the schema). **Flagged as a release-readiness blocker** — a production password-reset flow that never sends the link is not functional for a real user.
 
 ---
 
@@ -183,6 +216,7 @@ Accepted limitations, technical debt, and deferred work — none block the next 
 | **Neon (Postgres)** | ⏳ Not connected | All development/testing this entire project has run against a local Postgres 16 + PostGIS instance in the session container. `DATABASE_URL`/`DATABASE_URL_UNPOOLED` are documented (`docs/setup/environment-variables.md`) but not populated with real Neon values. Schema and migrations are Neon-ready (pooled + direct URL split already in place per ADR from Phase 3 prep) — running `prisma migrate deploy` against real Neon plus a seed-data verification pass is the only remaining step, blocked purely on credentials. |
 | **Cloudinary** | ⏳ Code-ready, not configured | Upload/delete integration fully implemented and used throughout listing image flows (Phase 3). No real `CLOUDINARY_*` credentials supplied yet — unsigned upload preset must also be created in the Cloudinary dashboard per the env var doc's setup notes. |
 | **Stripe** | ⏳ Code-ready, not configured | Full Connect integration built and tested via dependency injection (Phase 6) — `PAYMENTS_PROVIDER` defaults to `stub` so this has never required real credentials to develop or test against. Needs real `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` (test mode) plus a webhook endpoint registered in the Stripe dashboard pointing at `/api/webhooks/stripe` before it can be exercised against the real API. |
+| **Resend (email)** | ⏳ Code-ready, not configured | `EmailProvider` abstraction fully implemented and used throughout the notification pipeline (Phase 10) — `NOTIFICATIONS_PROVIDER` defaults to `stub` so this has never required real credentials to develop or test against. Needs real `RESEND_API_KEY` plus a `RESEND_FROM_EMAIL` on a domain verified in the Resend dashboard before it can send real email. |
 | **Vercel** | ⏳ Not deployed | No deployment has been verified yet. `vercel.json` (Cron config for the booking-lifecycle job) is in place. Env vars are documented but not set in a Vercel project. |
 | **Auth (NextAuth)** | ✅ Fully implemented | Credentials provider, JWT sessions, bcrypt password hashing, role-based authorization primitives — all working and tested locally. `NEXTAUTH_SECRET` needs a real distinct-per-environment value in production (documented, not yet set). |
 | **Environment variables** | ✅ Fully documented, ⏳ not populated | `docs/setup/environment-variables.md` is the canonical reference — every variable the app needs, where to obtain it, and whether it's required for Development vs. Production. Local `.env` (gitignored) currently holds only local-Postgres + dev-only values (`CRON_SECRET` set to a local test value, `PAYMENTS_PROVIDER` unset/defaults to stub). |
@@ -193,11 +227,7 @@ Accepted limitations, technical debt, and deferred work — none block the next 
 
 ## Next Phase
 
-**Notifications** (blueprint step 12). Prerequisites: none outstanding — the `Notification` and `NotificationPreference` models already exist in the schema (Phase 2), but no code writes to them yet. This phase builds: (1) the `notify()` emission primitive (writes a `Notification` row), (2) email delivery (likely via a transactional email provider — Resend, SendGrid, or SES — client choice needed), (3) in-app notification preferences UI, (4) retrofitting `notify()` calls into existing actions that should trigger notifications (booking confirmations, new messages, review publications, etc.).
-Before writing code:
-1. Confirm which email delivery provider the client wants (or whether to build behind an abstraction like `PaymentProvider`).
-2. Inventory which existing actions should emit notifications, based on the blueprint's notification matrix.
-3. Decide whether in-app notifications need real-time delivery (WebSockets/SSE) or page-refresh is sufficient for MVP.
+**There is no next feature phase.** Core platform functionality is complete as of Phase 10 (Notifications). Per the client's explicit direction, work now proceeds according to **`docs/release-readiness-plan.md`** — remaining essential features (the two flagged in Known Issues above: header/session wiring, real password-reset email delivery), production infrastructure verification, deployment checklist, security verification, performance optimization, accessibility review, SEO review, monitoring/observability, backup/recovery, final end-to-end testing, and the launch checklist — each item marked as a launch blocker or a safe-to-ship-after-launch enhancement.
 
 ---
 
@@ -219,8 +249,9 @@ Read this section to get productive immediately in a fresh session with no prior
 **Money handling:** `Payment.amount` is the only field required to be integer cents (matches Stripe's convention) — `dollarsToCents()`/`roundToCents()` live in `src/lib/pricing-policy.ts`. `Listing`/`Booking` pricing fields are `Decimal(10,2)` exact dollars; never pass a dollar amount to a cents-precision function or vice versa. **Prisma `Decimal` objects are always truthy** even when zero — never write `if (someDecimalField)` as a non-zero check, use `someDecimalField !== null` (existence) or `Number(someDecimalField) > 0` (value) explicitly; this was a real bug pattern caught and fixed in Phase 6.
 
 **Where things are:**
-- Domain/business logic: `src/modules/<domain>/{actions.ts,queries.ts}` (`admin`, `bookings`, `listings`, `inquiries`, `messaging`, `payments`, `reviews`, `favorites`).
-- Gateway abstractions: `src/lib/payments/` (`provider.ts` = interface, `stub-provider.ts`/`stripe-provider.ts` = adapters, `index.ts` = the only place `getPaymentProvider()` is exported from).
+- Domain/business logic: `src/modules/<domain>/{actions.ts,queries.ts}` (`admin`, `bookings`, `listings`, `inquiries`, `messaging`, `payments`, `reviews`, `favorites`, `notifications`).
+- Gateway abstractions: `src/lib/payments/` (`provider.ts` = interface, `stub-provider.ts`/`stripe-provider.ts` = adapters, `index.ts` = the only place `getPaymentProvider()` is exported from); `src/lib/notifications/` (same shape — `provider.ts`/`stub-provider.ts`/`resend-provider.ts`/`index.ts`, `getEmailProvider()`), plus `templates.ts` for the email copy per `NotificationType`.
+- Notifications: `src/modules/notifications/notify.ts` is the **only** writer of `Notification` rows — any new domain action that should notify a user calls `notify(userId, type, payload)`, never `prisma.notification.create()` directly. See ADR-026 before adding a new `NotificationType` or changing critical-vs-toggleable classification.
 - Cross-cutting config/constants: `src/lib/pricing-policy.ts` (fees, refund tiers — never hardcode a money-affecting constant elsewhere).
 - Rate limiting: `src/lib/rate-limit.ts` — `checkRateLimit(key, config)` against the DB-backed `RateLimitHit` model (ADR-023). `RATE_LIMITS` exports the four configured limits (signup, inquiry, message, review). Call it as the very first statement after `requireAuth()` (or, for signup, before any DB write) in any new user-facing write action — don't ship a new public mutation endpoint without asking whether it needs one.
 - Scheduled work: `src/jobs/`, triggered via `src/app/api/jobs/*` route handlers (bearer-token-gated).

@@ -7,6 +7,7 @@ import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { sendMessageSchema, conversationIdSchema, type SendMessageInput, type ConversationIdInput } from "@/lib/validations/messaging";
 import { isConversationParticipant, getConversationByIdUnchecked } from "./queries";
 import type { ActionResult } from "@/lib/validations/auth";
+import { notify } from "@/modules/notifications/notify";
 
 /**
  * Sends a message into an existing thread (`conversationId`), or lazily
@@ -91,6 +92,21 @@ export async function sendMessage(input: SendMessageInput): Promise<ActionResult
       await tx.inquiry.update({ where: { id: inquiry.id }, data: { status: "RESPONDED" } });
     }
   });
+
+  const otherParticipants = await prisma.conversationParticipant.findMany({
+    where: { conversationId, userId: { not: user.id } },
+    select: { userId: true },
+  });
+  const preview = data.body.length > 80 ? `${data.body.slice(0, 80)}...` : data.body;
+  await Promise.all(
+    otherParticipants.map((p) =>
+      notify(p.userId, "NEW_MESSAGE", {
+        conversationId,
+        senderName: `${user.firstName} ${user.lastName}`,
+        preview,
+      }),
+    ),
+  );
 
   revalidatePath("/account-messages");
   revalidatePath(`/account-messages/${conversationId}`);

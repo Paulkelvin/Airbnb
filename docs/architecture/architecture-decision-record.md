@@ -435,6 +435,30 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 
 ---
 
+## ADR-026: Notifications — `EmailProvider` Abstraction, Two-Row-Per-Channel Dispatch, Critical-Type Email Override
+
+**Decision:** Four scoped design choices for the Phase 10 Notifications module:
+
+1. **`EmailProvider` interface + stub/Resend adapters, mirroring ADR-006's `PaymentProvider` pattern exactly.** `src/lib/notifications/{provider,stub-provider,resend-provider,index}.ts` — `getEmailProvider()` is feature-flagged via `NOTIFICATIONS_PROVIDER` (`stub` default / `resend`), so the entire notification pipeline (in-app rows, preference gating, all ten retrofit call sites) is testable end-to-end with zero email credentials, same as every other gateway integration in this project.
+
+2. **`notify(userId, type, payload)` writes one `Notification` row per channel actually dispatched**, not one row with a channel list. The IN_APP row is always written (Platform Architecture Blueprint §7: "in-app ... always on") — it is never gated by preference and is what powers the unread badge/list. The EMAIL row is written only if that send path is taken (see #3), and its existence in the table doubles as a delivery log — no separate `EmailLog` model was needed.
+
+3. **`CRITICAL_EMAIL_TYPES` (`BOOKING_CONFIRMED`, `BOOKING_CANCELLED`, `PAYMENT_FAILED`, `PASSWORD_CHANGED`) always email, ignoring `NotificationPreference`.** Every other `NotificationType` defaults to emailing (opt-out: no preference row means enabled) unless the user has explicitly disabled it. This is a direct implementation of the blueprint's own worked example ("opt out of non-critical notifications ... without losing critical ones (e.g. booking confirmation)") — the four types chosen are the security- and transaction-integrity-critical ones a user must not be able to silence, even via a maliciously crafted preference-update request (enforced server-side in `notify()`, not just hidden in the preferences UI).
+
+4. **Email delivery is synchronous-but-isolated, not queued.** Per the blueprint's MVP dispatch guidance ("email sends queued ... so a slow email provider never blocks a user-facing request"), no new DB-backed job-queue table was introduced — that would duplicate `RateLimitHit`'s and the booking-lifecycle job's already-established "DB-backed at MVP, named Redis/queue graduation path" pattern (ADR-015, ADR-023) for infrastructure that doesn't yet need it. Instead, `notify()` awaits the send but wraps it in try/catch: a provider failure is logged and swallowed, never thrown, so it can never fail or roll back the caller's own transaction/action.
+
+**Reasoning:** Every other gateway integration in this project (Stripe, Cloudinary) follows the interface-plus-stub-adapter shape; repeating it for email keeps the codebase's abstraction vocabulary consistent and required no new judgment calls about testability. The two-row-per-channel schema was already fixed (Phase 2, unused until now) and fits this dispatch model without a migration. The critical-type override is the one place `notify()` encodes a business rule rather than pure mechanism — justified because it's explicitly named in the blueprint's own example, not inferred.
+
+**Alternatives Considered:** (1) A single `Notification` row per event with a `channels: NotificationChannel[]` array instead of one row per channel. (2) Opt-in preferences (email disabled by default, user must enable). (3) A real job queue (new `EmailJob` table + a `src/jobs/email-dispatch.ts` cron-polled worker) for email sends.
+
+**Why Rejected:** (1) The schema's `@@id([userId, type, channel])` on `NotificationPreference` and the `channel: NotificationChannel` singular field on `Notification` (both fixed since Phase 2) are structured for one-row-per-channel; fighting that would mean either a schema migration or a denormalized reinterpretation of an existing column, for no behavioral gain. (2) Opt-in would mean most users get zero emails until they take an action they don't know exists — opt-out matches the blueprint's own phrasing ("opt out of") and every mainstream marketplace's default. (3) A real queue is real infrastructure (worker process or cron-polled table, retry/backoff logic, dead-letter handling) for a problem the try/catch isolation already solves at MVP scale — introducing it now would be exactly the kind of "catch-up phase" the blueprint explicitly says Performance Optimization is *not* for, applied one phase too early.
+
+**Trade-offs Accepted:** A failed email send is logged to the server console and otherwise silently dropped — there is no retry, no dead-letter queue, and no admin-visible "this email failed to send" indicator beyond the `Notification` row's existence (which records that a send was *attempted*, not whether it *succeeded*). At current expected volume this is acceptable; the IN_APP row always exists as a fallback so the user isn't left with zero record of the event even if email delivery silently fails.
+
+**Revisit If:** Email volume or reliability requirements grow to the point where silent delivery failures become a real business problem (e.g., booking confirmation emails going unnoticed-missing) — at that point, promote to the named queue pattern (ADR-015/ADR-023's graduation path) with real retry/backoff and a delivery-status field on `Notification` or a dedicated `EmailLog` model.
+
+---
+
 ## Index of Decisions
 
 | ADR | Decision |
@@ -464,3 +488,4 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 | 023 | Rate limiting — DB-backed sliding window at MVP, retrofitted across all four required endpoints |
 | 024 | Review eligibility — `COMPLETED` or `TERMINATED_EARLY`, reconciling the blueprint against the domain model spec |
 | 025 | Admin dashboard — conditional listing moderation, key-value platform settings, polymorphic audit targeting |
+| 026 | Notifications — `EmailProvider` abstraction, two-row-per-channel dispatch, critical-type email override |

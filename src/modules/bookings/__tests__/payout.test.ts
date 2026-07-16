@@ -11,8 +11,10 @@ import { payoutForPayment } from "../actions";
  * pass covered live HTTP + real DB side effects for the sync paths).
  */
 
+const ADMIN_ID = "aaaaaaaa-0000-0000-0000-000000000010";
+
 vi.mock("@/lib/auth", () => ({
-  requireAdmin: vi.fn().mockResolvedValue({ id: "admin-test", roles: ["ADMIN"] }),
+  requireAdmin: vi.fn().mockResolvedValue({ id: "aaaaaaaa-0000-0000-0000-000000000010", roles: ["ADMIN"] }),
 }));
 
 // revalidatePath requires a real Next.js request-rendering context, which a
@@ -71,6 +73,17 @@ beforeAll(async () => {
       firstName: "Payout",
       lastName: "Guest",
       roles: ["CUSTOMER"],
+    },
+    update: {},
+  });
+  await prisma.user.upsert({
+    where: { id: ADMIN_ID },
+    create: {
+      id: ADMIN_ID,
+      email: "payout-test-admin@example.com",
+      firstName: "Payout",
+      lastName: "Admin",
+      roles: ["CUSTOMER", "ADMIN"],
     },
     update: {},
   });
@@ -172,10 +185,12 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await prisma.auditLog.deleteMany({ where: { actorId: ADMIN_ID } });
+  await prisma.notification.deleteMany({ where: { userId: { in: [HOST_ID, HOST_NO_STRIPE_ID] } } });
   await prisma.payment.deleteMany({ where: { bookingId: { in: [BOOKING_ID, BOOKING_NO_STRIPE_ID] } } });
   await prisma.booking.deleteMany({ where: { id: { in: [BOOKING_ID, BOOKING_NO_STRIPE_ID] } } });
   await prisma.listing.deleteMany({ where: { id: LISTING_ID } });
-  await prisma.user.deleteMany({ where: { id: { in: [HOST_ID, HOST_NO_STRIPE_ID, GUEST_ID] } } });
+  await prisma.user.deleteMany({ where: { id: { in: [HOST_ID, HOST_NO_STRIPE_ID, GUEST_ID, ADMIN_ID] } } });
   await prisma.propertyType.deleteMany({ where: { id: PROPERTY_TYPE_ID } });
   await prisma.$disconnect();
 });

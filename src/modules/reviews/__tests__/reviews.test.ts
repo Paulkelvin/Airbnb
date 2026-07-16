@@ -265,6 +265,14 @@ describe("runReviewExpiryJob", () => {
     const row = await prisma.review.findUnique({ where: { id: guestReview.data.id } });
     expect(row?.isVisible).toBe(true);
     expect(row?.publishedAt).not.toBeNull();
+
+    // The reviewed party (host, since this was a GUEST_TO_HOST review) is notified on publish-on-expiry too.
+    const notification = await prisma.notification.findFirst({
+      where: { userId: HOST_ID, type: "REVIEW_RECEIVED", channel: "IN_APP" },
+      orderBy: { createdAt: "desc" },
+    });
+    expect(notification).toBeTruthy();
+    expect((notification!.payload as Record<string, unknown>).reviewId).toBe(guestReview.data.id);
   });
 
   it("does not publish a review still within its 14-day window", async () => {

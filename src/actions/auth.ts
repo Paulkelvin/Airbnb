@@ -4,13 +4,16 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/auth";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import {
   registerSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  changePasswordSchema,
   type ActionResult,
 } from "@/lib/validations/auth";
+import { notify } from "@/modules/notifications/notify";
 
 const SALT_ROUNDS = 12;
 const RESET_TOKEN_EXPIRY_HOURS = 1;
@@ -197,8 +200,52 @@ export async function resetPassword(
     },
   });
 
+  await notify(user.id, "PASSWORD_CHANGED", { changedAt: new Date().toISOString() });
+
   return {
     success: true,
     data: { message: "Password has been reset successfully" },
   };
+}
+
+/** Authenticated "change my password" flow — distinct from the forgot/reset flow above, which works without a session via an emailed token. */
+export async function changePassword(
+  formData: FormData,
+): Promise<ActionResult<{ message: string }>> {
+  const user = await requireAuth();
+
+  const raw = {
+    currentPassword: formData.get("currentPassword"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  };
+
+  const parsed = changePasswordSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Invalid input",
+        fieldErrors: parsed.error.flatten().fieldErrors,
+      },
+    };
+  }
+
+  const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { passwordHash: true } });
+  if (!dbUser?.passwordHash) {
+    return { success: false, error: { code: "INVALID_STATE", message: "This account has no password set" } };
+  }
+
+  const matches = await bcrypt.compare(parsed.data.currentPassword, dbUser.passwordHash);
+  if (!matches) {
+    return { success: false, error: { code: "INVALID_CREDENTIALS", message: "Current password is incorrect" } };
+  }
+
+  const passwordHash = await bcrypt.hash(parsed.data.password, SALT_ROUNDS);
+  await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+
+  await notify(user.id, "PASSWORD_CHANGED", { changedAt: new Date().toISOString() });
+
+  return { success: true, data: { message: "Password changed successfully" } };
 }

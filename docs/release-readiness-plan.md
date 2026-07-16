@@ -1,0 +1,160 @@
+# Release Readiness Plan
+
+**Status as of 2026-07-16:** Core platform feature development is complete (Phase 10 — Notifications was the last core module named in `docs/architecture/platform-architecture-blueprint.md` §17). This document replaces "next phase" planning in `docs/project-status.md` and is the canonical checklist from here to launch. Update it as items are completed — do not let it drift the way `project-status.md`'s own working agreement forbids for that file.
+
+**How to read this document:** every item is tagged **BLOCKER** (must be resolved before a real, paying-customer launch) or **ENHANCEMENT** (safe to ship after launch, improves the product but doesn't put users, money, or the business at risk if deferred). The tag reflects risk if shipped without it, not effort to build it — several blockers are small; several enhancements are large.
+
+---
+
+## 1. Remaining Essential Features
+
+Everything named in the blueprint's core feature set is built and tested (auth/authorization, listings, search, bookings, Stripe Connect payments, messaging, reviews/favorites, rate limiting, admin dashboard, notifications). Two gaps were found during Phase 10 that are functional dead ends for a real user, not polish:
+
+- **BLOCKER — Password-reset emails are never sent.** `forgotPassword()` (`src/actions/auth.ts`) generates a real reset token but only `console.log`s it (`TODO: Send email with reset link`, predates this session). A real user who forgets their password today has no way to recover their account. Now that `EmailProvider` exists (Phase 10), this is a small fix: call `getEmailProvider().send()` with the reset link instead of logging it. Not folded into Phase 10 because a password-reset link isn't a `NotificationType` in the schema (it's a security-sensitive one-time link, not a `Notification` row a user should see in their in-app list) — it needs its own direct send, not a `notify()` call.
+- **BLOCKER — The header's `AvatarDropdown` isn't wired to real session state.** `src/app/(client-components)/(Header)/AvatarDropdown.tsx` never calls `useSession()` despite `AuthSessionProvider` being mounted at the root layout — it renders the same static "My Account / Wishlist / Log out" menu regardless of whether anyone is logged in, and "Log out" just navigates to `/login` instead of calling `signOut()`. A logged-in user cannot actually sign out from the main site header (only from wherever else `signOut()` might be wired, if anywhere — not confirmed). This is pre-existing (not introduced by any recent phase) but is a launch-blocking correctness issue, not polish.
+- **ENHANCEMENT — No header unread-notification badge.** Direct consequence of the item above; `getUnreadNotificationCount()` already exists (`modules/notifications/queries.ts`). Trivial once the header is session-aware.
+- **ENHANCEMENT — `BtnLikeIcon` on search-results/home-page `StayCard` instances is local-only UI state**, not wired to the real `Favorite` model (only the listing detail page and `/account-savelists` are). Cosmetic inconsistency, not a broken flow — the real save action exists and works.
+- **ENHANCEMENT — No real-time message delivery** (polling/refresh only). Documented as acceptable for MVP since Phase 7; no architecture doc requires it.
+- **ENHANCEMENT — Payout timing is manual-only** (`payoutForPayment()`, Phase 6) — the client explicitly deferred the automatic-trigger timing decision as a future business decision. Do not wire an automatic trigger without asking first (this is an *Outstanding Decision*, not a bug).
+
+---
+
+## 2. Production Infrastructure Verification
+
+All of these are configuration/credential steps, not code changes — the codebase has run 100% functionally against stub/local equivalents this entire project by design, specifically so nothing in feature development was blocked waiting on them.
+
+| Service | Status | Blocker? | What's needed |
+|---|---|---|---|
+| Neon (Postgres) | Not connected | **BLOCKER** | Real `DATABASE_URL`/`DATABASE_URL_UNPOOLED`, then `prisma migrate deploy` + seed verification against real Neon. |
+| Cloudinary | Not configured | **BLOCKER** | Real `CLOUDINARY_*` credentials + an unsigned upload preset created in the dashboard. (`res.cloudinary.com` was missing from `next.config.js`'s `images.remotePatterns` — **fixed during this pass**, would otherwise have silently broken every real listing photo in production.) |
+| Stripe Connect | Not configured | **BLOCKER** | Real `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` (test mode first, live mode only after a deliberate go-live decision) + webhook endpoint registered pointing at `/api/webhooks/stripe`. |
+| Resend (email) | Not configured | **BLOCKER** | Real `RESEND_API_KEY` + `RESEND_FROM_EMAIL` on a verified sending domain. Nothing in the notification pipeline sends real email until this is set. |
+| Vercel | Not deployed | **BLOCKER** | First deployment has never been verified end-to-end (see §3). |
+| `NEXTAUTH_SECRET` | Local dev placeholder only | **BLOCKER** | Generate a real, distinct-per-environment secret (`openssl rand -base64 32`) — never reuse the dev value. |
+| `CRON_SECRET` | Local test value only | **BLOCKER** | Generate a real secret; Vercel Cron auto-attaches it as the `Authorization: Bearer` header once set as an env var, per `vercel.json`. |
+| Google Maps API key | Documented, not populated | **ENHANCEMENT** (degrades map embeds only, doesn't block core booking flow) | Real `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` restricted to the production domain. |
+
+See `docs/setup/environment-variables.md` for the full reference (every variable, where to obtain it, dev vs. prod requirement) — this table only flags launch-readiness status, not the how-to.
+
+---
+
+## 3. Deployment Checklist
+
+- [ ] **BLOCKER** — First Vercel deployment, verified against real Neon + real env vars (not just local).
+- [ ] **BLOCKER** — `vercel.json`'s Cron entry (booking-lifecycle job) confirmed actually firing on schedule in the deployed environment, hitting `/api/jobs/booking-lifecycle` with the real `CRON_SECRET`.
+- [x] `/api/jobs/review-expiry` has a Cron entry in `vercel.json` (`0 4 * * *`, confirmed present during this pass) — just needs runtime verification once deployed, per the checklist item above.
+- [ ] **BLOCKER** — Stripe webhook endpoint registered against the deployed URL (not `localhost`), signature verified against a real `stripe listen`/dashboard-configured event.
+- [ ] **BLOCKER** — `metadataBase` set in `src/app/layout.tsx` metadata — currently unset, so Next.js falls back to `http://localhost:3000` for resolving Open Graph/Twitter image URLs in production (confirmed via a build warning during this session). One-line fix once the production domain is known.
+- [ ] **ENHANCEMENT** — Custom domain + DNS cutover, if not using the default `*.vercel.app` URL at first launch.
+- [ ] **ENHANCEMENT** — Preview-deployment protection (Vercel password protection or similar) so in-progress work isn't publicly indexable before intentional launch.
+
+---
+
+## 4. Security Verification
+
+The Phase 9 Follow-up audit (documented in `project-status.md`) already verified, against the real codebase, that: no `/admin/*` page is reachable by non-admins; no Server Action is callable in a way that bypasses its own authorization; every admin action requires `requireAdmin()`; every privileged action now writes an `AuditLog` row (three real gaps found and fixed in that pass); no privilege escalation is possible via a modified request (roles are never client-supplied); IDs cannot be enumerated to expose other users' data; hidden/rejected listings aren't reachable via direct URL without permission. That work does not need to be redone — this section covers what it didn't cover.
+
+- [ ] **BLOCKER** — **No rate limiting on login** (`/api/auth/[...nextauth]`, NextAuth credentials provider). The blueprint named signup/inquiry/message/review explicitly and those are covered (ADR-023) — login itself was never in that list, but shipping a credentials-based login with zero brute-force/credential-stuffing protection is a real production risk. Needs a `checkRateLimit()` call keyed by IP and/or email in the NextAuth `authorize()` callback, or an edge-level rate limit in front of the route.
+- [ ] **BLOCKER** — **No rate limiting on `forgotPassword()`.** An unauthenticated endpoint that accepts an email and always returns success (correctly avoids user enumeration via response shape) but has no request-volume limit — can be hit repeatedly to spam a target's inbox once real email sending is wired (§1), or used to fingerprint valid accounts via timing if the DB lookup cost differs meaningfully (unlikely here, but worth a look once real Resend calls are in the path).
+- [ ] **BLOCKER** — Real credential rotation plan: confirm `NEXTAUTH_SECRET`, `CRON_SECRET`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `CLOUDINARY_API_SECRET` are stored only in Vercel's env var system (never committed), and that whoever provisions them documents where the source-of-truth copies live (password manager, secrets vault) outside this repo.
+- [ ] **BLOCKER** — No security headers configured anywhere (`next.config.js` has no `headers()` function). At minimum before launch: `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` (or `frame-ancestors 'none'` via CSP), a baseline `Content-Security-Policy`. None of this exists today.
+- [ ] **ENHANCEMENT** — Formal dependency vulnerability scan (`npm audit` currently reports 18 known vulnerabilities, 9 moderate/9 high, inherited from the original Chisfis template's dependency tree plus this session's `resend`/`@react-email/render` additions — not triaged individually during this session; worth a dedicated pass before or shortly after launch).
+- [ ] **ENHANCEMENT** — CSRF is implicitly handled by Next.js Server Actions' same-origin enforcement, but this has not been explicitly verified against a cross-origin POST attempt in this project. Worth one explicit test.
+- [ ] **ENHANCEMENT** — Formal external penetration test / bug bounty, once launched and there's real traffic worth attacking.
+
+---
+
+## 5. Performance Optimization
+
+Per the blueprint, this is explicitly **not** a catch-up phase for indexes that should already exist — GIN (full-text search), GIST (geo radius), and standard B-tree indexes were front-loaded in Phase 2's schema design, not deferred.
+
+- [ ] **BLOCKER** — Load testing against realistic concurrent traffic has never been done — everything so far is single-request integration/E2E testing. At minimum, verify the booking-creation path (the one with a real concurrency guarantee — Phase 5's transactional per-night `Availability` insert against a unique constraint) holds up under concurrent double-booking attempts at real scale, not just the two-request test used during Phase 5 development.
+- [ ] **BLOCKER** — Confirm Prisma's connection pooling (`DATABASE_URL` via Neon's pooler) is actually sized correctly for the Vercel serverless function concurrency model — a common real-world failure mode for Prisma + Neon + Vercel is connection exhaustion under load that never shows up in local dev.
+- [ ] **ENHANCEMENT** — `next/image` optimization audit — confirm listing photos (once real Cloudinary images flow through) are appropriately sized/lazy-loaded, not just correctly domain-whitelisted (§2's fix only made them loadable, not necessarily optimized).
+- [ ] **ENHANCEMENT** — Query-level profiling of `searchListings()` (Phase 4's two-step raw-SQL-then-Prisma-hydrate pattern) under realistic listing-table row counts — works correctly today but has never been profiled against, say, 50k+ listings.
+- [ ] **ENHANCEMENT** — Bundle-size audit / code-splitting review now that the app has grown to 38 routes across 10 feature areas.
+
+---
+
+## 6. Accessibility Review
+
+No accessibility-specific work has been done in any phase — the UI layer was inherited from the Chisfis template (ADR-016: "visual layer kept, logic rebuilt") and accessibility was never an explicit acceptance criterion for any phase.
+
+- [ ] **BLOCKER** — Keyboard navigation audit of the booking flow end-to-end (search → listing detail → date picker → checkout) — date pickers and modal/popover components (Headless UI `Popover`, used in `AvatarDropdown` and elsewhere) are common sources of keyboard traps if not configured correctly; never explicitly tested.
+- [ ] **BLOCKER** — Screen reader pass on the core conversion paths (signup, login, booking creation, checkout) — never tested with an actual screen reader (VoiceOver/NVDA) in any phase.
+- [ ] **ENHANCEMENT** — Full WCAG 2.1 AA audit (color contrast, alt text coverage, ARIA labeling) across every page — a broader pass than the blocker items above, appropriate after launch unless the client has a specific compliance requirement (e.g., ADA exposure for a US consumer-facing marketplace, which is a real legal risk category — worth explicitly asking the client whether this should be a blocker instead of an enhancement given the business's risk tolerance).
+- [ ] **ENHANCEMENT** — Automated accessibility CI check (axe-core or similar) added to the test suite so regressions are caught going forward, not just a one-time audit.
+
+---
+
+## 7. SEO Review
+
+The blueprint has no dedicated SEO phase (noted in `project-status.md`'s prior Remaining Roadmap section); baseline SEO infrastructure exists but is incomplete.
+
+- [ ] **BLOCKER** — `metadataBase` unset (see §3) — breaks Open Graph/Twitter card image resolution in production, which matters for social-share conversion on listing links, one of the primary organic-growth channels for a marketplace.
+- [ ] **BLOCKER** — No `sitemap.xml` — `public/robots.txt` (Phase Pre-9 branding audit) references `Sitemap: https://potomac.com/sitemap.xml`, but no route or static file actually generates one. Next.js 13's `app/sitemap.ts` convention would need to be added, dynamically listing published listing detail pages at minimum.
+- [ ] **BLOCKER** — No `og:image` set anywhere (flagged, not resolved, in the Pre-9 branding audit) — every shared link (a listing on social media, a WhatsApp share) renders with no preview image, materially hurting click-through on the platform's primary discovery/sharing surface.
+- [ ] **ENHANCEMENT** — Per-listing structured data (`schema.org` `LodgingBusiness`/`Product` JSON-LD) for richer search-engine result snippets — not started in any phase.
+- [ ] **ENHANCEMENT** — `public/robots.txt`'s `Sitemap:` URL still hardcodes `potomac.com` — needs the real production domain once known (already flagged as a placeholder in the Pre-9 branding audit).
+- [ ] **ENHANCEMENT** — Canonical URL tags, structured breadcrumbs — standard marketplace SEO hygiene, not launch-blocking.
+
+---
+
+## 8. Monitoring and Observability
+
+**Nothing exists here today.** No error-tracking SDK (Sentry or equivalent), no APM, no uptime monitoring, no structured logging beyond `console.log`/`console.error` calls scattered through the codebase (e.g. `notify()`'s email-failure logging, Phase 10).
+
+- [ ] **BLOCKER** — Error tracking (Sentry or equivalent) wired into both the Next.js server and client runtimes — without this, a production bug (e.g. a failed Stripe charge, a crashed Server Action) is invisible until a user reports it.
+- [ ] **BLOCKER** — Uptime/health-check monitoring on the deployed app and on the Cron-triggered job routes specifically (`/api/jobs/booking-lifecycle`, `/api/jobs/review-expiry`) — a silently-failing-forever Cron job (auth misconfiguration, a code exception) would have no alerting today.
+- [ ] **BLOCKER** — Alerting on Stripe webhook failures — a webhook silently failing to process (bad signature, downstream exception) currently has no operator-facing signal beyond Stripe's own dashboard retry log, which nobody is committed to watching.
+- [ ] **ENHANCEMENT** — Structured application logging (replace ad hoc `console.log`/`console.error` with a real logger emitting to a log aggregation service) — the current approach is fine for a single-operator MVP but doesn't scale to a team debugging production incidents.
+- [ ] **ENHANCEMENT** — Business-metrics dashboard (bookings/day, GMV, active listings, notification delivery success rate) — `getPlatformStats()`-style queries already exist for the admin dashboard's overview cards (Phase 9); a proper analytics pipeline is a natural extension, not urgent for day-one launch.
+- [ ] **ENHANCEMENT** — Notification delivery observability specifically — ADR-026 accepted that a failed Resend send is currently silent beyond a server log line; promote per that ADR's "Revisit If" once real volume exists to judge against.
+
+---
+
+## 9. Backup and Recovery
+
+- [ ] **BLOCKER** — Confirm Neon's automated backup/point-in-time-recovery settings are enabled and understood (retention window, restore procedure) before real user data (bookings, payments, messages) exists in the production database. This has never been explicitly configured or verified in any phase — everything so far ran against an ephemeral local dev database.
+- [ ] **BLOCKER** — Documented, tested restore procedure — "backups exist" is not the same as "we know how to restore from one under pressure." At minimum, one dry-run restore into a scratch environment before launch.
+- [ ] **ENHANCEMENT** — Formal disaster-recovery runbook (what to do if Stripe/Cloudinary/Resend has an outage, what to do if the Vercel deployment is down) — good practice, not launch-blocking for a first release.
+- [ ] **ENHANCEMENT** — Data export/deletion tooling for user-initiated account deletion or GDPR-style data requests, if the target market requires it (worth explicitly asking the client about target geography/compliance scope — this is a business decision, not a technical default to assume).
+
+---
+
+## 10. Final End-to-End Testing
+
+Every phase to date was verified via genuine end-to-end testing (Vitest integration tests against a real local database, plus temporary Playwright passes driving the real dev server) per the client's standing working agreement — this is not starting from zero. What remains is testing against the *real* production-equivalent stack, which nothing has exercised yet.
+
+- [ ] **BLOCKER** — Full golden-path walkthrough against the deployed Vercel environment with real (test-mode) Stripe, real Cloudinary, real Resend: signup → email verification (if added) → browse/search → book (both short-term instant-book and long-term application/accept) → pay → message → complete stay → review → host payout. Every phase's own E2E pass used a local dev server; none has run against the actual deployed stack end-to-end.
+- [ ] **BLOCKER** — Stripe test-mode webhook delivery verified against the real deployed webhook endpoint (not `stripe listen --forward-to localhost`) — signature verification, idempotency, and the full charge/refund/payout/chargeback event set.
+- [ ] **BLOCKER** — Cross-browser smoke test (Chrome, Safari, Firefox at minimum; iOS Safari specifically, given a property-rental marketplace's real-world mobile-heavy usage pattern) — every E2E pass this project has run used Chromium only.
+- [ ] **ENHANCEMENT** — Automated E2E suite committed to the repo and run in CI, rather than the current pattern of temporary, scratchpad-only Playwright scripts written fresh each session. This is a meaningful process improvement worth doing, but the manual-per-phase approach has caught real bugs throughout the project and isn't itself a launch blocker.
+
+---
+
+## 11. Launch Checklist
+
+The actual go/no-go list — everything above distilled into one pass. All **BLOCKER**-tagged items above should be resolved (or explicitly, consciously waived by the client with a documented reason) before this checklist is run.
+
+- [ ] All Infrastructure (§2) services connected with real production credentials.
+- [ ] Vercel deployment verified, both Cron jobs confirmed firing (§3).
+- [ ] Stripe webhook live against the deployed URL, tested against a real event (§3, §10).
+- [ ] `metadataBase`, sitemap, `og:image` all set (§3, §7).
+- [ ] Login and password-reset rate limiting in place (§4).
+- [ ] Baseline security headers configured (§4).
+- [ ] Password-reset emails actually send (§1).
+- [ ] Header session-awareness fixed — a logged-in user can actually log out (§1).
+- [ ] Load test passed for the booking-concurrency path (§5).
+- [ ] Keyboard nav + screen reader pass on signup/login/booking/checkout (§6).
+- [ ] Error tracking, uptime monitoring, and Stripe-webhook-failure alerting live (§8).
+- [ ] Neon backup/PITR confirmed enabled, one restore dry-run completed (§9).
+- [ ] Full golden-path E2E walkthrough against the real deployed stack, cross-browser (§10).
+- [ ] Client sign-off on the two flagged business-scope questions this plan surfaces but doesn't resolve unilaterally: (a) whether full WCAG 2.1 AA compliance is a launch blocker given legal/ADA exposure (§6), (b) whether data export/deletion tooling is required for the target launch market (§9).
+- [ ] Final review of `docs/project-status.md`'s Outstanding Decisions section — confirm payout-timing policy is either decided or explicitly still deferred with the client's knowledge (not silently shipped as "manual only" without a conscious choice).
+
+---
+
+## Maintaining This Document
+
+Update this plan as items are completed, the same way `project-status.md` is kept current at the end of every phase per the client's standing working agreement. When every **BLOCKER** item is checked off (or explicitly waived by the client, with the waiver recorded here), the platform is ready for a real launch — **ENHANCEMENT** items remain a living backlog afterward, not a gate.

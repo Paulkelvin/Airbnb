@@ -26,6 +26,7 @@ import type { ActionResult } from "@/lib/validations/auth";
 import { computeShortTermQuote, computeLongTermQuote, nightsBetween, datesInRange, addMonthsUTC } from "./pricing";
 import { getListingForBooking } from "./queries";
 import { assertTransition, canTransition, InvalidTransitionError } from "./status-machine";
+import { notify } from "@/modules/notifications/notify";
 
 const DOUBLE_BOOKED_ERROR = {
   code: "DATES_UNAVAILABLE",
@@ -186,6 +187,17 @@ export async function createShortTermBooking(
     throw err;
   }
 
+  if (initialStatus === "CONFIRMED") {
+    await notify(user.id, "BOOKING_CONFIRMED", {
+      bookingId,
+      listingTitle: listing.title,
+      checkInDate: data.checkInDate.toISOString().slice(0, 10),
+      checkOutDate: data.checkOutDate.toISOString().slice(0, 10),
+      amount: dollarsToCents(quote.totalPrice),
+      currency: listing.currency,
+    });
+  }
+
   revalidatePath(`/listing-stay-detail/${listing.slug}`);
   revalidatePath("/account-bookings");
 
@@ -296,6 +308,11 @@ export async function createLongTermBooking(
 }
 
 type Tx = Prisma.TransactionClient;
+
+async function getListingTitle(listingId: string): Promise<string> {
+  const listing = await prisma.listing.findUnique({ where: { id: listingId }, select: { title: true } });
+  return listing?.title ?? "your listing";
+}
 
 async function chargeBookingTx(
   tx: Tx,
@@ -460,6 +477,13 @@ export async function confirmBooking(
     throw err;
   }
 
+  await notify(booking.guestId, "BOOKING_CONFIRMED", {
+    bookingId: booking.id,
+    listingTitle: await getListingTitle(booking.listingId),
+    amount: dollarsToCents(Number(booking.totalPrice ?? booking.monthlyRentSnapshot ?? 0)),
+    currency: booking.currency,
+  });
+
   revalidatePath("/account-bookings");
   revalidatePath("/account-listings");
 
@@ -506,6 +530,13 @@ export async function declineBooking(
     if (booking.rentalType === "SHORT_TERM") {
       await tx.availability.deleteMany({ where: { bookingId: booking.id } });
     }
+  });
+
+  await notify(booking.guestId, "BOOKING_CANCELLED", {
+    bookingId: booking.id,
+    listingTitle: await getListingTitle(booking.listingId),
+    cancelledBy: "HOST",
+    reason: parsed.data.reason,
   });
 
   revalidatePath("/account-bookings");
@@ -613,6 +644,13 @@ export async function cancelBooking(
     });
   });
 
+  await notify(nextStatus === "CANCELLED_BY_GUEST" ? booking.hostId : booking.guestId, "BOOKING_CANCELLED", {
+    bookingId: booking.id,
+    listingTitle: await getListingTitle(booking.listingId),
+    cancelledBy: nextStatus === "CANCELLED_BY_GUEST" ? "GUEST" : isHost ? "HOST" : "ADMIN",
+    reason: parsed.data.reason,
+  });
+
   revalidatePath("/account-bookings");
   revalidatePath("/account-listings");
 
@@ -688,6 +726,13 @@ export async function terminateLease(
         cancellationReason: parsed.data.reason ?? null,
       },
     });
+  });
+
+  await notify(isGuest ? booking.hostId : booking.guestId, "BOOKING_CANCELLED", {
+    bookingId: booking.id,
+    listingTitle: await getListingTitle(booking.listingId),
+    cancelledBy: isGuest ? "GUEST" : isHost ? "HOST" : "ADMIN",
+    reason: parsed.data.reason,
   });
 
   revalidatePath("/account-bookings");
@@ -795,6 +840,13 @@ export async function payoutForPayment(paymentId: string): Promise<ActionResult<
       error: { code: "PAYOUT_FAILED", message: result.failureReason ?? "Payout failed" },
     };
   }
+
+  await notify(payment.payeeUserId, "PAYOUT_SENT", {
+    paymentId: payout.id,
+    bookingId: payment.bookingId,
+    amount: payoutAmountCents,
+    currency: payment.currency,
+  });
 
   revalidatePath("/account-bookings");
 

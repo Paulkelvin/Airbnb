@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/auth";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { createInquirySchema, inquiryIdSchema, type CreateInquiryInput, type InquiryIdInput } from "@/lib/validations/inquiry";
 import type { ActionResult } from "@/lib/validations/auth";
+import { notify } from "@/modules/notifications/notify";
 
 export async function createInquiry(
   input: CreateInquiryInput,
@@ -38,7 +39,7 @@ export async function createInquiry(
 
   const listing = await prisma.listing.findUnique({
     where: { id: data.listingId },
-    select: { id: true, hostId: true, status: true, slug: true },
+    select: { id: true, hostId: true, status: true, slug: true, title: true },
   });
   if (!listing || listing.status !== "PUBLISHED") {
     return { success: false, error: { code: "NOT_FOUND", message: "Listing not found" } };
@@ -85,6 +86,13 @@ export async function createInquiry(
     });
 
     return created;
+  });
+
+  await notify(listing.hostId, "NEW_INQUIRY", {
+    inquiryId: inquiry.id,
+    listingTitle: listing.title,
+    senderName: `${user.firstName} ${user.lastName}`,
+    message: data.message,
   });
 
   revalidatePath("/account-inquiries");
