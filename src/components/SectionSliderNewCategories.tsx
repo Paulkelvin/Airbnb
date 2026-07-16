@@ -142,7 +142,7 @@ const SectionSliderNewCategories: FC<SectionSliderNewCategoriesProps> = ({
         <div
           ref={scrollerRef}
           onScroll={updateScrollState}
-          className="no-scrollbar flex gap-4 xl:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:-mx-2 sm:px-2"
+          className="no-scrollbar flex gap-4 xl:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth"
         >
           {categories.map((item, indx) => (
             <div
