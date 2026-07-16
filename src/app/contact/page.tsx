@@ -1,14 +1,37 @@
-import React from "react";
+"use client";
+
+import React, { useState, useTransition } from "react";
 import Label from "@/components/Label";
 import Input from "@/components/ui/Input";
 import Textarea from "@/components/ui/Textarea";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
-
-export const metadata = {
-  title: "Contact Us",
-};
+import { sendContactMessage } from "@/actions/contact";
 
 const PageContact: React.FC = () => {
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[] | undefined>>();
+  const [sent, setSent] = useState(false);
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setFieldErrors(undefined);
+    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+
+    startTransition(async () => {
+      const result = await sendContactMessage(formData);
+      if (!result.success) {
+        setError(result.error.message);
+        setFieldErrors(result.error.fieldErrors);
+        return;
+      }
+      setSent(true);
+      form.reset();
+    });
+  }
+
   return (
     <div className="nc-PageContact overflow-hidden">
       <div className="mb-24 lg:mb-32">
@@ -23,7 +46,6 @@ const PageContact: React.FC = () => {
                   Email
                 </h3>
                 <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-                  {/* TODO: replace with final support email */}
                   support@potomac.com
                 </span>
               </div>
@@ -32,33 +54,57 @@ const PageContact: React.FC = () => {
                   Phone
                 </h3>
                 <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-                  {/* TODO: replace with final support phone */}
                   (202) 555-0100
                 </span>
               </div>
             </div>
             <div>
-              <form className="grid grid-cols-1 gap-6" action="#" method="post">
-                <label className="block">
-                  <Label>Full name</Label>
-                  <Input placeholder="Your name" type="text" className="mt-1" />
-                </label>
-                <label className="block">
-                  <Label>Email address</Label>
-                  <Input
-                    type="email"
-                    placeholder="you@example.com"
-                    className="mt-1"
-                  />
-                </label>
-                <label className="block">
-                  <Label>Message</Label>
-                  <Textarea className="mt-1" rows={6} />
-                </label>
-                <div>
-                  <ButtonPrimary type="submit">Send Message</ButtonPrimary>
+              {sent ? (
+                <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-800 p-8 text-center">
+                  <h3 className="text-lg font-semibold">Message sent</h3>
+                  <p className="mt-2 text-neutral-500 dark:text-neutral-400">
+                    Thanks for reaching out — our team will get back to you soon.
+                  </p>
                 </div>
-              </form>
+              ) : (
+                <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
+                  {error && (
+                    <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">{error}</div>
+                  )}
+                  <label className="block">
+                    <Label>Full name</Label>
+                    <Input name="name" placeholder="Your name" type="text" required className="mt-1" />
+                    {fieldErrors?.name && (
+                      <span className="text-xs text-red-600">{fieldErrors.name[0]}</span>
+                    )}
+                  </label>
+                  <label className="block">
+                    <Label>Email address</Label>
+                    <Input
+                      name="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      required
+                      className="mt-1"
+                    />
+                    {fieldErrors?.email && (
+                      <span className="text-xs text-red-600">{fieldErrors.email[0]}</span>
+                    )}
+                  </label>
+                  <label className="block">
+                    <Label>Message</Label>
+                    <Textarea name="message" className="mt-1" rows={6} required />
+                    {fieldErrors?.message && (
+                      <span className="text-xs text-red-600">{fieldErrors.message[0]}</span>
+                    )}
+                  </label>
+                  <div>
+                    <ButtonPrimary type="submit" loading={isPending} disabled={isPending}>
+                      Send Message
+                    </ButtonPrimary>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>

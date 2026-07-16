@@ -1,5 +1,4 @@
 import React, { FC } from "react";
-import { DEMO_STAY_LISTINGS } from "@/data/listings";
 import { StayDataType } from "@/data/types";
 import StartRating from "@/components/StartRating";
 import BtnLikeIcon from "@/components/BtnLikeIcon";
@@ -10,16 +9,14 @@ import GallerySlider from "./GallerySlider";
 
 export interface StayCardProps {
   className?: string;
-  data?: StayDataType;
+  data: StayDataType;
   size?: "default" | "small";
 }
-
-const DEMO_DATA = DEMO_STAY_LISTINGS[0];
 
 const StayCard: FC<StayCardProps> = ({
   size = "default",
   className = "",
-  data = DEMO_DATA,
+  data,
 }) => {
   const {
     galleryImgs,

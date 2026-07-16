@@ -46,10 +46,10 @@ const MenuBar: React.FC<MenuBarProps> = ({
             <div className="flex justify-end min-h-full ">
               <Transition.Child
                 as={Fragment}
-                enter="transition duration-100 transform"
+                enter="transition duration-500 ease-out transform"
                 enterFrom="opacity-0 translate-x-56"
                 enterTo="opacity-100 translate-x-0"
-                leave="transition duration-150 transform"
+                leave="transition duration-200 ease-in transform"
                 leaveFrom="opacity-100 translate-x-0"
                 leaveTo="opacity-0 translate-x-56"
               >

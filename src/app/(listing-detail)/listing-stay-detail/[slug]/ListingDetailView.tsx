@@ -68,6 +68,9 @@ export default function ListingDetailView({
         isShowModal={isGalleryOpen}
         onClose={() => setIsGalleryOpen(false)}
         images={images}
+        listingId={listing.id}
+        isAuthenticated={isAuthenticated}
+        isFavorited={isFavorited}
       />
 
       {/* HEADER */}

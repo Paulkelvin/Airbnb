@@ -7,6 +7,7 @@ import ClearDataButton from "./ClearDataButton";
 import { useRef } from "react";
 import useOutsideAlerter from "@/hooks/useOutsideAlerter";
 import { MapPinIcon } from "@heroicons/react/24/outline";
+import { US_CITIES } from "@/data/usCities";
 
 export interface LocationInputProps {
   onInputDone?: (value: string) => void;
@@ -56,19 +57,14 @@ const LocationInput: FC<LocationInputProps> = ({
     setShowPopover(false);
   };
 
-  const renderRecentSearches = () => {
+  const renderPopularDestinations = () => {
     return (
       <>
         <h3 className="block mt-2 sm:mt-0 px-4 sm:px-8 font-semibold text-base text-neutral-800 dark:text-neutral-100">
-          Recent searches
+          Popular destinations
         </h3>
         <div className="mt-2">
-          {[
-            "Hamptons, Suffolk County, NY",
-            "Las Vegas, NV, United States",
-            "Ueno, Taito, Tokyo",
-            "Ikebukuro, Toshima, Tokyo",
-          ].map((item) => (
+          {US_CITIES.map((item) => (
             <span
               onClick={() => handleSelectLocation(item)}
               key={item}
@@ -88,14 +84,12 @@ const LocationInput: FC<LocationInputProps> = ({
   };
 
   const renderSearchValue = () => {
+    const filtered = US_CITIES.filter((city) =>
+      city.toLowerCase().includes(value.toLowerCase()),
+    );
     return (
       <>
-        {[
-          "Ha Noi, Viet Nam",
-          "San Diego, CA",
-          "Humboldt Park, Chicago, IL",
-          "Bangor, Northern Ireland",
-        ].map((item) => (
+        {filtered.map((item) => (
           <span
             onClick={() => handleSelectLocation(item)}
             key={item}
@@ -147,7 +141,7 @@ const LocationInput: FC<LocationInputProps> = ({
 
       {showPopover && (
         <div className="absolute left-0 z-40 w-full min-w-[300px] sm:min-w-[400px] bg-white dark:bg-neutral-800 top-full mt-3 py-3 sm:py-5 rounded-3xl shadow-xl max-h-96 overflow-y-auto">
-          {value ? renderSearchValue() : renderRecentSearches()}
+          {value ? renderSearchValue() : renderPopularDestinations()}
         </div>
       )}
     </div>

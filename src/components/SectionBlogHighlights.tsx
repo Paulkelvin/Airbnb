@@ -28,8 +28,12 @@ const SectionBlogHighlights: React.FC = () => {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
         {posts.map((post) => (
-          <Link key={post.slug} href={`/blog/${post.slug}` as Route} className="group block">
-            <div className="relative aspect-[16/10] rounded-2xl overflow-hidden">
+          <Link
+            key={post.slug}
+            href={`/blog/${post.slug}` as Route}
+            className="group block rounded-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden hover:shadow-lg dark:hover:border-neutral-600 transition-shadow duration-300"
+          >
+            <div className="relative aspect-[16/10] overflow-hidden">
               <Image
                 src={post.image}
                 fill
@@ -41,7 +45,7 @@ const SectionBlogHighlights: React.FC = () => {
                 {post.category}
               </span>
             </div>
-            <div className="mt-4">
+            <div className="p-4">
               <span className="text-xs text-neutral-500 dark:text-neutral-400">
                 {post.date} &middot; {post.readTime}
               </span>

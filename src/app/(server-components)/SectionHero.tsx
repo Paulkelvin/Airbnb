@@ -26,7 +26,7 @@ const SectionHero: FC<SectionHeroProps> = ({ className = "" }) => {
             Start your search
           </ButtonPrimary>
         </div>
-        <div className="flex-grow">
+        <div className="flex-grow lg:pb-20 xl:pb-28">
           <Image
             className="w-full rounded-2xl"
             src={imagePng}

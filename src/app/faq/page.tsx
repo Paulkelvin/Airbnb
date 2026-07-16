@@ -20,26 +20,30 @@ const FaqPage: React.FC = () => {
         <span className="block mt-3 text-neutral-500 dark:text-neutral-400 text-lg">
           Everything you need to know about booking, hosting, and staying with Potomac.
         </span>
-        <div className="w-14 border-b border-neutral-200 dark:border-neutral-700 mt-6 mb-10" />
 
-        <div className="max-w-3xl space-y-10">
+        <div className="max-w-3xl mt-10 space-y-12">
           {CATEGORIES.map((category) => (
             <div key={category}>
-              <h3 className="text-lg font-semibold text-primary-600 mb-3">
+              <h3 className="text-lg font-semibold text-primary-600 mb-4">
                 {category}
               </h3>
-              <div className="space-y-3">
+              <div className="rounded-3xl border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 overflow-hidden bg-white dark:bg-neutral-900 shadow-sm">
                 {faqs
                   .filter((f) => f.category === category)
-                  .map((faq) => (
+                  .map((faq, i) => (
                     <Disclosure key={faq.question}>
                       {({ open }) => (
-                        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
-                          <Disclosure.Button className="flex w-full items-center justify-between px-5 py-4 text-left font-medium text-neutral-900 dark:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
-                            <span>{faq.question}</span>
+                        <div>
+                          <Disclosure.Button className="flex w-full items-center gap-4 sm:gap-5 px-5 sm:px-6 py-5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors">
+                            <span className="flex-shrink-0 w-9 h-9 rounded-full bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-sm font-serif font-semibold flex items-center justify-center">
+                              {String(i + 1).padStart(2, "0")}
+                            </span>
+                            <span className="flex-1 font-medium text-neutral-900 dark:text-neutral-100">
+                              {faq.question}
+                            </span>
                             <ChevronDownIcon
-                              className={`w-5 h-5 flex-shrink-0 text-neutral-500 transition-transform duration-200 ${
-                                open ? "rotate-180" : ""
+                              className={`w-5 h-5 flex-shrink-0 text-neutral-400 transition-transform duration-200 ${
+                                open ? "rotate-180 text-primary-600" : ""
                               }`}
                             />
                           </Disclosure.Button>
@@ -51,7 +55,7 @@ const FaqPage: React.FC = () => {
                             leaveFrom="opacity-100 max-h-96"
                             leaveTo="opacity-0 max-h-0"
                           >
-                            <Disclosure.Panel className="overflow-hidden px-5 pb-4 text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                            <Disclosure.Panel className="overflow-hidden px-5 sm:px-6 pb-6 pl-[4.25rem] sm:pl-[4.75rem] text-neutral-600 dark:text-neutral-300 leading-relaxed">
                               {faq.answer}
                             </Disclosure.Panel>
                           </Transition>

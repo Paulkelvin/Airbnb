@@ -35,6 +35,7 @@ export const RATE_LIMITS = {
   /** Keyed by email — catches distributed brute-force against one target account. */
   LOGIN_EMAIL: { limit: 5, windowSeconds: 15 * 60 } satisfies RateLimitConfig,
   FORGOT_PASSWORD: { limit: 5, windowSeconds: 60 * 60 } satisfies RateLimitConfig,
+  CONTACT_FORM: { limit: 5, windowSeconds: 60 * 60 } satisfies RateLimitConfig,
 };
 
 /**

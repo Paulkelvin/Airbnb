@@ -4,14 +4,14 @@ import Image from "next/image";
 
 export const metadata = {
   title: "About Us",
-  description: "Learn about Potomac — our mission to connect travelers with unique stays and long-term rentals worldwide.",
+  description: "Learn about Potomac — our mission to connect travelers with unique stays and long-term rentals across the United States.",
 };
 
 const stats = [
-  { label: "Properties listed", value: "10,000+" },
-  { label: "Cities worldwide", value: "150+" },
-  { label: "Happy guests", value: "50,000+" },
-  { label: "Verified hosts", value: "3,000+" },
+  { label: "Properties listed", value: "15+" },
+  { label: "U.S. cities", value: "15" },
+  { label: "Verified hosts", value: "100%" },
+  { label: "Guest support", value: "24/7" },
 ];
 
 const values = [

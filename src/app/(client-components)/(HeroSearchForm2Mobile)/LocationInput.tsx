@@ -2,6 +2,7 @@
 
 import { MapPinIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import React, { useState, useEffect, useRef, FC } from "react";
+import { US_CITIES } from "@/data/usCities";
 
 interface Props {
   onClick?: () => void;
@@ -85,23 +86,13 @@ const LocationInput: FC<Props> = ({
           {value
             ? renderSearchValues({
                 heading: "Locations",
-                items: [
-                  "Afghanistan",
-                  "Albania",
-                  "Algeria",
-                  "American Samao",
-                  "Andorra",
-                ],
+                items: US_CITIES.filter((city) =>
+                  city.toLowerCase().includes(value.toLowerCase()),
+                ),
               })
             : renderSearchValues({
                 heading: "Popular destinations",
-                items: [
-                  "Australia",
-                  "Canada",
-                  "Germany",
-                  "United Kingdom",
-                  "United Arab Emirates",
-                ],
+                items: US_CITIES,
               })}
         </div>
       </div>

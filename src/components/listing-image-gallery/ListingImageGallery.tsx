@@ -9,7 +9,7 @@ import type { ListingGalleryImage } from "./utils/types";
 import { useLastViewedPhoto } from "./utils/useLastViewedPhoto";
 import { ArrowSmallLeftIcon } from "@heroicons/react/24/outline";
 import { Dialog, Transition } from "@headlessui/react";
-import LikeSaveBtns from "../LikeSaveBtns";
+import FavoriteButton from "@/app/(listing-detail)/listing-stay-detail/[slug]/FavoriteButton";
 import { Route } from "next";
 
 const PHOTOS: string[] = [
@@ -48,11 +48,17 @@ interface Props {
   images?: ListingGalleryImage[];
   onClose?: () => void;
   isShowModal: boolean;
+  listingId?: string;
+  isAuthenticated?: boolean;
+  isFavorited?: boolean;
 }
 
 const ListingImageGallery: FC<Props> = ({
   images = DEMO_IMAGE,
   onClose,
+  listingId,
+  isAuthenticated = false,
+  isFavorited = false,
   isShowModal,
 }) => {
   const searchParams = useSearchParams();
@@ -143,7 +149,13 @@ const ListingImageGallery: FC<Props> = ({
               >
                 <ArrowSmallLeftIcon className="w-6 h-6" />
               </button>
-              <LikeSaveBtns />
+              {listingId && (
+                <FavoriteButton
+                  listingId={listingId}
+                  isAuthenticated={isAuthenticated}
+                  initiallyFavorited={isFavorited}
+                />
+              )}
             </div>
 
             <div className="flex min-h-full items-center justify-center sm:p-4 pt-0 text-center">

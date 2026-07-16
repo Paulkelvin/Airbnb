@@ -4,19 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import { markNotificationRead, markAllNotificationsRead, updateNotificationPreference } from "@/modules/notifications/actions";
-
-type NotificationType =
-  | "BOOKING_CONFIRMED"
-  | "BOOKING_CANCELLED"
-  | "NEW_MESSAGE"
-  | "NEW_INQUIRY"
-  | "REVIEW_RECEIVED"
-  | "PAYOUT_SENT"
-  | "LISTING_APPROVED"
-  | "LISTING_REJECTED"
-  | "RENT_DUE_REMINDER"
-  | "PASSWORD_CHANGED"
-  | "PAYMENT_FAILED";
+import { TYPE_LABELS, summarizeNotification } from "@/modules/notifications/format";
+import type { NotificationType } from "@prisma/client";
 
 interface NotificationItem {
   id: string;
@@ -29,47 +18,6 @@ interface NotificationItem {
 interface PreferenceItem {
   type: NotificationType;
   emailEnabled: boolean;
-}
-
-const TYPE_LABELS: Record<NotificationType, string> = {
-  BOOKING_CONFIRMED: "Booking confirmed",
-  BOOKING_CANCELLED: "Booking cancelled",
-  NEW_MESSAGE: "New message",
-  NEW_INQUIRY: "New inquiry",
-  REVIEW_RECEIVED: "New review",
-  PAYOUT_SENT: "Payout sent",
-  LISTING_APPROVED: "Listing approved",
-  LISTING_REJECTED: "Listing not approved",
-  RENT_DUE_REMINDER: "Rent due soon",
-  PASSWORD_CHANGED: "Password changed",
-  PAYMENT_FAILED: "Payment failed",
-};
-
-function summarize(type: NotificationType, payload: Record<string, unknown>): string {
-  switch (type) {
-    case "BOOKING_CONFIRMED":
-    case "BOOKING_CANCELLED":
-      return String(payload.listingTitle ?? "");
-    case "NEW_MESSAGE":
-      return `${payload.senderName}: "${payload.preview}"`;
-    case "NEW_INQUIRY":
-      return `${payload.senderName} asked about "${payload.listingTitle}"`;
-    case "REVIEW_RECEIVED":
-      return `${payload.rating}-star review for "${payload.listingTitle}"`;
-    case "PAYOUT_SENT":
-      return `${((payload.amount as number) / 100).toFixed(2)} ${payload.currency}`;
-    case "LISTING_APPROVED":
-    case "LISTING_REJECTED":
-      return String(payload.listingTitle ?? "");
-    case "RENT_DUE_REMINDER":
-      return `${payload.listingTitle} — due ${payload.dueDate}`;
-    case "PASSWORD_CHANGED":
-      return "Your password was changed";
-    case "PAYMENT_FAILED":
-      return String(payload.failureReason ?? "A payment could not be processed");
-    default:
-      return "";
-  }
 }
 
 export default function NotificationsClient({
@@ -132,7 +80,7 @@ export default function NotificationsClient({
                 >
                   <div>
                     <p className="text-sm font-medium">{TYPE_LABELS[n.type]}</p>
-                    <p className="text-sm text-neutral-500">{summarize(n.type, n.payload)}</p>
+                    <p className="text-sm text-neutral-500">{summarizeNotification(n.type, n.payload)}</p>
                     <p className="text-xs text-neutral-400 mt-1">{new Date(n.createdAt).toLocaleString()}</p>
                   </div>
                   {isUnread && (

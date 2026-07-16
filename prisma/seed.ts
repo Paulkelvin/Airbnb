@@ -360,6 +360,21 @@ async function main() {
   });
   console.log(`  Host user: ${host.email}`);
 
+  const adminPasswordHash = await bcrypt.hash("PotomacAdmin2026!", 12);
+  const admin = await prisma.user.upsert({
+    where: { email: "admin@potomac-demo.com" },
+    update: {},
+    create: {
+      email: "admin@potomac-demo.com",
+      passwordHash: adminPasswordHash,
+      firstName: "Potomac",
+      lastName: "Admin",
+      roles: ["CUSTOMER", "ADMIN"],
+      isVerified: true,
+    },
+  });
+  console.log(`  Admin user: ${admin.email}`);
+
   const allPropTypes = await prisma.propertyType.findMany();
   const ptByName = (n: string) => allPropTypes.find((p) => p.name === n)!.id;
   const allAmenities = await prisma.amenity.findMany();
