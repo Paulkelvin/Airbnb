@@ -485,6 +485,26 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 
 ---
 
+## ADR-028: First Deployment Fixes — Prisma Client Generation on Vercel, Build-Time-DB-Independent Sitemap
+
+**Decision:** Two fixes surfaced by the project's actual first Vercel deployment attempt (`docs/release-readiness-plan.md` §3), both code-only:
+
+1. **`"postinstall": "prisma generate"` added to `package.json`'s `scripts`.** The first real Vercel build failed outright — `PrismaClientInitializationError` at `/api/auth/[...nextauth]`'s page-data-collection step, because Vercel's cached-`node_modules` install path skips whatever implicit `prisma generate` a fresh `npm install` would otherwise trigger, per Prisma's own documented Vercel gotcha (pris.ly/d/vercel-build). A `postinstall` script is the standard, Prisma-recommended fix: it runs after every install regardless of cache state, so the generated client can never silently go stale.
+
+2. **`src/app/sitemap.ts` marked `export const dynamic = "force-dynamic"`.** The same first deployment's build then failed a second way, later in the same build: `sitemap.ts` (ADR-027 #5) queries `Listing` via Prisma with no route-segment config, so Next's App Router attempted to statically prerender `/sitemap.xml` *at build time* — and a build must never depend on the database being reachable. Verified locally by dropping the local Postgres connection entirely and confirming `next build` now succeeds end-to-end (`/sitemap.xml` regenerates per-request instead). `export const revalidate` alone was tried first and rejected (see below) — App Router still performs an initial static-generation pass for an ISR-configured route at build time, which reproduces the exact same failure.
+
+**Reasoning:** Both bugs are real production-blocking defects, not hypothetical — they were found by the actual deployment failing, not by inspection. Neither requires reasoning about business logic or module boundaries; both are standard, narrowly-scoped Next.js/Prisma/Vercel platform-integration fixes.
+
+**Alternatives Considered:** (1) For the sitemap, `export const revalidate = 3600` (ISR) instead of `force-dynamic`. (2) Running `prisma generate` manually as a one-off Vercel "Build Command" override in project settings instead of a `postinstall` script.
+
+**Why Rejected:** (1) Confirmed by testing (see Decision #2) that `revalidate` does not avoid the build-time static-generation attempt for a route-handler-style special file (`sitemap.ts`) the way it might for a page — only `force-dynamic` does. A sitemap is crawled infrequently by bots, not by users on a hot path, so per-request generation with no caching has no meaningful cost. (2) A Vercel dashboard build-command override is invisible to anyone reading the repository, breaks for any other environment that runs `npm install`/`yarn install` directly (e.g. a future CI pipeline), and isn't captured by this documentation discipline — the `postinstall` script is portable and self-documenting.
+
+**Trade-offs Accepted:** `/sitemap.xml` now does a live database query on every crawl request instead of being served as a pre-built static file — acceptable given crawl frequency is low and the query (`getPublishedListingSlugsForSitemap()`, slug + `updatedAt` only) is cheap. If sitemap-request volume or database load ever becomes a real concern, revisit with a genuine ISR/ on-demand-revalidation setup that doesn't require build-time DB access (e.g. revalidating via a webhook when a listing is published, rather than a time interval).
+
+**Revisit If:** Sitemap crawl volume grows enough to matter for database load — add on-demand revalidation triggered from `publishListing()`/`approveListing()` instead of `force-dynamic`.
+
+---
+
 ## Index of Decisions
 
 | ADR | Decision |
@@ -516,3 +536,4 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 | 025 | Admin dashboard — conditional listing moderation, key-value platform settings, polymorphic audit targeting |
 | 026 | Notifications — `EmailProvider` abstraction, two-row-per-channel dispatch, critical-type email override |
 | 027 | Release hardening — security headers, rate limiting extension, password-reset delivery, file-convention SEO metadata |
+| 028 | First deployment fixes — Prisma Client generation on Vercel, build-time-DB-independent sitemap |

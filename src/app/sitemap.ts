@@ -7,7 +7,17 @@ import { getPublishedListingSlugsForSitemap } from "@/modules/listings/queries";
  * published listing detail page plus the site's static marketing routes.
  * Account/admin/checkout/API routes are intentionally excluded (see
  * `src/app/robots.ts`, which disallows crawling them).
+ *
+ * `force-dynamic` (not the default static-at-build-time behavior) so this
+ * route is generated per-request, never baked into the Vercel build — a
+ * transient database hiccup (or, as discovered during deployment, the
+ * database simply not existing yet at build time) must never fail the
+ * entire build over a sitemap. `revalidate` alone isn't enough here: App
+ * Router still attempts an initial static generation pass for an ISR
+ * route at build time, which is exactly the failure this avoids.
  */
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();
 
