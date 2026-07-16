@@ -31,7 +31,7 @@ const REASONS = [
 
 const SectionWhyBookWithUs = () => {
   return (
-    <div className="nc-SectionWhyBookWithUs relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary-6000 via-primary-700 to-secondary-6000">
+    <div className="nc-SectionWhyBookWithUs relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary-500 via-primary-6000 to-secondary-500">
       {/* Decorative glow accents */}
       <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-white/10 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-24 -right-16 w-80 h-80 rounded-full bg-secondary-500/30 blur-3xl pointer-events-none" />

@@ -192,7 +192,6 @@ export default function ListingDetailView({
           {/* SECTION 2: DESCRIPTION */}
           <div className="listingSection__wrap">
             <h2 className="text-2xl font-semibold">About this place</h2>
-            <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
             <div className="text-neutral-6000 dark:text-neutral-300 whitespace-pre-line">
               {listing.description || "No description provided yet."}
             </div>
@@ -201,7 +200,6 @@ export default function ListingDetailView({
           {/* SECTION 3: AMENITIES */}
           <div className="listingSection__wrap">
             <h2 className="text-2xl font-semibold">Amenities</h2>
-            <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
             {listing.amenities.length === 0 ? (
               <p className="text-neutral-500">No amenities listed.</p>
             ) : (
@@ -220,7 +218,6 @@ export default function ListingDetailView({
             <h2 className="text-2xl font-semibold">
               {listing.pricing.rentalType === "SHORT_TERM" ? "Rate details" : "Lease details"}
             </h2>
-            <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
             <div className="flow-root">
               <div className="text-sm sm:text-base text-neutral-6000 dark:text-neutral-300 -mb-4">
                 {listing.pricing.rentalType === "SHORT_TERM" ? (
@@ -275,7 +272,6 @@ export default function ListingDetailView({
           {/* SECTION 5: HOST */}
           <div className="listingSection__wrap">
             <h2 className="text-2xl font-semibold">Host information</h2>
-            <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
             <div className="flex items-center space-x-4">
               <Avatar
                 imgUrl={listing.host.avatarUrl ?? undefined}
@@ -308,7 +304,6 @@ export default function ListingDetailView({
               <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
                 {listing.address.city}, {listing.address.region}, {listing.address.country}
               </span>
-              <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
               {listing.address.latitude && listing.address.longitude && (
                 <div className="aspect-w-5 aspect-h-5 sm:aspect-h-3 ring-1 ring-black/10 rounded-xl z-0">
                   <div className="rounded-xl overflow-hidden z-0">

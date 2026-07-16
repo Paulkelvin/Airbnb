@@ -74,6 +74,7 @@ const amenities: { name: string; slug: string; category: AmenityCategory; icon: 
 ];
 
 const CLD = "https://res.cloudinary.com/lbwzvp5s/image/upload";
+const CLD_EXTRA = `${CLD}/potomac/listings`;
 
 const listingsData = [
   {
@@ -85,7 +86,12 @@ const listingsData = [
     amenitySlugs: ["wifi", "air-conditioning", "elevator", "tv", "coffee-maker", "washer"],
     avgRating: 4.7, reviewCount: 42,
     description: "Step into this beautifully renovated one-bedroom apartment in the heart of Manhattan. Floor-to-ceiling windows flood the space with natural light, while the modern kitchen and rainfall shower make every stay feel like a luxury retreat. Walk to Union Square, Gramercy Park, and dozens of restaurants within minutes.",
-    images: [`${CLD}/listings/seed_property_1.jpg`, `${CLD}/listings/seed_property_26.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_1.jpg`,
+      `${CLD}/listings/seed_property_26.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_0_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_0_b.jpg`,
+    ],
   },
   {
     title: "Beachfront Villa with Private Pool in Miami",
@@ -96,7 +102,12 @@ const listingsData = [
     amenitySlugs: ["wifi", "pool", "air-conditioning", "free-parking", "bbq-grill", "full-kitchen", "tv", "washer", "dryer"],
     avgRating: 4.9, reviewCount: 87,
     description: "Wake up to the sound of waves in this stunning beachfront villa. Featuring a private infinity pool, spacious outdoor terrace with BBQ, and direct beach access. Four bedrooms each with en-suite bathrooms make this the perfect retreat for families or groups. Just steps from South Beach's legendary nightlife and dining.",
-    images: [`${CLD}/listings/seed_property_2.jpg`, `${CLD}/listings/seed_property_15.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_2.jpg`,
+      `${CLD}/listings/seed_property_15.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_1_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_1_b.jpg`,
+    ],
   },
   {
     title: "Cozy Mountain Cabin in Asheville",
@@ -107,7 +118,12 @@ const listingsData = [
     amenitySlugs: ["wifi", "fireplace", "free-parking", "patio", "full-kitchen", "coffee-maker", "books"],
     avgRating: 4.8, reviewCount: 63,
     description: "Escape to this charming mountain cabin nestled among the Blue Ridge Mountains. Curl up by the stone fireplace, enjoy morning coffee on the wraparound porch with panoramic views, or explore nearby hiking trails and waterfalls. The perfect blend of rustic charm and modern comfort.",
-    images: [`${CLD}/listings/seed_property_19.jpg`, `${CLD}/listings/seed_property_17.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_19.jpg`,
+      `${CLD}/listings/seed_property_17.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_2_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_2_b.jpg`,
+    ],
   },
   {
     title: "Luxury Penthouse with Skyline Views in Chicago",
@@ -118,7 +134,12 @@ const listingsData = [
     amenitySlugs: ["wifi", "air-conditioning", "elevator", "gym", "tv", "dishwasher", "washer", "dryer", "balcony"],
     avgRating: 4.9, reviewCount: 31,
     description: "Experience Chicago from the top floor of this stunning penthouse overlooking the Magnificent Mile. Floor-to-ceiling windows frame breathtaking views of Lake Michigan and the city skyline. The gourmet kitchen, spa-like bathrooms, and private balcony make this the ultimate urban retreat.",
-    images: [`${CLD}/listings/seed_property_4.jpg`, `${CLD}/listings/seed_property_3.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_4.jpg`,
+      `${CLD}/listings/seed_property_3.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_3_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_3_b.jpg`,
+    ],
   },
   {
     title: "Charming Cottage in Savannah Historic District",
@@ -129,7 +150,12 @@ const listingsData = [
     amenitySlugs: ["wifi", "air-conditioning", "garden", "free-parking", "full-kitchen", "washer", "patio"],
     avgRating: 4.6, reviewCount: 55,
     description: "Stay in one of Savannah's most photographed streets in this beautifully restored 1890s cottage. Original hardwood floors, exposed brick, and a private courtyard garden create an atmosphere of Southern elegance. Walk to Forsyth Park, River Street, and the best restaurants in the historic district.",
-    images: [`${CLD}/listings/seed_property_20.jpg`, `${CLD}/listings/seed_property_25.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_20.jpg`,
+      `${CLD}/listings/seed_property_25.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_4_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_4_b.jpg`,
+    ],
   },
   {
     title: "Modern Loft in Arts District Los Angeles",
@@ -140,7 +166,12 @@ const listingsData = [
     amenitySlugs: ["wifi", "air-conditioning", "coffee-maker", "tv", "streaming-services", "street-parking"],
     avgRating: 4.5, reviewCount: 38,
     description: "This converted warehouse loft in LA's vibrant Arts District features 16-foot ceilings, polished concrete floors, and walls of industrial windows. The open-plan living space is filled with curated art and designer furniture. Steps from world-class galleries, craft breweries, and some of the city's best dining.",
-    images: [`${CLD}/listings/seed_property_6.jpg`, `${CLD}/listings/seed_property_30.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_6.jpg`,
+      `${CLD}/listings/seed_property_30.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_5_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_5_b.jpg`,
+    ],
   },
   {
     title: "Waterfront Bungalow in Charleston",
@@ -151,7 +182,12 @@ const listingsData = [
     amenitySlugs: ["wifi", "air-conditioning", "patio", "free-parking", "full-kitchen", "coffee-maker", "washer", "balcony"],
     avgRating: 4.7, reviewCount: 49,
     description: "This lovingly restored bungalow sits on Charleston's famous Battery, with sweeping views of the harbor. The wraparound porch is perfect for watching sunsets over Fort Sumter. Two bedrooms, each with its own bathroom, plus a fully equipped kitchen with local coffee and tea. Walk to King Street shopping and Rainbow Row.",
-    images: [`${CLD}/listings/seed_property_8.jpg`, `${CLD}/listings/seed_property_21.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_8.jpg`,
+      `${CLD}/listings/seed_property_21.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_6_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_6_b.jpg`,
+    ],
   },
   {
     title: "Desert Retreat Studio in Scottsdale",
@@ -162,7 +198,12 @@ const listingsData = [
     amenitySlugs: ["wifi", "air-conditioning", "pool", "free-parking", "kitchenette", "tv"],
     avgRating: 4.4, reviewCount: 22,
     description: "A tranquil desert studio with access to a shared resort-style pool and hot tub. The minimalist design features floor-to-ceiling desert views, a comfortable queen bed, and a well-appointed kitchenette. Perfect as a base for exploring Camelback Mountain, Old Town Scottsdale, and the Sonoran Desert.",
-    images: [`${CLD}/listings/seed_property_9.jpg`, `${CLD}/listings/seed_property_7.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_9.jpg`,
+      `${CLD}/listings/seed_property_7.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_7_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_7_b.jpg`,
+    ],
   },
   {
     title: "Historic Townhouse in Georgetown DC",
@@ -173,7 +214,12 @@ const listingsData = [
     amenitySlugs: ["wifi", "air-conditioning", "full-kitchen", "washer", "dryer", "garden", "tv", "books", "fireplace"],
     avgRating: 4.8, reviewCount: 36,
     description: "A beautifully appointed Federal-style townhouse in the heart of Georgetown. Three floors of elegant living with original fireplaces, a chef's kitchen, and a private walled garden. Walk to Georgetown's shops, restaurants, the C&O Canal, and the waterfront. A true Washington, DC experience.",
-    images: [`${CLD}/listings/seed_property_13.jpg`, `${CLD}/listings/seed_property_12.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_13.jpg`,
+      `${CLD}/listings/seed_property_12.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_8_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_8_b.jpg`,
+    ],
   },
   {
     title: "Oceanview Condo in San Diego",
@@ -184,7 +230,12 @@ const listingsData = [
     amenitySlugs: ["wifi", "air-conditioning", "pool", "gym", "elevator", "balcony", "full-kitchen", "tv", "free-parking"],
     avgRating: 4.6, reviewCount: 44,
     description: "This bright corner unit offers panoramic ocean views from a private balcony. The open-concept living area flows into a modern kitchen with granite countertops. Building amenities include a rooftop pool, fitness center, and concierge. Steps from the Gaslamp Quarter, Petco Park, and the harbor.",
-    images: [`${CLD}/listings/seed_property_11.jpg`, `${CLD}/listings/seed_property_14.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_11.jpg`,
+      `${CLD}/listings/seed_property_14.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_9_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_9_b.jpg`,
+    ],
   },
   {
     title: "Spacious Family House in Austin",
@@ -196,7 +247,12 @@ const listingsData = [
     avgRating: 4.7, reviewCount: 18,
     description: "A beautifully updated three-bedroom home in East Austin's most desirable neighborhood. The open-plan living and dining area opens onto a large backyard with mature trees and a covered patio — perfect for entertaining. Two-car garage, walking distance to restaurants, cafes, and Lady Bird Lake trails. Available for 12+ month lease.",
     utilitiesIncluded: false,
-    images: [`${CLD}/listings/seed_property_5.jpg`, `${CLD}/listings/seed_property_22.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_5.jpg`,
+      `${CLD}/listings/seed_property_22.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_10_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_10_b.jpg`,
+    ],
   },
   {
     title: "Modern Downtown Apartment in Denver",
@@ -208,7 +264,12 @@ const listingsData = [
     avgRating: 4.5, reviewCount: 12,
     description: "Live in the heart of downtown Denver in this sleek one-bedroom apartment. The building features a rooftop deck with mountain views, a state-of-the-art fitness center, and in-unit laundry. Walk to Union Station, Coors Field, and the 16th Street Mall. Ideal for young professionals. 12-month minimum lease.",
     utilitiesIncluded: true,
-    images: [`${CLD}/listings/seed_property_16.jpg`, `${CLD}/listings/seed_property_10.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_16.jpg`,
+      `${CLD}/listings/seed_property_10.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_11_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_11_b.jpg`,
+    ],
   },
   {
     title: "Farmhouse Retreat in Hudson Valley",
@@ -219,7 +280,12 @@ const listingsData = [
     amenitySlugs: ["wifi", "fireplace", "free-parking", "garden", "full-kitchen", "patio", "bbq-grill", "books", "board-games"],
     avgRating: 4.9, reviewCount: 71,
     description: "Escape to this restored 1840s farmhouse on 12 acres in the scenic Hudson Valley. Three bedrooms, two fireplaces, a farmhouse kitchen, and wraparound porch with views of rolling pastures. Pick apples in the orchard, hike nearby trails, or visit the charming town of Hudson's antique shops and farm-to-table restaurants.",
-    images: [`${CLD}/listings/seed_property_18.jpg`, `${CLD}/listings/seed_property_24.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_18.jpg`,
+      `${CLD}/listings/seed_property_24.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_12_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_12_b.jpg`,
+    ],
   },
   {
     title: "Elegant Duplex in Boston Back Bay",
@@ -231,7 +297,12 @@ const listingsData = [
     avgRating: 4.8, reviewCount: 9,
     description: "A rare two-floor duplex on one of Boston's most prestigious streets. The lower level features an open living and dining area with bay windows and a working fireplace; the upper level has two spacious bedrooms with original crown molding. Walking distance to the Esplanade, Newbury Street, and the T. 12-month lease.",
     utilitiesIncluded: false,
-    images: [`${CLD}/listings/seed_property_27.jpg`, `${CLD}/listings/seed_property_29.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_27.jpg`,
+      `${CLD}/listings/seed_property_29.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_13_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_13_b.jpg`,
+    ],
   },
   {
     title: "Tropical Guest House in Key West",
@@ -242,7 +313,12 @@ const listingsData = [
     amenitySlugs: ["wifi", "air-conditioning", "pool", "patio", "kitchenette", "coffee-maker", "tv"],
     avgRating: 4.6, reviewCount: 58,
     description: "A private guest house in a lush tropical compound just two blocks from Duval Street. The detached cottage features its own entrance, a queen bed with luxury linens, and a kitchenette. Cool off in the shared saltwater pool surrounded by palm trees and bougainvillea. The quintessential Key West experience.",
-    images: [`${CLD}/listings/seed_property_23.jpg`, `${CLD}/listings/seed_property_28.jpg`],
+    images: [
+      `${CLD}/listings/seed_property_23.jpg`,
+      `${CLD}/listings/seed_property_28.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_14_a.jpg`,
+      `${CLD_EXTRA}/seed_property_extra_14_b.jpg`,
+    ],
   },
 ];
 
@@ -291,10 +367,28 @@ async function main() {
 
   let created = 0;
   let skipped = 0;
+  let imagesBackfilled = 0;
   for (const [i, data] of Array.from(listingsData.entries())) {
     const slug = data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
     const existing = await prisma.listing.findUnique({ where: { slug } });
-    if (existing) { skipped++; continue; }
+    if (existing) {
+      const existingImageCount = await prisma.image.count({ where: { listingId: existing.id } });
+      if (existingImageCount < data.images.length) {
+        await prisma.image.deleteMany({ where: { listingId: existing.id } });
+        await prisma.image.createMany({
+          data: data.images.map((url, pos) => ({
+            listingId: existing.id,
+            url,
+            publicId: url.replace(`${CLD}/`, "").replace(/\.jpg$/, ""),
+            position: pos,
+            isCover: pos === 0,
+          })),
+        });
+        imagesBackfilled++;
+      }
+      skipped++;
+      continue;
+    }
 
     const amenityIds = data.amenitySlugs
       .map((s: string) => amenityId(s))
@@ -349,7 +443,7 @@ async function main() {
         images: {
           create: data.images.map((url, pos) => ({
             url,
-            publicId: `listings/seed_property_${i * 2 + pos + 1}`,
+            publicId: url.replace(`${CLD}/`, "").replace(/\.jpg$/, ""),
             position: pos,
             isCover: pos === 0,
           })),
@@ -358,7 +452,7 @@ async function main() {
     });
     created++;
   }
-  console.log(`  Listings: ${created} created, ${skipped} already existed`);
+  console.log(`  Listings: ${created} created, ${skipped} already existed (${imagesBackfilled} had images backfilled)`);
 
   console.log("Seeding complete.");
 }

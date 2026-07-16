@@ -40,7 +40,6 @@ export default function ReviewsSection({
   return (
     <div className="listingSection__wrap">
       <h2 className="text-2xl font-semibold">Reviews ({reviewCount})</h2>
-      <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
       {reviewCount === 0 ? (
         <p className="text-neutral-500">No reviews yet.</p>
       ) : (
