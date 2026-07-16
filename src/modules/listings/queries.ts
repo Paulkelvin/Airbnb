@@ -130,3 +130,15 @@ export async function getPublishedListingSlugsForSitemap(): Promise<
     orderBy: { publishedAt: "desc" },
   });
 }
+
+/** Cities with the most published listings — feeds the homepage's destination tabs. */
+export async function getTopCities(limit = 6): Promise<string[]> {
+  const rows = await prisma.address.groupBy({
+    by: ["city"],
+    where: { listing: { status: "PUBLISHED" } },
+    _count: { city: true },
+    orderBy: { _count: { city: "desc" } },
+    take: limit,
+  });
+  return rows.map((row) => row.city);
+}

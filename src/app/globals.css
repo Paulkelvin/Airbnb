@@ -45,4 +45,13 @@
   [data-headlessui-state] {
     @apply transition-all duration-200 ease-out;
   }
+
+  /* Hide scrollbars on horizontally-scrollable "peek" carousels */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }

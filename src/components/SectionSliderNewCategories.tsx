@@ -1,15 +1,11 @@
 "use client";
 
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useEffect, useRef, useState } from "react";
 import { TaxonomyType } from "@/data/types";
 import CardCategoryBox1 from "@/components/CardCategoryBox1";
 import Heading from "@/components/ui/Heading";
-import { AnimatePresence, motion, MotionConfig } from "framer-motion";
-import { useSwipeable } from "react-swipeable";
 import PrevBtn from "./PrevBtn";
 import NextBtn from "./NextBtn";
-import { variants } from "@/utils/animationVariants";
-import { useWindowSize } from "react-use";
 
 export interface SectionSliderNewCategoriesProps {
   className?: string;
@@ -105,116 +101,73 @@ const SectionSliderNewCategories: FC<SectionSliderNewCategoriesProps> = ({
   itemPerRow = 5,
   sliderStyle = "style1",
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState(0);
-  const [numberOfItems, setNumberOfitem] = useState(0);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(true);
 
-  const windowWidth = useWindowSize().width;
-  useEffect(() => {
-    if (windowWidth < 320) {
-      return setNumberOfitem(1);
-    }
-    if (windowWidth < 500) {
-      return setNumberOfitem(itemPerRow - 3);
-    }
-    if (windowWidth < 1024) {
-      return setNumberOfitem(itemPerRow - 2);
-    }
-    if (windowWidth < 1280) {
-      return setNumberOfitem(itemPerRow - 1);
-    }
-
-    setNumberOfitem(itemPerRow);
-  }, [itemPerRow, windowWidth]);
-
-  function changeItemId(newVal: number) {
-    if (newVal > currentIndex) {
-      setDirection(1);
-    } else {
-      setDirection(-1);
-    }
-    setCurrentIndex(newVal);
-  }
-
-  const handlers = useSwipeable({
-    onSwipedLeft: () => {
-      if (currentIndex < categories?.length - 1) {
-        changeItemId(currentIndex + 1);
-      }
-    },
-    onSwipedRight: () => {
-      if (currentIndex > 0) {
-        changeItemId(currentIndex - 1);
-      }
-    },
-    trackMouse: true,
-    preventScrollOnSwipe: true,
-  });
-
-  const renderCard = (item: TaxonomyType) => {
-    return <CardCategoryBox1 taxonomy={item} />;
+  const updateScrollState = () => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    setCanPrev(el.scrollLeft > 8);
+    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
   };
 
-  if (!numberOfItems) return null;
+  useEffect(() => {
+    updateScrollState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories]);
+
+  const scrollByAmount = (dir: 1 | -1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>("[data-slide]");
+    const amount = (card?.offsetWidth ?? el.clientWidth * 0.8) + 16;
+    el.scrollBy({ left: dir * amount, behavior: "smooth" });
+  };
+
+  // Cards are sized as a fraction of the viewport (not an even 1/n grid) so
+  // the next card visibly "bleeds" in from the edge, inviting a swipe/scroll
+  // — matching the peek-carousel pattern instead of a full-page-per-view slider.
+  const widthClass =
+    itemPerRow === 4
+      ? "w-[72%] sm:w-[45%] md:w-[32%] lg:w-[24%]"
+      : "w-[72%] sm:w-[45%] md:w-[32%] lg:w-[19%] xl:w-[18%]";
 
   return (
     <div className={`nc-SectionSliderNewCategories ${className}`}>
       <Heading desc={subHeading} isCenter={sliderStyle === "style2"}>
         {heading}
       </Heading>
-      <MotionConfig
-        transition={{
-          x: { type: "spring", stiffness: 300, damping: 30 },
-          opacity: { duration: 0.2 },
-        }}
-      >
-        <div className={`relative flow-root`} {...handlers}>
-          <div className={`flow-root overflow-hidden rounded-xl`}>
-            <motion.ul
-              initial={false}
-              className="relative whitespace-nowrap -mx-2 xl:-mx-4"
+      <div className="relative flow-root">
+        <div
+          ref={scrollerRef}
+          onScroll={updateScrollState}
+          className="no-scrollbar flex gap-4 xl:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:-mx-2 sm:px-2"
+        >
+          {categories.map((item, indx) => (
+            <div
+              data-slide
+              key={indx}
+              className={`flex-none snap-start ${widthClass} ${itemClassName}`}
             >
-              <AnimatePresence initial={false} custom={direction}>
-                {categories.map((item, indx) => (
-                  <motion.li
-                    className={`relative inline-block px-2 xl:px-4 ${itemClassName}`}
-                    custom={direction}
-                    initial={{
-                      x: `${(currentIndex - 1) * -100}%`,
-                    }}
-                    animate={{
-                      x: `${currentIndex * -100}%`,
-                    }}
-                    variants={variants(200, 1)}
-                    key={indx}
-                    style={{
-                      width: `calc(1/${numberOfItems} * 100%)`,
-                    }}
-                  >
-                    {renderCard(item)}
-                  </motion.li>
-                ))}
-              </AnimatePresence>
-            </motion.ul>
-          </div>
-
-          {currentIndex ? (
-            <PrevBtn
-              style={{ transform: "translate3d(0, 0, 0)" }}
-              onClick={() => changeItemId(currentIndex - 1)}
-              className="w-9 h-9 xl:w-12 xl:h-12 text-lg absolute -left-3 xl:-left-6 top-1/3 -translate-y-1/2 z-[1]"
-            />
-          ) : null}
-
-          {categories.length > currentIndex + numberOfItems ? (
-            <NextBtn
-              style={{ transform: "translate3d(0, 0, 0)" }}
-              onClick={() => changeItemId(currentIndex + 1)}
-              className="w-9 h-9 xl:w-12 xl:h-12 text-lg absolute -right-3 xl:-right-6 top-1/3 -translate-y-1/2 z-[1]"
-            />
-          ) : null}
+              <CardCategoryBox1 taxonomy={item} />
+            </div>
+          ))}
         </div>
-      </MotionConfig>
+
+        {canPrev && (
+          <PrevBtn
+            onClick={() => scrollByAmount(-1)}
+            className="hidden md:inline-flex w-10 h-10 xl:w-12 xl:h-12 text-lg absolute -left-3 xl:-left-6 top-1/3 -translate-y-1/2 z-[1]"
+          />
+        )}
+        {canNext && (
+          <NextBtn
+            onClick={() => scrollByAmount(1)}
+            className="hidden md:inline-flex w-10 h-10 xl:w-12 xl:h-12 text-lg absolute -right-3 xl:-right-6 top-1/3 -translate-y-1/2 z-[1]"
+          />
+        )}
+      </div>
     </div>
   );
 };
