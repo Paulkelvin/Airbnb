@@ -12,6 +12,8 @@ export interface ShortTermQuoteInput {
   weeklyDiscountPercent: number | null;
   monthlyDiscountPercent: number | null;
   nights: number;
+  /** Fraction (0-1) of subtotal charged as the guest service fee. Defaults to the platform constant. */
+  serviceFeePercent?: number;
 }
 
 export interface ShortTermQuote {
@@ -41,7 +43,7 @@ export function computeShortTermQuote(input: ShortTermQuoteInput): ShortTermQuot
   const discountAmount = roundToCents(nightlyTotal * (discountPercent / 100));
   const cleaningFee = input.cleaningFee ?? 0;
   const subtotal = roundToCents(nightlyTotal - discountAmount + cleaningFee);
-  const serviceFee = computeServiceFeeDollars(subtotal);
+  const serviceFee = computeServiceFeeDollars(subtotal, input.serviceFeePercent);
   const totalPrice = roundToCents(subtotal + serviceFee);
 
   return {

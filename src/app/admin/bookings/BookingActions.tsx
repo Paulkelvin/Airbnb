@@ -2,13 +2,12 @@
 
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { adminForceBookingTransition } from "@/modules/admin/actions";
+import { adminResolveDispute } from "@/modules/bookings/actions";
 
 const RESOLUTION_OPTIONS = [
-  { label: "Mark Completed", status: "COMPLETED" },
-  { label: "Cancel (Guest)", status: "CANCELLED_BY_GUEST" },
-  { label: "Cancel (Host)", status: "CANCELLED_BY_HOST" },
-] as const;
+  { label: "Refund guest & cancel", resolution: "REFUND_GUEST" as const },
+  { label: "Deny refund, side with host", resolution: "SIDE_WITH_HOST" as const },
+];
 
 export function BookingActions({
   bookingId,
@@ -21,9 +20,15 @@ export function BookingActions({
   const [showResolve, setShowResolve] = useState(false);
   const router = useRouter();
 
-  function handleResolve(nextStatus: string) {
+  function handleResolve(resolution: "REFUND_GUEST" | "SIDE_WITH_HOST") {
+    const reason = window.prompt(
+      resolution === "REFUND_GUEST"
+        ? "Reason for refunding the guest and cancelling this booking:"
+        : "Reason for denying the refund and closing this dispute:",
+    );
+    if (reason === null) return;
     startTransition(async () => {
-      await adminForceBookingTransition(bookingId, nextStatus as never, "Admin dispute resolution");
+      await adminResolveDispute(bookingId, resolution, reason.trim() || "Admin dispute resolution");
       setShowResolve(false);
       router.refresh();
     });
@@ -44,8 +49,8 @@ export function BookingActions({
         <div className="flex gap-1 flex-wrap">
           {RESOLUTION_OPTIONS.map((opt) => (
             <button
-              key={opt.status}
-              onClick={() => handleResolve(opt.status)}
+              key={opt.resolution}
+              onClick={() => handleResolve(opt.resolution)}
               disabled={isPending}
               className="px-2 py-1 text-xs rounded bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-600 disabled:opacity-50"
             >

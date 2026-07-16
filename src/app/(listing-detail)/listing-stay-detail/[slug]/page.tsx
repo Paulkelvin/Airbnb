@@ -4,6 +4,7 @@ import { getBlockedDatesForListing } from "@/modules/bookings/queries";
 import { getReviewsForListing } from "@/modules/reviews/queries";
 import { isFavorited } from "@/modules/favorites/queries";
 import { getCurrentUser } from "@/lib/auth";
+import { getServiceFeePercent } from "@/modules/admin/settings";
 import { toDetailViewModel } from "@/modules/listings/types";
 import ListingDetailView from "./ListingDetailView";
 import type { ListingReview } from "./ReviewsSection";
@@ -30,11 +31,13 @@ export default async function ListingStayDetailPage({
 
   const viewModel = toDetailViewModel(listing);
   const isOwner = user?.id === listing.hostId;
-  const [blockedDates, reviewRows, favorited] = await Promise.all([
+  const [blockedDates, reviewRows, favorited, serviceFeePercentWhole] = await Promise.all([
     listing.rentalType === "SHORT_TERM" ? getBlockedDatesForListing(listing.id) : Promise.resolve([]),
     getReviewsForListing(listing.id),
     user ? isFavorited(user.id, listing.id) : Promise.resolve(false),
+    getServiceFeePercent(),
   ]);
+  const serviceFeePercent = serviceFeePercentWhole / 100;
 
   const reviews = reviewRows.map((r) => ({
     id: r.id,
@@ -54,6 +57,7 @@ export default async function ListingStayDetailPage({
       blockedDates={blockedDates}
       reviews={reviews}
       isFavorited={favorited}
+      serviceFeePercent={serviceFeePercent}
     />
   );
 }

@@ -21,6 +21,15 @@ export function ListingActions({
     });
   }
 
+  function handleActionWithReason(
+    action: (reason?: string) => Promise<unknown>,
+    promptText: string,
+  ) {
+    const reason = window.prompt(promptText) ?? undefined;
+    if (reason === undefined) return;
+    handleAction(() => action(reason.trim() || undefined));
+  }
+
   return (
     <div className="flex gap-1 flex-wrap">
       {status === "PENDING_REVIEW" && (
@@ -33,7 +42,12 @@ export function ListingActions({
             Approve
           </button>
           <button
-            onClick={() => handleAction(() => rejectListing(listingId))}
+            onClick={() =>
+              handleActionWithReason(
+                (reason) => rejectListing(listingId, reason),
+                "Reason for rejecting this listing (shown to the host, optional):",
+              )
+            }
             disabled={isPending}
             className="px-2 py-1 text-xs rounded bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 disabled:opacity-50"
           >
@@ -43,7 +57,12 @@ export function ListingActions({
       )}
       {status === "PUBLISHED" && (
         <button
-          onClick={() => handleAction(() => adminUnpublishListing(listingId))}
+          onClick={() =>
+            handleActionWithReason(
+              (reason) => adminUnpublishListing(listingId, reason),
+              "Reason for unpublishing this listing (logged internally, optional):",
+            )
+          }
           disabled={isPending}
           className="px-2 py-1 text-xs rounded bg-yellow-50 text-yellow-600 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/40 disabled:opacity-50"
         >

@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireOwnership, requireAdmin, AuthError } from "@/lib/auth";
 import { getPaymentProvider } from "@/lib/payments";
+import { getServiceFeePercent } from "@/modules/admin/settings";
 import {
   dollarsToCents,
   computeCancellationRefundDollars,
@@ -119,6 +120,7 @@ export async function createShortTermBooking(
     };
   }
 
+  const serviceFeePercent = (await getServiceFeePercent()) / 100;
   const quote = computeShortTermQuote({
     nightlyPrice: Number(listing.nightlyPrice),
     cleaningFee: listing.cleaningFee ? Number(listing.cleaningFee) : null,
@@ -129,6 +131,7 @@ export async function createShortTermBooking(
       ? Number(listing.monthlyDiscountPercent)
       : null,
     nights,
+    serviceFeePercent,
   });
 
   const nightDates = datesInRange(data.checkInDate, data.checkOutDate);
@@ -737,6 +740,95 @@ export async function terminateLease(
 
   revalidatePath("/account-bookings");
   revalidatePath("/account-listings");
+
+  return { success: true, data: { id: booking.id } };
+}
+
+/**
+ * Admin-only dispute resolution. `DISPUTED` is a terminal state in the
+ * status machine (no automatic transition out of it), because resolving one
+ * is a judgment call, not something the normal cancellation-policy math
+ * should decide — so this bypasses `assertTransition` the same way
+ * `adminForceBookingTransition` does, but — unlike that function — actually
+ * moves money when the resolution sides with the guest, instead of just
+ * relabeling the booking's status.
+ */
+export async function adminResolveDispute(
+  bookingId: string,
+  resolution: "REFUND_GUEST" | "SIDE_WITH_HOST",
+  reason: string,
+): Promise<ActionResult<{ id: string }>> {
+  const admin = await requireAdmin();
+
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking) {
+    return { success: false, error: { code: "NOT_FOUND", message: "Booking not found" } };
+  }
+  if (booking.status !== "DISPUTED") {
+    return { success: false, error: { code: "INVALID_STATE", message: "Booking is not disputed" } };
+  }
+
+  const nextStatus = resolution === "REFUND_GUEST" ? "CANCELLED_BY_HOST" : "COMPLETED";
+
+  await prisma.$transaction(async (tx) => {
+    if (resolution === "REFUND_GUEST") {
+      const chargeType = booking.rentalType === "SHORT_TERM" ? "CHARGE" : "SECURITY_DEPOSIT_HOLD";
+      const originalCharge = await tx.payment.findFirst({
+        where: { bookingId: booking.id, type: chargeType, status: "SUCCEEDED" },
+        orderBy: { createdAt: "asc" },
+      });
+      if (originalCharge) {
+        await refundBookingTx(tx, {
+          bookingId: booking.id,
+          payerUserId: booking.guestId,
+          payeeUserId: booking.hostId,
+          amountDollars: Number(originalCharge.amount) / 100,
+          currency: booking.currency,
+          originalProviderTransactionRef: originalCharge.providerTransactionRef,
+          relatedPaymentId: originalCharge.id,
+          type: booking.rentalType === "SHORT_TERM" ? "REFUND" : "SECURITY_DEPOSIT_RELEASE",
+        });
+      }
+    }
+
+    await tx.booking.update({
+      where: { id: booking.id },
+      data: {
+        status: nextStatus,
+        cancelledAt: resolution === "REFUND_GUEST" ? new Date() : undefined,
+        cancellationReason: resolution === "REFUND_GUEST" ? reason : undefined,
+      },
+    });
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      actorId: admin.id,
+      action: "booking.resolveDispute",
+      targetType: "Booking",
+      targetId: booking.id,
+      metadata: { resolution, reason },
+    },
+  });
+
+  const listingTitle = await getListingTitle(booking.listingId);
+  await Promise.all([
+    notify(booking.guestId, "BOOKING_CANCELLED", {
+      bookingId: booking.id,
+      listingTitle,
+      cancelledBy: "ADMIN",
+      reason,
+    }),
+    notify(booking.hostId, "BOOKING_CANCELLED", {
+      bookingId: booking.id,
+      listingTitle,
+      cancelledBy: "ADMIN",
+      reason,
+    }),
+  ]);
+
+  revalidatePath("/admin/bookings");
+  revalidatePath("/account-bookings");
 
   return { success: true, data: { id: booking.id } };
 }

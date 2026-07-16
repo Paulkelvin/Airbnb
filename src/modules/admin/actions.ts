@@ -53,6 +53,31 @@ export async function verifyUser(userId: string): Promise<ActionResult<{ id: str
   return { success: true, data: { id: userId } };
 }
 
+/** Grants or revokes the ADMIN role. Self-demotion is blocked so an admin can never lock themselves out. */
+export async function setAdminRole(userId: string, makeAdmin: boolean): Promise<ActionResult<{ id: string }>> {
+  const admin = await requireAdmin();
+  if (!makeAdmin && userId === admin.id) {
+    return { success: false, error: { code: "FORBIDDEN", message: "You cannot remove your own admin access" } };
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, roles: true } });
+  if (!user) return { success: false, error: { code: "NOT_FOUND", message: "User not found" } };
+
+  const hasAdmin = user.roles.includes("ADMIN");
+  if (makeAdmin === hasAdmin) {
+    return { success: true, data: { id: userId } };
+  }
+
+  const nextRoles = makeAdmin
+    ? [...user.roles, "ADMIN" as const]
+    : user.roles.filter((r) => r !== "ADMIN");
+
+  await prisma.user.update({ where: { id: userId }, data: { roles: nextRoles } });
+  await auditLog(admin.id, makeAdmin ? "user.grantAdmin" : "user.revokeAdmin", "User", userId);
+  revalidatePath("/admin/users");
+  return { success: true, data: { id: userId } };
+}
+
 // ─── Listing Moderation ──────────────────────────────────────────────────────
 
 export async function approveListing(listingId: string): Promise<ActionResult<{ id: string }>> {
@@ -164,6 +189,29 @@ export async function updatePropertyType(id: string, data: { name?: string; desc
   return { success: true, data: { id } };
 }
 
+export async function deletePropertyType(id: string): Promise<ActionResult<{ id: string }>> {
+  const admin = await requireAdmin();
+  const existing = await prisma.propertyType.findUnique({
+    where: { id },
+    select: { id: true, name: true, _count: { select: { listings: true } } },
+  });
+  if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Property type not found" } };
+  if (existing._count.listings > 0) {
+    return {
+      success: false,
+      error: {
+        code: "IN_USE",
+        message: `Can't delete — ${existing._count.listings} listing(s) still use this property type. Mark it inactive instead.`,
+      },
+    };
+  }
+
+  await prisma.propertyType.delete({ where: { id } });
+  await auditLog(admin.id, "taxonomy.deletePropertyType", "PropertyType", id, { name: existing.name });
+  revalidatePath("/admin/taxonomy");
+  return { success: true, data: { id } };
+}
+
 export async function createAmenity(data: { name: string; category?: string; icon?: string }): Promise<ActionResult<{ id: string }>> {
   const admin = await requireAdmin();
   const slug = slugify(data.name);
@@ -199,6 +247,29 @@ export async function updateAmenity(id: string, data: { name?: string; category?
 
   await prisma.amenity.update({ where: { id }, data: updateData });
   await auditLog(admin.id, "taxonomy.updateAmenity", "Amenity", id, data as Record<string, unknown>);
+  revalidatePath("/admin/taxonomy");
+  return { success: true, data: { id } };
+}
+
+export async function deleteAmenity(id: string): Promise<ActionResult<{ id: string }>> {
+  const admin = await requireAdmin();
+  const existing = await prisma.amenity.findUnique({
+    where: { id },
+    select: { id: true, name: true, _count: { select: { listings: true } } },
+  });
+  if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Amenity not found" } };
+  if (existing._count.listings > 0) {
+    return {
+      success: false,
+      error: {
+        code: "IN_USE",
+        message: `Can't delete — ${existing._count.listings} listing(s) still use this amenity. Mark it inactive instead.`,
+      },
+    };
+  }
+
+  await prisma.amenity.delete({ where: { id } });
+  await auditLog(admin.id, "taxonomy.deleteAmenity", "Amenity", id, { name: existing.name });
   revalidatePath("/admin/taxonomy");
   return { success: true, data: { id } };
 }

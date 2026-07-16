@@ -35,6 +35,7 @@ export default function ListingDetailView({
   blockedDates,
   reviews,
   isFavorited,
+  serviceFeePercent,
 }: {
   listing: ListingDetailViewModel;
   isOwner: boolean;
@@ -42,6 +43,7 @@ export default function ListingDetailView({
   blockedDates: string[];
   reviews: ListingReview[];
   isFavorited: boolean;
+  serviceFeePercent: number;
 }) {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
@@ -395,6 +397,7 @@ export default function ListingDetailView({
                   isAuthenticated={isAuthenticated}
                   pricing={listing.pricing}
                   blockedDates={blockedDates}
+                  serviceFeePercent={serviceFeePercent}
                 />
               )}
             </div>
@@ -411,6 +414,7 @@ export default function ListingDetailView({
         isOwner={isOwner}
         pricing={listing.pricing}
         blockedDates={blockedDates}
+        serviceFeePercent={serviceFeePercent}
       />
     </div>
   );

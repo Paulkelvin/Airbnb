@@ -26,6 +26,7 @@ export default function MobileBookingBar({
   isOwner,
   pricing,
   blockedDates,
+  serviceFeePercent,
 }: {
   listingId: string;
   listingTitle: string;
@@ -35,6 +36,7 @@ export default function MobileBookingBar({
   isOwner: boolean;
   pricing: ListingDetailViewModel["pricing"];
   blockedDates: string[];
+  serviceFeePercent: number;
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -109,6 +111,7 @@ export default function MobileBookingBar({
                   isAuthenticated={isAuthenticated}
                   pricing={pricing}
                   blockedDates={blockedDates}
+                  serviceFeePercent={serviceFeePercent}
                 />
               </Dialog.Panel>
             </Transition.Child>

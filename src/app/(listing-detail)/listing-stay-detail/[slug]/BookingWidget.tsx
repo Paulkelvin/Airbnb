@@ -17,6 +17,7 @@ interface BookingWidgetProps {
   isAuthenticated: boolean;
   pricing: ListingDetailViewModel["pricing"];
   blockedDates: string[];
+  serviceFeePercent: number;
 }
 
 export default function BookingWidget({
@@ -26,6 +27,7 @@ export default function BookingWidget({
   isAuthenticated,
   pricing,
   blockedDates,
+  serviceFeePercent,
 }: BookingWidgetProps) {
   if (!isAuthenticated) {
     return (
@@ -45,6 +47,7 @@ export default function BookingWidget({
       maxOccupants={maxOccupants}
       pricing={pricing}
       blockedDates={blockedDates}
+      serviceFeePercent={serviceFeePercent}
     />
   ) : (
     <LongTermBookingForm listingId={listingId} currency={currency} pricing={pricing} />
@@ -57,12 +60,14 @@ function ShortTermBookingForm({
   maxOccupants,
   pricing,
   blockedDates,
+  serviceFeePercent,
 }: {
   listingId: string;
   currency: string;
   maxOccupants: number;
   pricing: Extract<ListingDetailViewModel["pricing"], { rentalType: "SHORT_TERM" }>;
   blockedDates: string[];
+  serviceFeePercent: number;
 }) {
   const router = useRouter();
   const [checkInDate, setCheckInDate] = useState<Date | null>(null);
@@ -74,7 +79,7 @@ function ShortTermBookingForm({
   const excludeDates = useMemo(() => blockedDates.map((d) => new Date(d)), [blockedDates]);
 
   const nights = checkInDate && checkOutDate ? nightsBetween(checkInDate, checkOutDate) : 0;
-  const quote = nights > 0 ? computeShortTermQuote({ ...pricing, nights }) : null;
+  const quote = nights > 0 ? computeShortTermQuote({ ...pricing, nights, serviceFeePercent }) : null;
 
   const idempotencyKey = useMemo(
     () => crypto.randomUUID(),

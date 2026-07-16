@@ -6,22 +6,25 @@
  * decision (not specified in the ADRs), confirmed by the client:
  *   - Short-term cancellation: industry-standard tiers
  *   - Long-term early termination (STANDARD): linear 30-day proration
- *   - Guest service fee: 10% of subtotal
+ *   - Guest service fee: 10% of subtotal by default, admin-configurable
+ *     via the "serviceFeePercent" platform setting (`getServiceFeePercent`
+ *     in `@/modules/admin/settings`) — pass the resolved fraction through
+ *     rather than re-deriving it, so quote math stays in one place.
  *
- * Nothing outside this file should hardcode a fee percentage, refund
- * tier, or proration formula — change the constants here, not call sites.
+ * Nothing outside this file should hardcode a refund tier or proration
+ * formula — change the constants here, not call sites.
  */
 
 import type { CancellationPolicy, EarlyTerminationPolicy } from "@prisma/client";
 
-/** Guest-side service fee, as a fraction of subtotal (nightly/monthly charges + cleaning fee). */
+/** Default guest-side service fee, as a fraction of subtotal — used until the admin sets a different value. */
 export const SERVICE_FEE_PERCENT = 0.1;
 
 /** Notice window (days) for full deposit refund under a STANDARD early-termination policy. */
 export const STANDARD_TERMINATION_FULL_REFUND_NOTICE_DAYS = 30;
 
-export function computeServiceFee(subtotalCents: number): number {
-  return Math.round(subtotalCents * SERVICE_FEE_PERCENT);
+export function computeServiceFee(subtotalCents: number, feePercent: number = SERVICE_FEE_PERCENT): number {
+  return Math.round(subtotalCents * feePercent);
 }
 
 /**
@@ -31,8 +34,8 @@ export function computeServiceFee(subtotalCents: number): number {
  * `Math.round()` operates on whole cents and would collapse sub-cent dollar
  * precision (e.g. $85.50 * 0.10 = $8.55, not $9).
  */
-export function computeServiceFeeDollars(subtotal: number): number {
-  return roundToCents(subtotal * SERVICE_FEE_PERCENT);
+export function computeServiceFeeDollars(subtotal: number, feePercent: number = SERVICE_FEE_PERCENT): number {
+  return roundToCents(subtotal * feePercent);
 }
 
 /** Round a dollar amount to 2 decimal places (whole cents), avoiding float drift. */

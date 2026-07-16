@@ -1,4 +1,5 @@
 import { getAdminUsers } from "@/modules/admin/queries";
+import { getCurrentUser } from "@/lib/auth";
 import { UserActions } from "./UserActions";
 import Link from "next/link";
 
@@ -10,11 +11,14 @@ export default async function AdminUsersPage({
   searchParams: { page?: string; status?: string; search?: string };
 }) {
   const page = Number(searchParams.page) || 1;
-  const { users, total, totalPages } = await getAdminUsers({
-    page,
-    status: searchParams.status as never,
-    search: searchParams.search,
-  });
+  const [{ users, total, totalPages }, currentUser] = await Promise.all([
+    getAdminUsers({
+      page,
+      status: searchParams.status as never,
+      search: searchParams.search,
+    }),
+    getCurrentUser(),
+  ]);
 
   return (
     <div>
@@ -109,6 +113,8 @@ export default async function AdminUsersPage({
                     userId={user.id}
                     status={user.status}
                     isVerified={user.isVerified}
+                    roles={user.roles}
+                    isSelf={user.id === currentUser?.id}
                   />
                 </td>
               </tr>
