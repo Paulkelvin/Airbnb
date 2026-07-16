@@ -12,10 +12,10 @@ export interface SocialsListProps {
   socials?: SocialType[];
 }
 
+// TODO: replace with final Potomac social media URLs
 const socialsDemo: SocialType[] = [
   { name: "Facebook", icon: "lab la-facebook-square", href: "#" },
   { name: "Twitter", icon: "lab la-twitter", href: "#" },
-  { name: "Youtube", icon: "lab la-youtube", href: "#" },
   { name: "Instagram", icon: "lab la-instagram", href: "#" },
 ];
 

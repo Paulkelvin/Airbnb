@@ -1,4 +1,5 @@
 import { Poppins } from "next/font/google";
+import { Metadata } from "next";
 import SiteHeader from "./(client-components)/(Header)/SiteHeader";
 import ClientCommons from "./ClientCommons";
 import "./globals.css";
@@ -13,6 +14,22 @@ const poppins = Poppins({
   display: "swap",
   weight: ["300", "400", "500", "600", "700"],
 });
+
+export const metadata: Metadata = {
+  title: {
+    default: "Potomac — Property Rentals & Stays",
+    template: "%s | Potomac",
+  },
+  description:
+    "Find your next stay or long-term lease on Potomac. Browse short-term rentals and monthly leases from verified hosts.",
+  openGraph: {
+    siteName: "Potomac",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
+};
 
 export default function RootLayout({
   children,

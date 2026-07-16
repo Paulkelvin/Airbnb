@@ -1,42 +1,25 @@
-# Online Booking NextJs Template: Chisfis
+# Potomac — Property Rental Platform
 
-Welcome to **Chisfis**, a responsive Nextjs template theme tailored for Online booking, Listing, Real Estate, and booking systems. Whether you're running an accommodation service, travel experience, cruise, car rental, real estate, or a travel agency, Chisfis has got you covered.
+A single-vertical property rental marketplace for short-term stays and long-term leases.
 
-![Chisfis Banner](https://i.ibb.co/JqPfydC/b-landing.png) 
+## Tech Stack
 
-## 🌟 Features
+- **Framework:** Next.js 13 (App Router, Server Actions, TypeScript)
+- **Database:** PostgreSQL 16 + PostGIS via Prisma 5
+- **Auth:** NextAuth v4 (credentials + OAuth, JWT sessions)
+- **Payments:** Stripe Connect (separate charges and transfers)
+- **Media:** Cloudinary (unsigned client upload, signed server delete)
+- **Styling:** Tailwind CSS 3, Poppins font
+- **Testing:** Vitest (unit/integration), Playwright (E2E)
 
-- **Responsive Design**: Modern and fresh design across all devices.
-- **Booking & Listing**: Dedicated templates for booking and listing.
-- **30+ Pages**: A plethora of pages to suit all your needs.
-- **Tailwindcss v3.x**: Built on the latest version for a sleek design.
-- **Dark & Light Modes**: Switch between themes seamlessly.
-- **Latest Tech Stack**: NextJs 13.4.x (`app` directory), Typescript, and TailwindCss.
-- **React Ecosystem**: HeadlessUI components, React v.18.x, Google Map React, React-datepicker, and more.
-- **Code Quality**: Proptypes checking, React hooks, and Prettier for a consistent codebase.
-- **Interactive Components**: Over 8 listing cards, modal gallery, checkout pages, and more.
-- **Built-in React Packages**: A collection of essential packages for a smooth development experience.
-
-## 📦 In The Box
-
-- Full source code of the theme.
-- All React component files.
-- CSS & SCSS source codes.
-- All plugins & libraries.
-- Comprehensive documentation.
-
-## 🚀 Getting Started
+## Getting Started
 
 1. Clone the repository.
-2. Navigate to the `app` directory.
-3. Install dependencies using `npm install` or `yarn install`.
-4. Run the development server using `npm run dev` or `yarn dev`.
-5. Explore the documentation for more details.
+2. Copy `.env.example` to `.env.local` and fill in required values.
+3. Install dependencies: `npm install`
+4. Set up the database: `npx prisma migrate dev`
+5. Run the development server: `npm run dev`
 
-## 🙏 Acknowledgements
+## Project Structure
 
-A big shoutout to all the libraries, plugins, and assets that made this project possible.
-
----
-
-Crafted with ❤️ by [Hamed Hasan](https://github.com/Hamed-Hasan). Connect with me on [LinkedIn](https://www.linkedin.com/in/hamed-hasan).
+See `docs/project-status.md` for current implementation progress and `docs/architecture/` for architectural decisions.

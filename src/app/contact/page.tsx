@@ -23,7 +23,8 @@ const PageContact: React.FC = () => {
                   Email
                 </h3>
                 <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-                  support@example.com
+                  {/* TODO: replace with final support email */}
+                  support@potomac.com
                 </span>
               </div>
               <div>
@@ -31,7 +32,8 @@ const PageContact: React.FC = () => {
                   Phone
                 </h3>
                 <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-                  000-123-456-7890
+                  {/* TODO: replace with final support phone */}
+                  (202) 555-0100
                 </span>
               </div>
             </div>
