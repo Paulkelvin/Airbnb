@@ -1,5 +1,3 @@
-"use server";
-
 import { prisma } from "@/lib/db";
 
 export async function getSetting(key: string): Promise<string | null> {

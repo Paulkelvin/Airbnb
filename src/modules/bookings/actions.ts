@@ -706,7 +706,7 @@ export async function terminateLease(
  * mechanism — whatever policy is decided later can call this directly.
  */
 export async function payoutForPayment(paymentId: string): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
@@ -769,6 +769,23 @@ export async function payoutForPayment(paymentId: string): Promise<ActionResult<
       providerTransactionRef: result.providerTransactionRef,
       status: result.status,
       failureReason: result.failureReason,
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      actorId: admin.id,
+      action: "payment.payout",
+      targetType: "Payment",
+      targetId: payout.id,
+      metadata: {
+        chargePaymentId: payment.id,
+        bookingId: payment.bookingId,
+        payeeUserId: payment.payeeUserId,
+        amount: payoutAmountCents,
+        currency: payment.currency,
+        status: result.status,
+      } as Prisma.InputJsonValue,
     },
   });
 

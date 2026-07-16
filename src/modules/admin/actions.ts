@@ -128,7 +128,7 @@ function slugify(name: string): string {
 }
 
 export async function createPropertyType(data: { name: string; description?: string; icon?: string }): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const slug = slugify(data.name);
   const existing = await prisma.propertyType.findFirst({ where: { OR: [{ name: data.name }, { slug }] } });
   if (existing) return { success: false, error: { code: "DUPLICATE", message: "A property type with this name already exists" } };
@@ -136,12 +136,13 @@ export async function createPropertyType(data: { name: string; description?: str
   const pt = await prisma.propertyType.create({
     data: { name: data.name, slug, description: data.description, icon: data.icon },
   });
+  await auditLog(admin.id, "taxonomy.createPropertyType", "PropertyType", pt.id, { name: data.name, slug });
   revalidatePath("/admin/taxonomy");
   return { success: true, data: { id: pt.id } };
 }
 
 export async function updatePropertyType(id: string, data: { name?: string; description?: string; icon?: string; isActive?: boolean }): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const existing = await prisma.propertyType.findUnique({ where: { id } });
   if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Property type not found" } };
 
@@ -155,12 +156,13 @@ export async function updatePropertyType(id: string, data: { name?: string; desc
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
   await prisma.propertyType.update({ where: { id }, data: updateData });
+  await auditLog(admin.id, "taxonomy.updatePropertyType", "PropertyType", id, data as Record<string, unknown>);
   revalidatePath("/admin/taxonomy");
   return { success: true, data: { id } };
 }
 
 export async function createAmenity(data: { name: string; category?: string; icon?: string }): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const slug = slugify(data.name);
   const existing = await prisma.amenity.findFirst({ where: { OR: [{ name: data.name }, { slug }] } });
   if (existing) return { success: false, error: { code: "DUPLICATE", message: "An amenity with this name already exists" } };
@@ -173,12 +175,13 @@ export async function createAmenity(data: { name: string; category?: string; ico
       icon: data.icon,
     },
   });
+  await auditLog(admin.id, "taxonomy.createAmenity", "Amenity", amenity.id, { name: data.name, slug });
   revalidatePath("/admin/taxonomy");
   return { success: true, data: { id: amenity.id } };
 }
 
 export async function updateAmenity(id: string, data: { name?: string; category?: string; icon?: string; isActive?: boolean }): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const existing = await prisma.amenity.findUnique({ where: { id } });
   if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Amenity not found" } };
 
@@ -192,6 +195,7 @@ export async function updateAmenity(id: string, data: { name?: string; category?
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
   await prisma.amenity.update({ where: { id }, data: updateData });
+  await auditLog(admin.id, "taxonomy.updateAmenity", "Amenity", id, data as Record<string, unknown>);
   revalidatePath("/admin/taxonomy");
   return { success: true, data: { id } };
 }
