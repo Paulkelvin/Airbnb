@@ -19,7 +19,7 @@ const CardCategoryBox1: FC<CardCategoryBox1Props> = ({
       href={href}
       className={`nc-CardCategoryBox1 group relative flex flex-col ${className}`}
     >
-      <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden">
+      <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden">
         <Image
           src={thumbnail || ""}
           fill

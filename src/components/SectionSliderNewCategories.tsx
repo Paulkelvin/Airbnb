@@ -25,7 +25,7 @@ const DEMO_CATS: TaxonomyType[] = [
     taxonomy: "category",
     count: 320,
     thumbnail:
-      "https://images.pexels.com/photos/802024/pexels-photo-802024.jpeg?auto=compress&cs=tinysrgb&w=600",
+      "https://images.pexels.com/photos/2190283/pexels-photo-2190283.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
   {
     id: "2",
