@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Input from "@/components/ui/Input";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import Link from "next/link";
 import { register } from "@/actions/auth";
+import { getDefaultDashboardPath } from "@/lib/dashboard-path";
 
 const PageSignUp = () => {
   const router = useRouter();
@@ -40,7 +41,8 @@ const PageSignUp = () => {
         return;
       }
 
-      router.push("/account-listings");
+      const session = await getSession();
+      router.push(getDefaultDashboardPath(session?.user.roles ?? ["CUSTOMER"]));
       router.refresh();
     });
   }
