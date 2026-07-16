@@ -413,6 +413,28 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 
 ---
 
+## ADR-025: Admin Dashboard — Conditional Listing Moderation, Key-Value Platform Settings, Polymorphic Audit Targeting
+
+**Decision:** Three scoped design choices for the Phase 9 Admin Dashboard:
+
+1. **Listing moderation is a runtime-toggleable gate, not a permanent workflow change.** `publishListing()` checks `isListingModerationEnabled()` at runtime — when ON and the listing status is `DRAFT` or `REJECTED`, it routes to `PENDING_REVIEW` instead of `PUBLISHED`; when OFF (default), the existing direct-publish behavior is preserved. This means the moderation queue is opt-in infrastructure, not a forced addition to every listing lifecycle.
+
+2. **Platform settings are stored in a key-value `PlatformSetting` model** (primary key = `key: String`, single `value: String` column) rather than a single-row config table with one column per setting. Typed accessors in `src/modules/admin/settings.ts` prevent stringly-typed reads (`isListingModerationEnabled()` returns `boolean`, `getServiceFeePercent()` returns `number`). New settings are added by inserting a row and writing an accessor — no migration required.
+
+3. **`AuditLog.targetId` is `String`, not `@db.Uuid`.** The field is polymorphic — it references the primary key of whichever entity type `targetType` names. Most entities use UUID primary keys, but `PlatformSetting` uses a string key (`"listingModerationEnabled"`, `"serviceFeePercent"`). Constraining the column to UUID would break audit logging for non-UUID-keyed entities.
+
+**Reasoning:** The moderation toggle avoids forcing every listing through a review queue when the platform is small and doesn't need it, while still making the infrastructure instantly available when the client wants it. Key-value settings are the simplest extensible pattern for a small number of platform-wide knobs. The `targetId` type change corrects a schema assumption that all audited entities have UUID primary keys.
+
+**Alternatives Considered:** (1) Hardcode moderation always-on (forces queue overhead on every listing immediately). (2) Single-row config table with typed columns per setting (requires a migration to add each new setting). (3) Keep `targetId` as UUID and hash the PlatformSetting key into a deterministic UUID (preserves UUID-only but makes the audit log unintelligible for non-UUID entities).
+
+**Why Rejected:** (1) Over-constrains the platform before it needs moderation. (2) Adds migration overhead for what should be a runtime-configurable value. (3) Unnecessarily obscures audit records — the whole point of an audit log is human-readable traceability.
+
+**Trade-offs Accepted:** Key-value settings lack schema validation at the database level (any string is valid as a value) — the typed accessors in `settings.ts` are the enforcement layer, not the schema. If the number of settings grows large or they need relational integrity (e.g., a setting that references another entity), this pattern should be revisited.
+
+**Revisit If:** The platform needs structured/nested configuration (feature flags with rollout percentages, per-tenant overrides) — at that point, a dedicated configuration service or a more structured settings model would be warranted.
+
+---
+
 ## Index of Decisions
 
 | ADR | Decision |
@@ -441,3 +463,4 @@ Each entry follows: Decision · Reasoning · Alternatives Considered · Why Reje
 | 022 | Messaging — two conversation-creation triggers, admin access as a separate audited path |
 | 023 | Rate limiting — DB-backed sliding window at MVP, retrofitted across all four required endpoints |
 | 024 | Review eligibility — `COMPLETED` or `TERMINATED_EARLY`, reconciling the blueprint against the domain model spec |
+| 025 | Admin dashboard — conditional listing moderation, key-value platform settings, polymorphic audit targeting |

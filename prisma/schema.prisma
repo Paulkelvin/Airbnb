@@ -620,7 +620,7 @@ model AuditLog {
   actorId    String?  @db.Uuid
   action     String
   targetType String
-  targetId   String   @db.Uuid
+  targetId   String
   metadata   Json?
   createdAt  DateTime @default(now())
 
@@ -629,6 +629,16 @@ model AuditLog {
   @@index([actorId])
   @@index([targetType, targetId])
   @@index([createdAt])
+}
+
+// ─── PlatformSetting ─────────────────────────────────────────────────────────
+// Key-value store for runtime-configurable platform settings (Blueprint §10).
+// Typed accessors in src/modules/admin/settings.ts prevent stringly-typed reads.
+
+model PlatformSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }
 
 // ─── RateLimitHit ────────────────────────────────────────────────────────────

@@ -13,6 +13,7 @@ import {
   type DraftUpdateInput,
 } from "@/lib/validations/listing";
 import type { ActionResult } from "@/lib/validations/auth";
+import { isListingModerationEnabled } from "@/modules/admin/settings";
 
 function slugify(title: string): string {
   return title
@@ -329,9 +330,39 @@ function toStrictInput(listing: {
   };
 }
 
+async function validateListingCompleteness(listing: {
+  images: unknown[];
+} & Record<string, unknown>): Promise<ActionResult<null> | null> {
+  const strictInput = toStrictInput(listing as Parameters<typeof toStrictInput>[0]);
+  const validation = strictInput ? createListingSchema.safeParse(strictInput) : null;
+
+  if (!strictInput || !validation?.success) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "This listing is missing required information before it can be published",
+        fieldErrors:
+          validation && !validation.success
+            ? (validation.error.flatten().fieldErrors as Record<string, string[]>)
+            : undefined,
+      },
+    };
+  }
+
+  if (listing.images.length === 0) {
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Add at least one photo before publishing" },
+    };
+  }
+
+  return null;
+}
+
 async function transitionStatus(
   id: string,
-  nextStatus: "PUBLISHED" | "PAUSED" | "ARCHIVED",
+  nextStatus: "PUBLISHED" | "PENDING_REVIEW" | "PAUSED" | "ARCHIVED",
 ): Promise<ActionResult<{ id: string }>> {
   const listing = await prisma.listing.findUnique({
     where: { id },
@@ -351,30 +382,9 @@ async function transitionStatus(
     throw err;
   }
 
-  if (nextStatus === "PUBLISHED") {
-    const strictInput = toStrictInput(listing);
-    const validation = strictInput ? createListingSchema.safeParse(strictInput) : null;
-
-    if (!strictInput || !validation?.success) {
-      return {
-        success: false,
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "This listing is missing required information before it can be published",
-          fieldErrors:
-            validation && !validation.success
-              ? (validation.error.flatten().fieldErrors as Record<string, string[]>)
-              : undefined,
-        },
-      };
-    }
-
-    if (listing.images.length === 0) {
-      return {
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "Add at least one photo before publishing" },
-      };
-    }
+  if (nextStatus === "PUBLISHED" || nextStatus === "PENDING_REVIEW") {
+    const validationError = await validateListingCompleteness(listing);
+    if (validationError) return validationError as ActionResult<{ id: string }>;
   }
 
   await prisma.listing.update({
@@ -393,6 +403,13 @@ async function transitionStatus(
 }
 
 export async function publishListing(id: string) {
+  const moderationOn = await isListingModerationEnabled();
+  if (moderationOn) {
+    const listing = await prisma.listing.findUnique({ where: { id }, select: { status: true } });
+    if (listing && (listing.status === "DRAFT" || listing.status === "REJECTED")) {
+      return transitionStatus(id, "PENDING_REVIEW");
+    }
+  }
   return transitionStatus(id, "PUBLISHED");
 }
 

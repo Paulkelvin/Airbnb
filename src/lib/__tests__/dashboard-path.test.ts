@@ -10,12 +10,12 @@ describe("getDefaultDashboardPath", () => {
     expect(getDefaultDashboardPath(["CUSTOMER", "HOST"])).toBe("/account-listings");
   });
 
-  it("routes an ADMIN to the account page (no dedicated admin dashboard yet)", () => {
-    expect(getDefaultDashboardPath(["ADMIN"])).toBe("/account");
+  it("routes an ADMIN to the admin dashboard", () => {
+    expect(getDefaultDashboardPath(["ADMIN"])).toBe("/admin");
   });
 
   it("gives ADMIN priority over HOST and CUSTOMER when a user carries all three", () => {
-    expect(getDefaultDashboardPath(["CUSTOMER", "HOST", "ADMIN"])).toBe("/account");
+    expect(getDefaultDashboardPath(["CUSTOMER", "HOST", "ADMIN"])).toBe("/admin");
   });
 
   it("gives HOST priority over CUSTOMER", () => {

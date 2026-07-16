@@ -6,10 +6,7 @@ import type { Route } from "@/routers/types";
 const ROLE_PRIORITY: UserRole[] = ["ADMIN", "HOST", "CUSTOMER"];
 
 const ROLE_DASHBOARD_PATH: Record<UserRole, Route> = {
-  // TODO: point at "/admin" once the Admin Dashboard phase ships that route
-  // (see docs/project-status.md) — no admin-facing page exists yet, so this
-  // falls back to the neutral account page rather than a route that 404s.
-  ADMIN: "/account" as Route,
+  ADMIN: "/admin" as Route,
   HOST: "/account-listings" as Route,
   CUSTOMER: "/account-bookings" as Route,
 };
