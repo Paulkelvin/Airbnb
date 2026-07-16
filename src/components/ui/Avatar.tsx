@@ -6,7 +6,6 @@ const avatarColors = [
   "#146eb4", "#8e43e7", "#ea1d5d", "#fc636b", "#ff6f2c",
   "#ffc603", "#c0ca33", "#5e35b1",
 ];
-import avatar1 from "@/images/avatars/Image-1.png";
 import Image, { StaticImageData } from "next/image";
 import { CheckIcon } from "@heroicons/react/24/solid";
 
@@ -24,7 +23,7 @@ const Avatar: FC<AvatarProps> = ({
   containerClassName = "ring-1 ring-white dark:ring-neutral-900",
   sizeClass = "h-6 w-6 text-sm",
   radius = "rounded-full",
-  imgUrl = avatar1,
+  imgUrl,
   userName,
   hasChecked,
   hasCheckedClass = "w-4 h-4 -top-0.5 -right-0.5",

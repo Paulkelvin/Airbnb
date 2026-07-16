@@ -18,7 +18,7 @@ const csp = [
   `style-src 'self' 'unsafe-inline'`,
   `img-src 'self' data: blob: https://images.pexels.com https://images.unsplash.com https://res.cloudinary.com https://*.googleapis.com https://*.gstatic.com https://*.ggpht.com`,
   `font-src 'self' data:`,
-  `connect-src 'self' https://maps.googleapis.com https://api.stripe.com`,
+  `connect-src 'self' https://maps.googleapis.com https://api.stripe.com https://api.cloudinary.com`,
   `frame-src 'self' https://www.google.com https://js.stripe.com https://hooks.stripe.com`,
   `object-src 'none'`,
   `base-uri 'self'`,

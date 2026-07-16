@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { Squares2X2Icon } from "@heroicons/react/24/outline";
+import { Squares2X2Icon, CheckIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import StartRating from "@/components/StartRating";
 import Avatar from "@/components/ui/Avatar";
 import Badge from "@/components/ui/Badge";
@@ -44,6 +44,20 @@ export default function ListingDetailView({
   isFavorited: boolean;
 }) {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [showAllAmenities, setShowAllAmenities] = useState(false);
+
+  const AMENITIES_PREVIEW_COUNT = 8;
+  const visibleAmenities = showAllAmenities
+    ? listing.amenities
+    : listing.amenities.slice(0, AMENITIES_PREVIEW_COUNT);
+  const amenitiesByCategory = visibleAmenities.reduce<Record<string, typeof listing.amenities>>(
+    (acc, a) => {
+      const key = a.category ?? "OTHER";
+      (acc[key] ??= []).push(a);
+      return acc;
+    },
+    {},
+  );
 
   const images = listing.images.length > 0 ? listing.images : [{ id: 0, url: "" }];
   const priceLabel =
@@ -129,7 +143,7 @@ export default function ListingDetailView({
 
       {/* MAIN */}
       <main className="relative z-10 mt-11 flex flex-col lg:flex-row">
-        <div className="w-full lg:w-3/5 xl:w-2/3 space-y-8 lg:space-y-10 lg:pr-10">
+        <div className="w-full lg:w-3/5 xl:w-2/3 space-y-7 lg:space-y-8 lg:pr-10">
           {/* SECTION 1 */}
           <div className="listingSection__wrap !space-y-6">
             <div className="flex justify-between items-center">
@@ -201,18 +215,46 @@ export default function ListingDetailView({
           </div>
 
           {/* SECTION 3: AMENITIES */}
-          <div className="listingSection__wrap">
-            <h2 className="text-2xl font-semibold">Amenities</h2>
+          <div className="listingSection__wrap !space-y-4">
+            <h2 className="text-2xl font-semibold">
+              What this place offers
+              <span className="ml-2 text-base font-normal text-neutral-400">
+                ({listing.amenities.length})
+              </span>
+            </h2>
             {listing.amenities.length === 0 ? (
               <p className="text-neutral-500">No amenities listed.</p>
             ) : (
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 text-sm text-neutral-700 dark:text-neutral-300">
-                {listing.amenities.map((a) => (
-                  <div key={a.id} className="flex items-center space-x-3">
-                    <span>{a.name}</span>
-                  </div>
-                ))}
-              </div>
+              <>
+                <div className="space-y-5">
+                  {Object.entries(amenitiesByCategory).map(([category, items]) => (
+                    <div key={category}>
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400 mb-2.5">
+                        {AMENITY_CATEGORY_LABELS[category] ?? category}
+                      </h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2.5 text-sm text-neutral-700 dark:text-neutral-300">
+                        {items.map((a) => (
+                          <div key={a.id} className="flex items-center gap-2 min-w-0">
+                            <CheckIcon className="w-4 h-4 flex-shrink-0 text-neutral-400" />
+                            <span className="truncate">{a.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {listing.amenities.length > AMENITIES_PREVIEW_COUNT && (
+                  <button
+                    onClick={() => setShowAllAmenities((v) => !v)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                  >
+                    {showAllAmenities ? "Show less" : `Show all ${listing.amenities.length} amenities`}
+                    <ChevronDownIcon
+                      className={`w-4 h-4 transition-transform ${showAllAmenities ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                )}
+              </>
             )}
           </div>
 
@@ -377,7 +419,7 @@ export default function ListingDetailView({
 function Row({ label, value, shaded }: { label: string; value: string; shaded?: boolean }) {
   return (
     <div
-      className={`p-4 flex justify-between items-center space-x-4 rounded-lg ${
+      className={`px-4 py-3 flex justify-between items-center space-x-4 rounded-lg text-sm ${
         shaded ? "bg-neutral-100 dark:bg-neutral-800" : ""
       }`}
     >

@@ -15,6 +15,7 @@ export const updateProfileSchema = z.object({
     .max(1000, "About you must be at most 1000 characters")
     .optional()
     .or(z.literal("")),
+  avatarUrl: z.string().trim().url().optional().or(z.literal("")),
 });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

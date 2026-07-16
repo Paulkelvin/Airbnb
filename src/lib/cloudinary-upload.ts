@@ -14,9 +14,7 @@ export class CloudinaryUploadError extends Error {}
  * and an unsigned upload preset (NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) scoped to
  * image formats only. The API secret is never exposed to the client.
  */
-export async function uploadListingImage(
-  file: File,
-): Promise<CloudinaryUploadResult> {
+async function uploadImage(file: File, folder: string): Promise<CloudinaryUploadResult> {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
@@ -29,7 +27,7 @@ export async function uploadListingImage(
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", uploadPreset);
-  formData.append("folder", "listings");
+  formData.append("folder", folder);
 
   const response = await fetch(
     `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
@@ -51,6 +49,14 @@ export async function uploadListingImage(
     width: data.width,
     height: data.height,
   };
+}
+
+export async function uploadListingImage(file: File): Promise<CloudinaryUploadResult> {
+  return uploadImage(file, "listings");
+}
+
+export async function uploadAvatarImage(file: File): Promise<CloudinaryUploadResult> {
+  return uploadImage(file, "avatars");
 }
 
 export function isImageUploadConfigured() {

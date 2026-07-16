@@ -16,6 +16,7 @@ export async function updateProfile(
     lastName: formData.get("lastName"),
     phone: formData.get("phone"),
     bio: formData.get("bio"),
+    avatarUrl: formData.get("avatarUrl"),
   };
   const parsed = updateProfileSchema.safeParse(raw);
   if (!parsed.success) {
@@ -29,7 +30,7 @@ export async function updateProfile(
     };
   }
 
-  const { firstName, lastName, phone, bio } = parsed.data;
+  const { firstName, lastName, phone, bio, avatarUrl } = parsed.data;
   await prisma.user.update({
     where: { id: user.id },
     data: {
@@ -37,6 +38,7 @@ export async function updateProfile(
       lastName,
       phone: phone || null,
       bio: bio || null,
+      avatarUrl: avatarUrl || null,
     },
   });
 
