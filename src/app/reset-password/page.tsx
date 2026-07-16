@@ -3,6 +3,7 @@
 import React, { Suspense, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Input from "@/components/ui/Input";
+import PasswordInput from "@/components/ui/PasswordInput";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import Link from "next/link";
 import { resetPassword } from "@/actions/auth";
@@ -77,14 +78,14 @@ const ResetPasswordForm = () => {
               <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
                 <label className="block">
                   <span className="text-neutral-800 dark:text-neutral-200">New password</span>
-                  <Input name="password" type="password" required className="mt-1" />
+                  <PasswordInput name="password" required className="mt-1" />
                   {fieldErrors?.password && (
                     <span className="text-xs text-red-600">{fieldErrors.password[0]}</span>
                   )}
                 </label>
                 <label className="block">
                   <span className="text-neutral-800 dark:text-neutral-200">Confirm new password</span>
-                  <Input name="confirmPassword" type="password" required className="mt-1" />
+                  <PasswordInput name="confirmPassword" required className="mt-1" />
                   {fieldErrors?.confirmPassword && (
                     <span className="text-xs text-red-600">{fieldErrors.confirmPassword[0]}</span>
                   )}

@@ -34,7 +34,7 @@ export const NAVIGATION_DEMO: NavItemType[] = [
   },
   {
     id: ncNanoId(),
-    href: "/add-listing/1" as Route,
+    href: "/add-listing" as Route,
     name: "List your property",
   },
   {

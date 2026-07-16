@@ -26,7 +26,7 @@ const widgetMenus: WidgetFooterMenu[] = [
     id: "2",
     title: "Hosting",
     menus: [
-      { href: "/add-listing/1", label: "List your property" },
+      { href: "/add-listing", label: "List your property" },
       { href: "/faq", label: "Help center" },
       { href: "/contact", label: "Contact us" },
     ],

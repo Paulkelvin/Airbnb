@@ -57,7 +57,7 @@ export const faqs: Faq[] = [
     category: "Trust & Safety",
     question: "Are hosts and listings verified?",
     answer:
-      "Every host completes identity verification before they can publish a listing, and our team reviews new listings for accuracy before they go live. Guest reviews after every stay keep that accountability ongoing.",
+      "Our team reviews new listings for accuracy before they go live, and every booking is tied to a verified account. Guest reviews after every stay keep that accountability ongoing.",
   },
   {
     category: "Trust & Safety",

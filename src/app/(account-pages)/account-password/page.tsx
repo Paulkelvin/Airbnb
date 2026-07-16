@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Label from "@/components/Label";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
-import Input from "@/components/ui/Input";
+import PasswordInput from "@/components/ui/PasswordInput";
 import { changePassword } from "@/actions/auth";
 
 const AccountPass = () => {
@@ -43,8 +43,7 @@ const AccountPass = () => {
       <div className=" max-w-xl space-y-6">
         <div>
           <Label>Current password</Label>
-          <Input
-            type="password"
+          <PasswordInput
             className="mt-1.5"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
@@ -52,12 +51,11 @@ const AccountPass = () => {
         </div>
         <div>
           <Label>New password</Label>
-          <Input type="password" className="mt-1.5" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <PasswordInput className="mt-1.5" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <div>
           <Label>Confirm password</Label>
-          <Input
-            type="password"
+          <PasswordInput
             className="mt-1.5"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}

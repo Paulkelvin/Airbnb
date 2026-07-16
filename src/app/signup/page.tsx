@@ -4,6 +4,7 @@ import React, { useState, useTransition } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Input from "@/components/ui/Input";
+import PasswordInput from "@/components/ui/PasswordInput";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import Link from "next/link";
 import { register } from "@/actions/auth";
@@ -89,14 +90,14 @@ const PageSignUp = () => {
             </label>
             <label className="block">
               <span className="text-neutral-800 dark:text-neutral-200">Password</span>
-              <Input name="password" type="password" placeholder="Create a password" required className="mt-1" />
+              <PasswordInput name="password" placeholder="Create a password" required className="mt-1" />
               {fieldErrors?.password && (
                 <span className="text-xs text-red-600">{fieldErrors.password[0]}</span>
               )}
             </label>
             <label className="block">
               <span className="text-neutral-800 dark:text-neutral-200">Confirm password</span>
-              <Input name="confirmPassword" type="password" placeholder="Confirm your password" required className="mt-1" />
+              <PasswordInput name="confirmPassword" placeholder="Confirm your password" required className="mt-1" />
               {fieldErrors?.confirmPassword && (
                 <span className="text-xs text-red-600">{fieldErrors.confirmPassword[0]}</span>
               )}

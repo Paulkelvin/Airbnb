@@ -150,7 +150,7 @@ const PageAbout: React.FC = () => {
               Browse listings
             </a>
             <a
-              href="/add-listing/1"
+              href="/add-listing"
               className="px-8 py-3 rounded-full border border-neutral-400 text-white font-medium hover:bg-neutral-700 transition-colors"
             >
               Become a host

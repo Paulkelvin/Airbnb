@@ -4,6 +4,7 @@ import React, { useState, useTransition } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Input from "@/components/ui/Input";
+import PasswordInput from "@/components/ui/PasswordInput";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import Link from "next/link";
 import { getDefaultDashboardPath } from "@/lib/dashboard-path";
@@ -63,7 +64,7 @@ const PageLogin = () => {
             </label>
             <label className="block">
               <span className="text-neutral-800 dark:text-neutral-200">Password</span>
-              <Input name="password" type="password" required className="mt-1" />
+              <PasswordInput name="password" required className="mt-1" />
               <Link href="/forgot-password" className="text-sm underline mt-1 inline-block">
                 Forgot password?
               </Link>
