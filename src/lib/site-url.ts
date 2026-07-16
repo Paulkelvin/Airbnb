@@ -8,7 +8,7 @@
  * where `NEXTAUTH_URL` isn't set yet.
  */
 export function getSiteUrl(): string {
-  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL;
+  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL.trim();
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return "http://localhost:3000";
 }

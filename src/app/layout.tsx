@@ -47,11 +47,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={poppins.className}>
-      <body className="bg-white text-base dark:bg-neutral-900 text-neutral-900 dark:text-neutral-200">
+      <body className="bg-white text-base dark:bg-neutral-900 text-neutral-900 dark:text-neutral-200 flex flex-col min-h-screen">
         <AuthSessionProvider>
           <ClientCommons />
           <SiteHeader />
-          {children}
+          <main className="flex-grow">{children}</main>
           <FooterNav />
           <Footer />
         </AuthSessionProvider>

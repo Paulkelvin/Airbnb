@@ -32,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/signup`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${siteUrl}/privacy`, changeFrequency: "yearly", priority: 0.1 },
     { url: `${siteUrl}/terms`, changeFrequency: "yearly", priority: 0.1 },
-    { url: `${siteUrl}/cookies`, changeFrequency: "yearly", priority: 0.1 },
+    { url: `${siteUrl}/blog`, changeFrequency: "weekly", priority: 0.5 },
   ];
 
   const listings = await getPublishedListingSlugsForSitemap();

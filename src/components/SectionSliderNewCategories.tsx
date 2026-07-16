@@ -25,74 +25,74 @@ const DEMO_CATS: TaxonomyType[] = [
   {
     id: "1",
     href: "/listing-stay-map",
-    name: "Nature House",
+    name: "New York",
     taxonomy: "category",
-    count: 17288,
+    count: 320,
     thumbnail:
-      "https://images.pexels.com/photos/2581922/pexels-photo-2581922.jpeg?auto=compress&cs=tinysrgb&dpr=3&h=750&w=1260",
+      "https://images.pexels.com/photos/802024/pexels-photo-802024.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
   {
     id: "2",
     href: "/listing-stay-map",
-    name: "Wooden house",
+    name: "Miami",
     taxonomy: "category",
-    count: 2118,
+    count: 215,
     thumbnail:
-      "https://images.pexels.com/photos/2351649/pexels-photo-2351649.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+      "https://images.pexels.com/photos/3601425/pexels-photo-3601425.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
   {
     id: "3",
     href: "/listing-stay-map",
-    name: "Houseboat",
+    name: "Los Angeles",
     taxonomy: "category",
-    count: 36612,
+    count: 280,
     thumbnail:
-      "https://images.pexels.com/photos/962464/pexels-photo-962464.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+      "https://images.pexels.com/photos/2695679/pexels-photo-2695679.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
   {
     id: "4",
     href: "/listing-stay-map",
-    name: "Farm House",
+    name: "Chicago",
     taxonomy: "category",
-    count: 18188,
+    count: 175,
     thumbnail:
-      "https://images.pexels.com/photos/248837/pexels-photo-248837.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+      "https://images.pexels.com/photos/1769370/pexels-photo-1769370.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
   {
     id: "5",
     href: "/listing-stay-map",
-    name: "Dome House",
+    name: "San Diego",
     taxonomy: "category",
-    count: 22288,
+    count: 140,
     thumbnail:
-      "https://images.pexels.com/photos/3613236/pexels-photo-3613236.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500",
+      "https://images.pexels.com/photos/2476632/pexels-photo-2476632.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
   {
     id: "6",
     href: "/listing-stay-map",
-    name: "Dome House",
+    name: "Austin",
     taxonomy: "category",
-    count: 188288,
+    count: 195,
     thumbnail:
-      "https://images.pexels.com/photos/14534337/pexels-photo-14534337.jpeg?auto=compress&cs=tinysrgb&w=1600&lazy=load",
+      "https://images.pexels.com/photos/1563256/pexels-photo-1563256.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
   {
     id: "7",
     href: "/listing-stay-map",
-    name: "Wooden house",
+    name: "Denver",
     taxonomy: "category",
-    count: 2118,
+    count: 130,
     thumbnail:
-      "https://images.pexels.com/photos/2351649/pexels-photo-2351649.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+      "https://images.pexels.com/photos/2706750/pexels-photo-2706750.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
   {
     id: "8",
     href: "/listing-stay-map",
-    name: "Wooden Dome",
+    name: "Charleston",
     taxonomy: "category",
-    count: 515,
+    count: 95,
     thumbnail:
-      "https://images.pexels.com/photos/9039238/pexels-photo-9039238.jpeg?auto=compress&cs=tinysrgb&w=1600&lazy=load",
+      "https://images.pexels.com/photos/3935350/pexels-photo-3935350.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
 ];
 
@@ -148,9 +148,6 @@ const SectionSliderNewCategories: FC<SectionSliderNewCategoriesProps> = ({
       }
     },
     trackMouse: true,
-    // Without this, a horizontal swipe on a touch device also lets the
-    // browser's native vertical scroll engage at the same time, which is
-    // exactly the "page nudges up/down while sliding" symptom.
     preventScrollOnSwipe: true,
   });
 

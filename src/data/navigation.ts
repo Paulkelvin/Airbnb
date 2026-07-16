@@ -24,6 +24,11 @@ export const NAVIGATION_DEMO: NavItemType[] = [
   },
   {
     id: ncNanoId(),
+    href: "/about" as Route,
+    name: "About",
+  },
+  {
+    id: ncNanoId(),
     href: "/blog" as Route,
     name: "Blog",
   },
