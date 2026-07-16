@@ -2,7 +2,7 @@
 
 **This is the canonical, single source of truth for implementation progress.** Read this file first in any new session before touching code or asking the client about status — it is kept current at the end of every completed phase and should never fall out of sync with the codebase or `docs/architecture/architecture-decision-record.md`.
 
-Last updated: **2026-07-15**, end of Phase 8 (Reviews and Favorites).
+Last updated: **2026-07-16**, Phase 8 (Reviews and Favorites) plus the client-approved role-aware post-login redirect fix.
 
 ---
 
@@ -30,11 +30,11 @@ A single-vertical property rental marketplace (short-term stays and long-term le
 
 ## Current Status
 
-- **Current phase:** Phase 8 (Reviews and Favorites) complete. Phase 9 (Admin Dashboard) not yet started.
+- **Current phase:** Phase 8 (Reviews and Favorites) complete, including the client-approved post-approval redirect fix below. Phase 9 (Admin Dashboard) not yet started.
 - **Current branch:** `claude/booking-platform-overhaul-j2unm6`
-- **Latest commit:** `caba803` — "Add Phase 8: Reviews and Favorites, DB-backed rate limiting" (2026-07-15)
-- **Build status:** ✅ Clean. `npx next build` succeeds with no errors (30 routes, all typed routes resolve — the one new route this phase is `/api/jobs/review-expiry`; `/account-savelists` already existed as a route, only its data source changed). Last verified 2026-07-15 at the end of Phase 8.
-- **Test status:** ✅ Clean. `npm test` (Vitest): 48/48 passing across 6 files (added `src/lib/__tests__/rate-limit.test.ts`, `src/modules/reviews/__tests__/reviews.test.ts`, `src/modules/favorites/__tests__/favorites.test.ts`). `node_modules/.bin/tsc --noEmit`: zero errors. Additionally verified with a real Playwright browser pass against a production build (`npm run build && npm run start`): guest review submission, double-blind hide-until-counterpart behavior, host counterpart review + publish-on-match, host response, favorite toggle on/off, and `account-savelists` reflecting real favorites — all confirmed working against the real local database, then torn down (Playwright itself uninstalled afterward, per the established non-persistent-devDependency convention).
+- **Latest commit:** `1deaf86` — "Make post-login/signup redirect role-aware" (2026-07-16)
+- **Build status:** ✅ Clean. `npx next build` succeeds with no errors (30 routes, all typed routes resolve — the one new route this phase is `/api/jobs/review-expiry`; `/account-savelists` already existed as a route, only its data source changed). Last verified 2026-07-16.
+- **Test status:** ✅ Clean. `npm test` (Vitest): 54/54 passing across 7 files (added `src/lib/__tests__/{rate-limit,dashboard-path}.test.ts`, `src/modules/reviews/__tests__/reviews.test.ts`, `src/modules/favorites/__tests__/favorites.test.ts`). `node_modules/.bin/tsc --noEmit`: zero errors. Additionally verified with real Playwright browser passes against a production build (`npm run build && npm run start`): (Phase 8) guest review submission, double-blind hide-until-counterpart behavior, host counterpart review + publish-on-match, host response, favorite toggle on/off, and `account-savelists` reflecting real favorites; (redirect fix) a CUSTOMER-only login lands on `/account-bookings`, a HOST (who also carries CUSTOMER) lands on `/account-listings`, and an ADMIN lands on `/account` — all against the real local database, Playwright uninstalled afterward per the established non-persistent-devDependency convention.
 - **Working tree:** Clean, fully pushed to origin.
 
 ---
@@ -89,6 +89,10 @@ Two-sided, double-blind reviews (`Review.direction`, one row per direction, `isV
 **ADRs:** 023 (rate limiting — DB-backed sliding window, retrofitted across all four required endpoints), 024 (review eligibility — `COMPLETED` or `TERMINATED_EARLY`, blueprint/domain-spec reconciliation).
 **Files:** `src/modules/reviews/{actions,queries,rating}.ts`, `src/modules/favorites/{actions,queries}.ts`, `src/lib/rate-limit.ts`, `src/lib/validations/review.ts`, `src/jobs/review-expiry.ts`, `src/app/api/jobs/review-expiry/route.ts`, `src/app/(listing-detail)/listing-stay-detail/[slug]/{FavoriteButton,ReviewsSection}.tsx`, `src/app/(account-pages)/account-bookings/[id]/ReviewPrompt.tsx`, `src/app/(account-pages)/account-savelists/page.tsx`, `prisma/migrations/20260715174500_add_rate_limit_hit/`.
 
+### Phase 8 Follow-up — Role-Aware Post-Login Redirect
+Client-requested fix, approved alongside Phase 8 and completed before Phase 9 began. Post-login/post-signup navigation always pushed to `/account-listings` (the host dashboard) regardless of role — flagged as a Known Issue at the end of Phase 8. Replaced with `getDefaultDashboardPath(roles)` (`src/lib/dashboard-path.ts`), a single lookup used by both `/login` and `/signup`: role-priority `ADMIN > HOST > CUSTOMER` (a `HOST` always also carries `CUSTOMER` per ADR-017, so priority order matters), routing to `/account-bookings` (CUSTOMER), `/account-listings` (HOST), or `/account` (ADMIN — temporary placeholder; no dedicated `/admin` route exists until the Admin Dashboard phase ships one, tracked with a `TODO` in the file). Deliberately a single centralized function (not inlined in each page) so a future "remember the user's last active dashboard" feature is a one-place change.
+**Files:** `src/lib/dashboard-path.ts` (new), `src/app/login/page.tsx`, `src/app/signup/page.tsx`, `src/lib/__tests__/dashboard-path.test.ts` (new).
+
 ---
 
 ## Remaining Roadmap
@@ -125,7 +129,7 @@ Accepted limitations, technical debt, and deferred work — none block the next 
 - **Task from Phase 2 still open:** verify Neon migration/seed and Vercel deployment once the client supplies real credentials — see Infrastructure below. Nothing code-side blocks this; it's purely waiting on credentials.
 - **`RateLimitHit` pruning is opportunistic, not a sweep job.** Stale rows for a given `key` are deleted only the next time that same key is checked (see `src/lib/rate-limit.ts`) — a key that's never hit again (e.g. an abandoned signup IP) leaves its rows in the table indefinitely. Cheap at current volume (storage only, no correctness impact); revisit if the table grows large enough to matter (ADR-023's "Revisit If").
 - **`BtnLikeIcon` (used by `StayCard` across search results, home page sections, and related-listings grids) is still local-only UI state**, not wired to the real `Favorite` model — only the listing detail page's dedicated `FavoriteButton` and the `account-savelists` page are backed by real data. Toggling the heart icon on a search-results card doesn't persist. Out of scope for Phase 8 (which specifically named the listing detail page's save button and the saved-listings page); wiring every `StayCard` instance to `toggleFavorite()`/`isFavorited()` is a small follow-up, not a redesign, whenever it's prioritized.
-- **Post-login redirect always targets `/account-listings` regardless of role** (`src/app/login/page.tsx`, pre-existing — not introduced this phase). A non-host guest logging in lands on their own (empty) host listings dashboard instead of an account home page. Noticed during this phase's E2E verification; not fixed since it's outside Phase 8's scope and no architecture doc specifies the intended post-login landing page per role.
+- **~~Post-login redirect always targets `/account-listings` regardless of role~~ — fixed** (see Phase 8 Follow-up above). `ADMIN`'s landing page is still a temporary placeholder (`/account`, not a real admin dashboard) until the Admin Dashboard phase ships `/admin` — tracked with a `TODO` in `src/lib/dashboard-path.ts`.
 
 ---
 
