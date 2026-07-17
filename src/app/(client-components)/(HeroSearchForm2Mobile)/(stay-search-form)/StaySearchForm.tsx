@@ -39,6 +39,12 @@ const StaySearchForm: React.FC<StaySearchFormProps> = ({ onValuesChange }) => {
     setStartDate(start);
     setEndDate(end);
     onValuesChange?.({ city: locationInputTo, startDate: start, endDate: end, guests: guestInput });
+    // Same auto-advance pattern as location -> dates above: once a full
+    // range is picked, move on to the next step instead of leaving the
+    // dates panel open showing the same "pick a range" instruction again.
+    if (start && end) {
+      setFieldNameShow("guests");
+    }
   };
 
   const renderInputLocation = () => {

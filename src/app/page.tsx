@@ -28,7 +28,7 @@ async function PageHome() {
 
         <SectionSliderNewCategories
           heading="Top cities to explore"
-          subHeading="The cities guests love most"
+          subHeading="From weekend coastal escapes to big-city stays — see where guests are booking right now"
           categories={cityCategories}
         />
 

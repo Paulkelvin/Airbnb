@@ -7,7 +7,7 @@ import { updatePlatformSetting } from "@/modules/admin/actions";
 export function SettingsForm({ settings }: { settings: Record<string, string> }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
-  const [moderationEnabled, setModerationEnabled] = useState(settings.listingModerationEnabled === "true");
+  const [moderationEnabled, setModerationEnabled] = useState(settings.listingModerationEnabled !== "false");
   const [serviceFee, setServiceFee] = useState(settings.serviceFeePercent ?? "10");
   const [saved, setSaved] = useState(false);
 

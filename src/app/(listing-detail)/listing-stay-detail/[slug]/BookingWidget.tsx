@@ -183,6 +183,13 @@ function ShortTermBookingForm({
           <label className="block text-xs font-medium text-neutral-500 mb-1">
             Check in — Check out
           </label>
+          {(!checkInDate || !checkOutDate) && (
+            <p className="mb-1 text-xs text-neutral-400">
+              {checkInDate && !checkOutDate
+                ? "Now pick your check-out date"
+                : "Pick a check-in date, then a check-out date"}
+            </p>
+          )}
           <DatePicker
             selected={checkInDate}
             onChange={(dates) => {
