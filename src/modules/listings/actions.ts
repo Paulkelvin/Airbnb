@@ -427,3 +427,27 @@ export async function deleteUploadedImage(publicId: string): Promise<ActionResul
   await deleteCloudinaryImage(publicId);
   return { success: true, data: null };
 }
+
+/**
+ * Backs the listing wizard's city combobox. ~32,000 US Census places live in
+ * the City table, so this is search-on-demand rather than a full list —
+ * hosts can still type a custom city that doesn't match anything here.
+ */
+export async function searchActiveCities(
+  query: string,
+): Promise<{ id: string; name: string; region: string }[]> {
+  const q = query.trim();
+  if (!q) return [];
+  return prisma.city.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { region: { contains: q, mode: "insensitive" } },
+      ],
+    },
+    orderBy: [{ name: "asc" }],
+    take: 8,
+    select: { id: true, name: true, region: true },
+  });
+}

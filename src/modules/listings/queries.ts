@@ -17,14 +17,6 @@ export async function getActiveAmenities() {
   });
 }
 
-/** Admin-curated cities for the listing wizard's location combobox. Hosts can still type a custom city. */
-export async function getActiveCities() {
-  return prisma.city.findMany({
-    where: { isActive: true },
-    orderBy: [{ region: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, region: true },
-  });
-}
 
 export const listingInclude = {
   address: true,
@@ -147,20 +139,34 @@ export async function getPublishedListingSlugsForSitemap(): Promise<
  * the admin decides what's eligible, hosts can still list anywhere.
  */
 export async function getTopCities(limit = 6): Promise<string[]> {
-  const [rows, activeCities] = await Promise.all([
-    prisma.address.groupBy({
-      by: ["city"],
-      where: { listing: { status: "PUBLISHED" } },
-      _count: { city: true },
-      orderBy: { _count: { city: "desc" } },
-    }),
-    prisma.city.findMany({ where: { isActive: true }, select: { name: true } }),
-  ]);
-  const activeNames = new Set(activeCities.map((c) => c.name.toLowerCase()));
+  const rows = await prisma.address.groupBy({
+    by: ["city"],
+    where: { listing: { status: "PUBLISHED" } },
+    _count: { city: true },
+    orderBy: { _count: { city: "desc" } },
+  });
+  const activeNames = await activeCityNameSet(rows.map((row) => row.city));
   return rows
     .filter((row) => activeNames.has(row.city.toLowerCase()))
     .slice(0, limit)
     .map((row) => row.city);
+}
+
+/**
+ * The City table holds ~32,000 US Census places, so rather than pulling every
+ * active row into memory, this only checks the handful of distinct city
+ * names that actually showed up in the groupBy above.
+ */
+async function activeCityNameSet(candidateNames: string[]): Promise<Set<string>> {
+  if (candidateNames.length === 0) return new Set();
+  const activeCities = await prisma.city.findMany({
+    where: {
+      isActive: true,
+      name: { in: Array.from(new Set(candidateNames)), mode: "insensitive" },
+    },
+    select: { name: true },
+  });
+  return new Set(activeCities.map((c) => c.name.toLowerCase()));
 }
 
 const CITY_THUMBNAILS: Record<string, string> = {
@@ -185,16 +191,13 @@ const CITY_THUMBNAILS: Record<string, string> = {
 import type { TaxonomyType } from "@/data/types";
 
 export async function getTopCityCategories(limit = 8): Promise<TaxonomyType[]> {
-  const [rows, activeCities] = await Promise.all([
-    prisma.address.groupBy({
-      by: ["city"],
-      where: { listing: { status: "PUBLISHED" } },
-      _count: { city: true },
-      orderBy: { _count: { city: "desc" } },
-    }),
-    prisma.city.findMany({ where: { isActive: true }, select: { name: true } }),
-  ]);
-  const activeNames = new Set(activeCities.map((c) => c.name.toLowerCase()));
+  const rows = await prisma.address.groupBy({
+    by: ["city"],
+    where: { listing: { status: "PUBLISHED" } },
+    _count: { city: true },
+    orderBy: { _count: { city: "desc" } },
+  });
+  const activeNames = await activeCityNameSet(rows.map((row) => row.city));
   const curated = rows.filter((row) => activeNames.has(row.city.toLowerCase())).slice(0, limit);
 
   return curated.map((row, i) => ({

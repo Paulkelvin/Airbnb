@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo, useState, useTransition } from "react";
+import React, { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import { getCities } from "@/modules/admin/queries";
 import { createCity, updateCity, deleteCity } from "@/modules/admin/actions";
 
 interface CityItem {
@@ -13,10 +14,18 @@ interface CityItem {
   isActive: boolean;
 }
 
-export function CitiesManager({ cities }: { cities: CityItem[] }) {
+export function CitiesManager({
+  initialCities,
+  initialTotal,
+}: {
+  initialCities: CityItem[];
+  initialTotal: number;
+}) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [cities, setCities] = useState(initialCities);
+  const [total, setTotal] = useState(initialTotal);
   const [newName, setNewName] = useState("");
   const [newRegion, setNewRegion] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -24,12 +33,27 @@ export function CitiesManager({ cities }: { cities: CityItem[] }) {
   const [editingRegion, setEditingRegion] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return cities;
-    const q = search.trim().toLowerCase();
-    return cities.filter((c) => c.name.toLowerCase().includes(q) || c.region.toLowerCase().includes(q));
-  }, [cities, search]);
+  function runSearch(query: string) {
+    startTransition(async () => {
+      const result = await getCities({ search: query || undefined });
+      setCities(result.cities);
+      setTotal(result.total);
+    });
+  }
+
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => runSearch(search), 300);
+    return () => clearTimeout(debounceRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  function refreshAfterMutation() {
+    router.refresh();
+    runSearch(search);
+  }
 
   function handleCreate() {
     if (!newName.trim() || !newRegion.trim()) return;
@@ -42,7 +66,7 @@ export function CitiesManager({ cities }: { cities: CityItem[] }) {
       }
       setNewName("");
       setNewRegion("");
-      router.refresh();
+      refreshAfterMutation();
     });
   }
 
@@ -63,14 +87,14 @@ export function CitiesManager({ cities }: { cities: CityItem[] }) {
         return;
       }
       setEditingId(null);
-      router.refresh();
+      refreshAfterMutation();
     });
   }
 
   function handleToggle(id: string, isActive: boolean) {
     startTransition(async () => {
       await updateCity(id, { isActive: !isActive });
-      router.refresh();
+      refreshAfterMutation();
     });
   }
 
@@ -78,7 +102,7 @@ export function CitiesManager({ cities }: { cities: CityItem[] }) {
     startTransition(async () => {
       const result = await deleteCity(id);
       if (!result.success) setError(result.error.message);
-      router.refresh();
+      refreshAfterMutation();
     });
   }
 
@@ -98,8 +122,8 @@ export function CitiesManager({ cities }: { cities: CityItem[] }) {
           type="text"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
-          placeholder="City name"
-          className={`flex-1 min-w-[160px] ${inputClass}`}
+          placeholder="City name (if it's not already in the Census list)"
+          className={`flex-1 min-w-[220px] ${inputClass}`}
           onKeyDown={(e) => e.key === "Enter" && handleCreate()}
         />
         <input
@@ -124,12 +148,16 @@ export function CitiesManager({ cities }: { cities: CityItem[] }) {
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder={`Search ${cities.length} cities by name or state...`}
+        placeholder="Search by city name or state..."
         className={`w-full ${inputClass}`}
       />
+      <p className="text-xs text-neutral-400">
+        {total.toLocaleString()} match{total === 1 ? "" : "es"}
+        {total > cities.length ? ` — showing first ${cities.length}, keep typing to narrow it down` : ""}
+      </p>
 
       <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 divide-y divide-neutral-100 dark:divide-neutral-700 max-h-[32rem] overflow-y-auto">
-        {filtered.map((city) => (
+        {cities.map((city) => (
           <div key={city.id} className="flex items-center justify-between px-4 py-3 gap-2">
             {editingId === city.id ? (
               <div className="flex flex-1 gap-2 min-w-0">
@@ -214,7 +242,7 @@ export function CitiesManager({ cities }: { cities: CityItem[] }) {
             </div>
           </div>
         ))}
-        {filtered.length === 0 && (
+        {cities.length === 0 && (
           <p className="px-4 py-10 text-center text-sm text-neutral-400">No cities match your search.</p>
         )}
       </div>

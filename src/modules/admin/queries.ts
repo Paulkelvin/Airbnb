@@ -218,8 +218,13 @@ export async function getAmenities() {
   return prisma.amenity.findMany({ orderBy: { name: "asc" } });
 }
 
-export async function getCities(opts: { search?: string } = {}) {
+/**
+ * ~32,000 US Census places live in this table, so this always caps the
+ * result set — the admin UI is search-driven, not a full-list browser.
+ */
+export async function getCities(opts: { search?: string; limit?: number } = {}) {
   await requireAdmin();
+  const take = Math.min(opts.limit ?? 100, 200);
   const where: Record<string, unknown> = {};
   if (opts.search) {
     where.OR = [
@@ -227,7 +232,11 @@ export async function getCities(opts: { search?: string } = {}) {
       { region: { contains: opts.search, mode: "insensitive" } },
     ];
   }
-  return prisma.city.findMany({ where, orderBy: [{ region: "asc" }, { name: "asc" }] });
+  const [cities, total] = await Promise.all([
+    prisma.city.findMany({ where, orderBy: [{ region: "asc" }, { name: "asc" }], take }),
+    prisma.city.count({ where }),
+  ]);
+  return { cities, total };
 }
 
 export async function getPlatformSettings() {

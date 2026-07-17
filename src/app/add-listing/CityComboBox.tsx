@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Input from "@/components/ui/Input";
+import { searchActiveCities } from "@/modules/listings/actions";
 
 export interface CityOption {
   id: string;
@@ -10,31 +11,44 @@ export interface CityOption {
 }
 
 interface CityComboBoxProps {
-  cities: CityOption[];
   cityValue: string;
   onCityChange: (city: string) => void;
   onSelectCity: (city: string, region: string) => void;
 }
 
 /**
- * Lets a host search/select from the admin-curated city list, but still type
- * a custom city that isn't in it — that value just won't be eligible for the
- * homepage's "Top cities to explore" curation (admin-curated cities only).
+ * Lets a host search/select from the admin-curated city list (~32,000 US
+ * Census places, searched on demand — not shipped to the browser up front),
+ * but still type a custom city that isn't in it. That value just won't be
+ * eligible for the homepage's "Top cities to explore" curation.
  */
-export default function CityComboBox({ cities, cityValue, onCityChange, onSelectCity }: CityComboBoxProps) {
+export default function CityComboBox({ cityValue, onCityChange, onSelectCity }: CityComboBoxProps) {
   const [open, setOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<CityOption[]>([]);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [knownMatch, setKnownMatch] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const requestIdRef = useRef(0);
 
-  const query = cityValue.trim().toLowerCase();
-  const matches = query
-    ? cities.filter(
-        (c) => c.name.toLowerCase().includes(query) || c.region.toLowerCase().includes(query),
-      )
-    : cities;
-  const suggestions = matches.slice(0, 8);
-
-  const isKnownCity = cities.some((c) => c.name.toLowerCase() === query);
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    const query = cityValue.trim();
+    if (!query) {
+      setSuggestions([]);
+      setKnownMatch(false);
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      const requestId = ++requestIdRef.current;
+      searchActiveCities(query).then((results) => {
+        if (requestId !== requestIdRef.current) return; // stale response, ignore
+        setSuggestions(results);
+        setKnownMatch(results.some((c) => c.name.toLowerCase() === query.toLowerCase()));
+      });
+    }, 250);
+    return () => clearTimeout(debounceRef.current);
+  }, [cityValue]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -48,7 +62,7 @@ export default function CityComboBox({ cities, cityValue, onCityChange, onSelect
 
   useEffect(() => {
     setFocusedIndex(-1);
-  }, [cityValue, open]);
+  }, [suggestions, open]);
 
   function selectCity(city: CityOption) {
     onSelectCity(city.name, city.region);
@@ -94,7 +108,7 @@ export default function CityComboBox({ cities, cityValue, onCityChange, onSelect
         aria-expanded={open}
         aria-autocomplete="list"
       />
-      {cityValue && !isKnownCity && (
+      {cityValue && !knownMatch && (
         <p className="mt-1 text-xs text-neutral-400">
           Not in our curated list — your listing will still work, but this city won&apos;t show up in Top Cities.
         </p>

@@ -12,7 +12,7 @@ import NcInputNumber from "@/components/NcInputNumber";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import FormItem from "./FormItem";
-import CityComboBox, { type CityOption } from "./CityComboBox";
+import CityComboBox from "./CityComboBox";
 import { saveListingDraft, publishListing, deleteUploadedImage } from "@/modules/listings/actions";
 import { uploadListingImage, isImageUploadConfigured } from "@/lib/cloudinary-upload";
 
@@ -96,14 +96,12 @@ export interface AddListingWizardProps {
   initialListing: WizardListing;
   propertyTypes: { id: string; name: string; slug: string }[];
   amenities: { id: string; name: string; slug: string; category: string | null; icon: string | null }[];
-  cities?: CityOption[];
 }
 
 export default function AddListingWizard({
   initialListing,
   propertyTypes,
   amenities,
-  cities = [],
 }: AddListingWizardProps) {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
@@ -255,7 +253,6 @@ export default function AddListingWizard({
               <div className="grid grid-cols-2 gap-4">
                 <FormItem label="City">
                   <CityComboBox
-                    cities={cities}
                     cityValue={listing.address?.city ?? ""}
                     onCityChange={(city) =>
                       update("address", { ...emptyAddress(listing.address), city })
