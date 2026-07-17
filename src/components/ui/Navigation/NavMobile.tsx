@@ -11,6 +11,7 @@ import SocialsList from "@/components/ui/SocialsList";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import SwitchDarkMode from "@/components/ui/SwitchDarkMode";
 import Link from "next/link";
+import { signOut, useSession } from "next-auth/react";
 
 export interface NavMobileProps {
   data?: NavItemType[];
@@ -21,6 +22,9 @@ const NavMobile: React.FC<NavMobileProps> = ({
   data = NAVIGATION_DEMO,
   onClickClose,
 }) => {
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+
   const _renderMenuChild = (item: NavItemType) => {
     return (
       <ul className="nav-mobile-sub-menu pl-6 pb-1 text-base">
@@ -145,10 +149,33 @@ const NavMobile: React.FC<NavMobileProps> = ({
       <ul className="flex flex-col py-6 px-2 space-y-1">
         {data.map(_renderItem)}
       </ul>
-      <div className="flex items-center justify-between py-6 px-5">
-        <Link href="/login">
-          <ButtonPrimary>Sign up</ButtonPrimary>
-        </Link>
+      <div className="py-6 px-5 space-y-3">
+        {isAuthenticated ? (
+          <>
+            <Link href="/account" className="block">
+              <ButtonPrimary className="w-full">My Account</ButtonPrimary>
+            </Link>
+            <button
+              type="button"
+              className="w-full text-sm font-medium text-left px-1 text-neutral-700 dark:text-neutral-300 hover:underline"
+              onClick={() => signOut({ callbackUrl: "/" })}
+            >
+              Log out
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" className="block">
+              <ButtonPrimary className="w-full">Log in</ButtonPrimary>
+            </Link>
+            <Link
+              href="/signup"
+              className="block text-sm font-medium text-center text-neutral-700 dark:text-neutral-300 hover:underline"
+            >
+              Create account
+            </Link>
+          </>
+        )}
       </div>
     </div>
   );

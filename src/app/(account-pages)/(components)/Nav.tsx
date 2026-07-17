@@ -18,6 +18,16 @@ export const Nav = () => {
     "/account-password",
     "/account-billing",
   ];
+  const labels: Record<Route, string> = {
+    "/account": "Profile",
+    "/account-bookings": "Trips",
+    "/account-messages": "Messages",
+    "/account-listings": "Listings",
+    "/account-savelists": "Saved",
+    "/account-notifications": "Notifications",
+    "/account-password": "Security",
+    "/account-billing": "Payments",
+  };
 
   return (
     <div className="container">
@@ -28,13 +38,13 @@ export const Nav = () => {
             <Link
               key={item}
               href={item}
-              className={`block py-5 md:py-8 border-b-2 flex-shrink-0 capitalize ${
+              className={`block py-5 md:py-8 border-b-2 flex-shrink-0 ${
                 isActive
                   ? "border-primary-500 font-medium"
                   : "border-transparent"
               }`}
             >
-              {item.replace("-", " ").replace("/", " ")}
+              {labels[item]}
             </Link>
           );
         })}

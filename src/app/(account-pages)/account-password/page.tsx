@@ -14,7 +14,8 @@ const AccountPass = () => {
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  function handleSubmit() {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setError(null);
     setSuccess(false);
     const formData = new FormData();
@@ -37,10 +38,9 @@ const AccountPass = () => {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* HEADING */}
-      <h2 className="text-3xl font-semibold">Update your password</h2>
+      <h1 className="text-3xl font-semibold">Security</h1>
       <div className="w-14 border-b border-neutral-200 dark:border-neutral-700"></div>
-      <div className=" max-w-xl space-y-6">
+      <form className=" max-w-xl space-y-6" onSubmit={handleSubmit}>
         <div>
           <Label>Current password</Label>
           <PasswordInput
@@ -65,14 +65,14 @@ const AccountPass = () => {
         {success && <p className="text-sm text-green-600">Password updated successfully.</p>}
         <div className="pt-2">
           <ButtonPrimary
+            type="submit"
             loading={isPending}
             disabled={isPending || !currentPassword || !password || !confirmPassword}
-            onClick={handleSubmit}
           >
             Update password
           </ButtonPrimary>
         </div>
-      </div>
+      </form>
     </div>
   );
 };

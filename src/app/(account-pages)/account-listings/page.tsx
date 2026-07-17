@@ -44,7 +44,7 @@ export default async function AccountListingsPage() {
   return (
     <div className="space-y-6 sm:space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-semibold">My Listings</h2>
+        <h1 className="text-3xl font-semibold">Your Listings</h1>
         <a
           href="/add-listing"
           className="inline-flex items-center justify-center rounded-full bg-primary-6000 px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-700 transition-colors"

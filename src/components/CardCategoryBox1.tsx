@@ -29,9 +29,9 @@ const CardCategoryBox1: FC<CardCategoryBox1Props> = ({
         />
       </div>
       <div className="mt-3">
-        <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+        <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
           <span className="line-clamp-1">{name}</span>
-        </h2>
+        </h3>
         <span className="block mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
           {convertNumbThousand(count)} properties
         </span>

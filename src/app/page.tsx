@@ -26,7 +26,7 @@ async function PageHome() {
         <SectionHero className="pt-10 lg:pt-16 lg:pb-16" />
 
         <SectionSliderNewCategories
-          heading="Popular destinations"
+          heading="Trending Destinations"
           subHeading="Explore the most booked cities on Potomac"
         />
 

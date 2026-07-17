@@ -5,16 +5,11 @@ import { Route } from "@/routers/types";
 export const NAVIGATION_DEMO: NavItemType[] = [
   {
     id: ncNanoId(),
-    href: "/",
-    name: "Home",
-  },
-  {
-    id: ncNanoId(),
     href: "/listing-stay" as Route,
-    name: "Listings",
+    name: "Explore",
     type: "dropdown",
     children: [
-      { id: ncNanoId(), href: "/listing-stay" as Route, name: "All listings" },
+      { id: ncNanoId(), href: "/listing-stay" as Route, name: "All stays" },
       {
         id: ncNanoId(),
         href: "/listing-stay-map" as Route,
@@ -34,12 +29,12 @@ export const NAVIGATION_DEMO: NavItemType[] = [
   },
   {
     id: ncNanoId(),
-    href: "/add-listing" as Route,
-    name: "List your property",
+    href: "/help" as Route,
+    name: "Help",
   },
   {
     id: ncNanoId(),
-    href: "/login" as Route,
-    name: "Login",
+    href: "/add-listing" as Route,
+    name: "Become a Host",
   },
 ];

@@ -47,7 +47,7 @@ export default async function AccountBookingsPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h2 className="text-3xl font-semibold">My Trips</h2>
+        <h1 className="text-3xl font-semibold">Your Trips</h1>
         <div className="w-14 border-b border-neutral-200 dark:border-neutral-700 my-4" />
         <BookingsList bookings={guestRows} viewerRole="guest" emptyMessage="You haven't booked anything yet." />
       </div>

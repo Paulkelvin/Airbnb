@@ -28,7 +28,7 @@ const AccountPage = async () => {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <h2 className="text-3xl font-semibold">Account information</h2>
+      <h1 className="text-3xl font-semibold">Your Profile</h1>
       <div className="w-14 border-b border-neutral-200 dark:border-neutral-700"></div>
       <ProfileForm
         email={user.email}

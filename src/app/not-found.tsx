@@ -9,9 +9,9 @@ const Page404 = () => (
       {/* HEADER */}
       <header className="text-center max-w-2xl mx-auto space-y-2">
         <Image src={I404Png} alt="not-found" />
-        <span className="block text-sm text-neutral-800 sm:text-base dark:text-neutral-200 tracking-wider font-medium">
-          {`THE PAGE YOU WERE LOOKING FOR DOESN'T EXIST.`}{" "}
-        </span>
+        <h1 className="block text-2xl text-neutral-800 sm:text-3xl dark:text-neutral-200 tracking-wide font-semibold">
+          Page not found
+        </h1>
         <div className="pt-8">
           <ButtonPrimary href="/">Return Home Page</ButtonPrimary>
         </div>

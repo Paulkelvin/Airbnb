@@ -11,6 +11,7 @@ import MenuBar from "@/components/ui/MenuBar";
 import isInViewport from "@/utils/isInViewport";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 let WIN_PREV_POSITION = 0;
 if (typeof window !== "undefined") {
@@ -23,32 +24,13 @@ interface NavItem {
   icon: any;
 }
 
-const NAV: NavItem[] = [
-  {
-    name: "Explore",
-    link: "/",
-    icon: MagnifyingGlassIcon,
-  },
-  {
-    name: "Wishlists",
-    link: "/account-savelists",
-    icon: HeartIcon,
-  },
-  {
-    name: "Log in",
-    link: "/login",
-    icon: UserCircleIcon,
-  },
-  {
-    name: "Menu",
-    icon: MenuBar,
-  },
-];
-
 const FooterNav = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
 
   const pathname = usePathname();
+  const profileLink = isAuthenticated ? "/account" : "/login";
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -134,8 +116,10 @@ const FooterNav = () => {
       transition-transform duration-300 ease-in-out"
     >
       <div className="w-full max-w-lg flex justify-around mx-auto text-sm text-center ">
-        {/* MENU */}
-        {NAV.map(renderItem)}
+        {renderItem({ name: "Search", link: "/", icon: MagnifyingGlassIcon }, 0)}
+        {renderItem({ name: "Saved", link: "/account-savelists", icon: HeartIcon }, 1)}
+        {renderItem({ name: "Profile", link: profileLink as PathName, icon: UserCircleIcon }, 2)}
+        {renderItem({ name: "Menu", icon: MenuBar }, 3)}
       </div>
     </div>
   );

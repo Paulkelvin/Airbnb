@@ -15,15 +15,15 @@ const SectionHero: FC<SectionHeroProps> = ({ className = "" }) => {
     >
       <div className="flex flex-col lg:flex-row lg:items-center">
         <div className="flex-shrink-0 lg:w-1/2 flex flex-col items-start space-y-8 sm:space-y-10 pb-14 lg:pb-64 xl:pr-14 lg:mr-10 xl:mr-0">
-          <h2 className="font-medium text-4xl md:text-5xl xl:text-7xl !leading-[114%] ">
-            Find your perfect stay
-          </h2>
+          <h1 className="font-medium text-4xl md:text-5xl xl:text-7xl !leading-[114%] ">
+            Short-Term Stays &amp; Long-Term Rentals in Top U.S. Cities
+          </h1>
           <span className="text-base md:text-lg text-neutral-500 dark:text-neutral-400">
-            Discover and book properties for short-term stays or long-term
-            rentals. Your next home is just a search away.
+            Browse verified properties from trusted hosts. Book a weekend
+            getaway or sign a long-term lease -- all in one place.
           </span>
           <ButtonPrimary href="/listing-stay-map" sizeClass="px-5 py-4 sm:px-7">
-            Start your search
+            Search stays
           </ButtonPrimary>
         </div>
         <div className="flex-grow lg:pb-20 xl:pb-28">

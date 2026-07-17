@@ -20,7 +20,7 @@ export default async function AccountSavelists() {
   return (
     <div className="space-y-6 sm:space-y-8">
       <div>
-        <h2 className="text-3xl font-semibold">Saved listings</h2>
+        <h1 className="text-3xl font-semibold">Saved Stays</h1>
       </div>
       <div className="w-14 border-b border-neutral-200 dark:border-neutral-700"></div>
 

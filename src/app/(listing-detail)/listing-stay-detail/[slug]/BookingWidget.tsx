@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import DatePicker from "react-datepicker";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import NcInputNumber from "@/components/NcInputNumber";
@@ -29,13 +29,19 @@ export default function BookingWidget({
   blockedDates,
   serviceFeePercent,
 }: BookingWidgetProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const callbackUrl = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+
   if (!isAuthenticated) {
     return (
       <div className="text-center space-y-3">
         <p className="text-neutral-600 dark:text-neutral-300">
           Log in to book this {pricing.rentalType === "SHORT_TERM" ? "stay" : "lease"}.
         </p>
-        <ButtonPrimary href={"/login" as Route}>Log in</ButtonPrimary>
+        <ButtonPrimary href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}` as Route}>
+          Log in
+        </ButtonPrimary>
       </div>
     );
   }
@@ -75,6 +81,9 @@ function ShortTermBookingForm({
   const [guestCount, setGuestCount] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const rentTotal = pricing.monthlyRent * leaseTermMonths;
+  const deposit = pricing.securityDeposit ?? 0;
+  const totalCommitment = rentTotal + deposit;
 
   const excludeDates = useMemo(() => blockedDates.map((d) => new Date(d)), [blockedDates]);
 
@@ -271,6 +280,17 @@ function LongTermBookingForm({
             <span>${pricing.securityDeposit.toFixed(2)}</span>
           </div>
         )}
+        <div className="border-t border-neutral-200 dark:border-neutral-700 pt-2 flex justify-between font-semibold">
+          <span>Total ({currency})</span>
+          <span>${totalCommitment.toFixed(2)}</span>
+        </div>
+        <div className="text-xs text-neutral-500">
+          {leaseTermMonths} months x ${pricing.monthlyRent.toFixed(2)} = ${rentTotal.toFixed(2)}
+          {pricing.securityDeposit !== null
+            ? ` + $${pricing.securityDeposit.toFixed(2)} deposit`
+            : ""}{" "}
+          = ${totalCommitment.toFixed(2)}
+        </div>
         <div className="text-xs text-neutral-500">Currency: {currency}</div>
       </div>
 
