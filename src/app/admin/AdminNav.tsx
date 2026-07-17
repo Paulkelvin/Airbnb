@@ -25,25 +25,44 @@ const NAV_ITEMS = [
   { href: "/admin/taxonomy", label: "Taxonomy", icon: TagIcon },
   { href: "/admin/audit-log", label: "Audit Log", icon: ClipboardDocumentListIcon },
   { href: "/admin/settings", label: "Settings", icon: Cog6ToothIcon },
-  { href: "/studio", label: "CMS", icon: PencilSquareIcon },
+  { href: "https://potomac.sanity.studio", label: "CMS", icon: PencilSquareIcon, external: true },
 ] as const;
 
 function NavLinks({ pathname, onNavigate }: { pathname: string | null; onNavigate?: () => void }) {
   return (
     <nav className="flex-1 space-y-1 px-3">
       {NAV_ITEMS.map((item) => {
-        const isActive =
-          item.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(item.href);
+        const isExternal = "external" in item && item.external;
+        const isActive = !isExternal &&
+          (item.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(item.href));
+        const className = `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+          isActive
+            ? "bg-primary-50 text-primary-6000 dark:bg-primary-900/30 dark:text-primary-400"
+            : "text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 hover:text-neutral-900 dark:hover:text-neutral-100"
+        }`;
+
+        if (isExternal) {
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onNavigate}
+              className={className}
+            >
+              <item.icon className="w-5 h-5 flex-shrink-0" />
+              {item.label}
+            </a>
+          );
+        }
+
         return (
           <Link
             key={item.href}
             href={item.href as never}
             onClick={onNavigate}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-              isActive
-                ? "bg-primary-50 text-primary-6000 dark:bg-primary-900/30 dark:text-primary-400"
-                : "text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 hover:text-neutral-900 dark:hover:text-neutral-100"
-            }`}
+            className={className}
           >
             <item.icon className="w-5 h-5 flex-shrink-0" />
             {item.label}
