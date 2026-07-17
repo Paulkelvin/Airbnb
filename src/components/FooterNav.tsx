@@ -6,6 +6,7 @@ import {
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import React, { useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { PathName } from "@/routers/types";
 import MenuBar from "@/components/ui/MenuBar";
 import isInViewport from "@/utils/isInViewport";
@@ -23,7 +24,7 @@ interface NavItem {
   icon: any;
 }
 
-const NAV: NavItem[] = [
+const NAV_LOGGED_OUT: NavItem[] = [
   {
     name: "Explore",
     link: "/",
@@ -45,10 +46,34 @@ const NAV: NavItem[] = [
   },
 ];
 
+const NAV_LOGGED_IN: NavItem[] = [
+  {
+    name: "Explore",
+    link: "/",
+    icon: MagnifyingGlassIcon,
+  },
+  {
+    name: "Wishlists",
+    link: "/account-savelists",
+    icon: HeartIcon,
+  },
+  {
+    name: "Account",
+    link: "/account",
+    icon: UserCircleIcon,
+  },
+  {
+    name: "Menu",
+    icon: MenuBar,
+  },
+];
+
 const FooterNav = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { status } = useSession();
 
   const pathname = usePathname();
+  const NAV = status === "authenticated" ? NAV_LOGGED_IN : NAV_LOGGED_OUT;
 
   useEffect(() => {
     if (typeof window !== "undefined") {

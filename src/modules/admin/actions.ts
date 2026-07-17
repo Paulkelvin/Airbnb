@@ -131,6 +131,42 @@ export async function adminUnpublishListing(listingId: string, reason?: string):
   return { success: true, data: { id: listingId } };
 }
 
+export async function adminDeleteListing(listingId: string): Promise<ActionResult<{ id: string }>> {
+  const admin = await requireAdmin();
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    select: {
+      id: true,
+      title: true,
+      hostId: true,
+      _count: {
+        select: {
+          bookings: {
+            where: { status: { in: ["PENDING", "CONFIRMED", "ACTIVE", "CHECKED_IN"] } },
+          },
+        },
+      },
+    },
+  });
+  if (!listing) return { success: false, error: { code: "NOT_FOUND", message: "Listing not found" } };
+  if (listing._count.bookings > 0) {
+    return {
+      success: false,
+      error: {
+        code: "IN_USE",
+        message: `Cannot delete — ${listing._count.bookings} active booking(s) exist. Cancel or complete them first.`,
+      },
+    };
+  }
+
+  await prisma.listing.delete({ where: { id: listingId } });
+  await auditLog(admin.id, "listing.delete", "Listing", listingId, { title: listing.title });
+  await notify(listing.hostId, "LISTING_REJECTED", { listingId, listingTitle: listing.title, reason: "Your listing has been permanently removed by an administrator." });
+  revalidatePath("/admin/listings");
+  revalidatePath("/listing-stay");
+  return { success: true, data: { id: listingId } };
+}
+
 // ─── Booking Dispute Resolution ──────────────────────────────────────────────
 
 export async function adminForceBookingTransition(

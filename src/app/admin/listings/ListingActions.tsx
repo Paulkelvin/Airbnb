@@ -2,7 +2,7 @@
 
 import React, { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { approveListing, rejectListing, adminUnpublishListing } from "@/modules/admin/actions";
+import { approveListing, rejectListing, adminUnpublishListing, adminDeleteListing } from "@/modules/admin/actions";
 
 export function ListingActions({
   listingId,
@@ -69,6 +69,16 @@ export function ListingActions({
           Unpublish
         </button>
       )}
+      <button
+        onClick={() => {
+          if (!window.confirm("Permanently delete this listing? This cannot be undone.")) return;
+          handleAction(() => adminDeleteListing(listingId));
+        }}
+        disabled={isPending}
+        className="px-2 py-1 text-xs rounded bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 disabled:opacity-50"
+      >
+        Delete
+      </button>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import "rc-slider/assets/index.css";
 import Footer from "@/components/Footer";
 import FooterNav from "@/components/FooterNav";
 import AuthSessionProvider from "./AuthSessionProvider";
+import SiteChrome from "./SiteChrome";
 import { getSiteUrl } from "@/lib/site-url";
 
 const poppins = Poppins({
@@ -50,10 +51,14 @@ export default function RootLayout({
       <body className="bg-white text-base dark:bg-neutral-900 text-neutral-900 dark:text-neutral-200 flex flex-col min-h-screen">
         <AuthSessionProvider>
           <ClientCommons />
-          <SiteHeader />
+          <SiteChrome>
+            <SiteHeader />
+          </SiteChrome>
           <main className="flex-grow">{children}</main>
-          <FooterNav />
-          <Footer />
+          <SiteChrome>
+            <FooterNav />
+            <Footer />
+          </SiteChrome>
         </AuthSessionProvider>
       </body>
     </html>

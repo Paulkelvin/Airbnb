@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useSession, signOut } from "next-auth/react";
 import ButtonClose from "@/components/ui/ButtonClose";
 import Logo from "@/components/ui/Logo";
 import { Disclosure, Transition } from "@headlessui/react";
@@ -21,6 +22,7 @@ const NavMobile: React.FC<NavMobileProps> = ({
   data = NAVIGATION_DEMO,
   onClickClose,
 }) => {
+  const { status } = useSession();
   const _renderMenuChild = (item: NavItemType) => {
     return (
       <ul className="nav-mobile-sub-menu pl-6 pb-1 text-base">
@@ -146,9 +148,23 @@ const NavMobile: React.FC<NavMobileProps> = ({
         {data.map(_renderItem)}
       </ul>
       <div className="flex items-center justify-between py-6 px-5">
-        <Link href="/login">
-          <ButtonPrimary>Sign up</ButtonPrimary>
-        </Link>
+        {status === "authenticated" ? (
+          <div className="flex gap-3">
+            <Link href="/account" onClick={onClickClose}>
+              <ButtonPrimary>My Account</ButtonPrimary>
+            </Link>
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="px-4 py-2 rounded-full border border-neutral-300 dark:border-neutral-600 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              Log out
+            </button>
+          </div>
+        ) : (
+          <Link href="/login">
+            <ButtonPrimary>Sign up</ButtonPrimary>
+          </Link>
+        )}
       </div>
     </div>
   );
