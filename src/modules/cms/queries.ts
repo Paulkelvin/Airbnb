@@ -115,3 +115,52 @@ export async function getAdminAuthors(): Promise<CmsAuthorItem[]> {
     }
   `);
 }
+
+// ---------- FAQ ----------
+
+export interface CmsFaqItem {
+  _id: string;
+  question: string;
+  answer: string;
+  category: string;
+  order: number;
+}
+
+export async function getAdminFaqs(): Promise<CmsFaqItem[]> {
+  return sanityClient.fetch(groq`
+    *[_type == "faq"] | order(category asc, order asc) {
+      _id, question, answer, category, order
+    }
+  `);
+}
+
+export async function getAdminFaq(id: string): Promise<CmsFaqItem | null> {
+  return sanityClient.fetch(
+    groq`*[_type == "faq" && _id == $id][0] { _id, question, answer, category, order }`,
+    { id },
+  );
+}
+
+// ---------- About page (singleton) ----------
+
+export const ABOUT_PAGE_ID = "aboutPage-singleton";
+
+export interface CmsAboutPage {
+  _id: string;
+  heroTitle: string;
+  heroSubtitle: string | null;
+  heroBody: unknown;
+  stats: { label: string; value: string }[];
+  missionTitle: string | null;
+  missionBody: unknown;
+  missionImage: unknown;
+  valuesTitle: string | null;
+  valuesSubtitle: string | null;
+  values: { title: string; description: string }[];
+  ctaTitle: string | null;
+  ctaSubtitle: string | null;
+}
+
+export async function getAdminAboutPage(): Promise<CmsAboutPage | null> {
+  return sanityClient.fetch(groq`*[_type == "aboutPage" && _id == $id][0]`, { id: ABOUT_PAGE_ID });
+}

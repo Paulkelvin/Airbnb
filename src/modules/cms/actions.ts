@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import type { ActionResult } from "@/lib/validations/auth";
 import { sanityAdminClient } from "./sanity-admin-client";
 import { plainTextToBlocks } from "./portable-text";
+import { ABOUT_PAGE_ID } from "./queries";
 
 function slugify(title: string): string {
   return title
@@ -255,4 +256,114 @@ export async function deleteAuthor(id: string): Promise<ActionResult<{ id: strin
   await sanityAdminClient.delete(id);
   revalidatePath("/admin/content/categories-authors");
   return { success: true, data: { id } };
+}
+
+// ---------- FAQ ----------
+
+export interface FaqFormInput {
+  question: string;
+  answer: string;
+  category: string;
+  order: number;
+}
+
+export async function createFaq(input: FaqFormInput): Promise<ActionResult<{ id: string }>> {
+  await requireAdmin();
+  if (!input.question.trim() || !input.answer.trim() || !input.category.trim()) {
+    return fail("Question, answer, and category are all required");
+  }
+  const doc = await sanityAdminClient.create({
+    _type: "faq",
+    question: input.question.trim(),
+    answer: input.answer.trim(),
+    category: input.category.trim(),
+    order: input.order,
+  });
+  revalidatePath("/faq");
+  revalidatePath("/admin/content/faq");
+  return { success: true, data: { id: doc._id } };
+}
+
+export async function updateFaq(
+  id: string,
+  input: FaqFormInput,
+): Promise<ActionResult<{ id: string }>> {
+  await requireAdmin();
+  if (!input.question.trim() || !input.answer.trim() || !input.category.trim()) {
+    return fail("Question, answer, and category are all required");
+  }
+  await sanityAdminClient
+    .patch(id)
+    .set({
+      question: input.question.trim(),
+      answer: input.answer.trim(),
+      category: input.category.trim(),
+      order: input.order,
+    })
+    .commit();
+  revalidatePath("/faq");
+  revalidatePath("/admin/content/faq");
+  return { success: true, data: { id } };
+}
+
+export async function deleteFaq(id: string): Promise<ActionResult<{ id: string }>> {
+  await requireAdmin();
+  await sanityAdminClient.delete(id);
+  revalidatePath("/faq");
+  revalidatePath("/admin/content/faq");
+  return { success: true, data: { id } };
+}
+
+// ---------- About page (singleton) ----------
+
+export interface AboutPageFormInput {
+  heroTitle: string;
+  heroSubtitle: string;
+  heroBodyText: string;
+  stats: { label: string; value: string }[];
+  missionTitle: string;
+  missionBodyText: string;
+  valuesTitle: string;
+  valuesSubtitle: string;
+  values: { title: string; description: string }[];
+  ctaTitle: string;
+  ctaSubtitle: string;
+}
+
+export async function saveAboutPage(input: AboutPageFormInput): Promise<ActionResult<{ id: string }>> {
+  await requireAdmin();
+  if (!input.heroTitle.trim()) return fail("Hero title is required");
+
+  await sanityAdminClient.createOrReplace({
+    _id: ABOUT_PAGE_ID,
+    _type: "aboutPage",
+    heroTitle: input.heroTitle.trim(),
+    heroSubtitle: input.heroSubtitle.trim() || undefined,
+    heroBody: plainTextToBlocks(input.heroBodyText),
+    stats: input.stats
+      .filter((s) => s.label.trim() && s.value.trim())
+      .map((s) => ({ _type: "stat", _key: cryptoKey(), label: s.label.trim(), value: s.value.trim() })),
+    missionTitle: input.missionTitle.trim() || undefined,
+    missionBody: plainTextToBlocks(input.missionBodyText),
+    valuesTitle: input.valuesTitle.trim() || undefined,
+    valuesSubtitle: input.valuesSubtitle.trim() || undefined,
+    values: input.values
+      .filter((v) => v.title.trim())
+      .map((v) => ({
+        _type: "value",
+        _key: cryptoKey(),
+        title: v.title.trim(),
+        description: v.description.trim(),
+      })),
+    ctaTitle: input.ctaTitle.trim() || undefined,
+    ctaSubtitle: input.ctaSubtitle.trim() || undefined,
+  });
+
+  revalidatePath("/about");
+  revalidatePath("/admin/content/about");
+  return { success: true, data: { id: ABOUT_PAGE_ID } };
+}
+
+function cryptoKey(): string {
+  return Math.random().toString(36).slice(2, 10);
 }

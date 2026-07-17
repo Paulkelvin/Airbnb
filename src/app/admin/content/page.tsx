@@ -1,16 +1,29 @@
 import Link from "next/link";
-import { DocumentTextIcon, DocumentIcon, TagIcon } from "@heroicons/react/24/outline";
+import {
+  DocumentTextIcon,
+  DocumentIcon,
+  TagIcon,
+  QuestionMarkCircleIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/24/outline";
 import { AdminPageHeader } from "../AdminUI";
-import { getAdminPosts, getAdminPages, getAdminCategories, getAdminAuthors } from "@/modules/cms/queries";
+import {
+  getAdminPosts,
+  getAdminPages,
+  getAdminCategories,
+  getAdminAuthors,
+  getAdminFaqs,
+} from "@/modules/cms/queries";
 
 export const metadata = { title: "Content" };
 
 export default async function AdminContentOverviewPage() {
-  const [posts, pages, categories, authors] = await Promise.all([
+  const [posts, pages, categories, authors, faqs] = await Promise.all([
     getAdminPosts(),
     getAdminPages(),
     getAdminCategories(),
     getAdminAuthors(),
+    getAdminFaqs(),
   ]);
 
   const sections = [
@@ -26,7 +39,21 @@ export default async function AdminContentOverviewPage() {
       label: "Pages",
       count: pages.length,
       icon: DocumentIcon,
-      description: "Static content pages like About, FAQ, Terms.",
+      description: "Standalone pages — Terms, Privacy, and any others.",
+    },
+    {
+      href: "/admin/content/about",
+      label: "About Page",
+      count: null,
+      icon: InformationCircleIcon,
+      description: "The public /about page — hero, stats, mission, values.",
+    },
+    {
+      href: "/admin/content/faq",
+      label: "FAQ",
+      count: faqs.length,
+      icon: QuestionMarkCircleIcon,
+      description: "Questions shown on the Help Centre page.",
     },
     {
       href: "/admin/content/categories-authors",
@@ -55,9 +82,11 @@ export default async function AdminContentOverviewPage() {
             </div>
             <p className="font-medium text-neutral-900 dark:text-neutral-100">{section.label}</p>
             <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{section.description}</p>
-            <p className="mt-3 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-              {section.count}
-            </p>
+            {section.count !== null && (
+              <p className="mt-3 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                {section.count}
+              </p>
+            )}
           </Link>
         ))}
       </div>

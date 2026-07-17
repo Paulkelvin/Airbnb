@@ -68,6 +68,29 @@ export const pageBySlugQuery = groq`
   }
 `;
 
+export const allFaqsQuery = groq`
+  *[_type == "faq"] | order(category asc, order asc) {
+    _id, question, answer, category
+  }
+`;
+
+export const aboutPageQuery = groq`
+  *[_type == "aboutPage"][0] {
+    heroTitle,
+    heroSubtitle,
+    heroBody,
+    stats,
+    missionTitle,
+    missionBody,
+    missionImage,
+    valuesTitle,
+    valuesSubtitle,
+    values,
+    ctaTitle,
+    ctaSubtitle
+  }
+`;
+
 export const sitemapPostsQuery = groq`
   *[_type == "post" && defined(publishedAt) && publishedAt <= now()] | order(publishedAt desc) {
     "slug": slug.current,
