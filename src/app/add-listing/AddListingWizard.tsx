@@ -113,12 +113,18 @@ export default function AddListingWizard({
   >();
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [flexibleCheckInOut, setFlexibleCheckInOut] = useState(
+    initialListing.checkInTime === null && initialListing.checkOutTime === null,
+  );
 
   const amenitiesByCategory = amenities.reduce<Record<string, typeof amenities>>((acc, a) => {
     const key = a.category ?? "OTHER";
     (acc[key] ??= []).push(a);
     return acc;
   }, {});
+
+  const checklist = getCompletionChecklist(listing);
+  const canPublish = checklist.every((item) => item.done);
 
   function update<K extends keyof WizardListing>(key: K, value: WizardListing[K]) {
     setListing((prev) => ({ ...prev, [key]: value }));
@@ -353,22 +359,40 @@ export default function AddListingWizard({
             <h2 className="text-2xl font-semibold">Booking policies</h2>
             <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
             <div className="space-y-8">
-              <div className="grid grid-cols-2 gap-4">
-                <FormItem label="Check-in time">
-                  <Input
-                    type="time"
-                    value={listing.checkInTime ?? "15:00"}
-                    onChange={(e) => update("checkInTime", e.target.value)}
-                  />
-                </FormItem>
-                <FormItem label="Check-out time">
-                  <Input
-                    type="time"
-                    value={listing.checkOutTime ?? "11:00"}
-                    onChange={(e) => update("checkOutTime", e.target.value)}
-                  />
-                </FormItem>
-              </div>
+              <Checkbox
+                name="flexibleCheckInOut"
+                label="No fixed check-in/check-out time"
+                subLabel="Choose this for self check-in or a flexible arrival — guests won't see a specific time"
+                defaultChecked={flexibleCheckInOut}
+                onChange={(checked) => {
+                  setFlexibleCheckInOut(checked);
+                  if (checked) {
+                    update("checkInTime", null);
+                    update("checkOutTime", null);
+                  } else {
+                    update("checkInTime", listing.checkInTime ?? "15:00");
+                    update("checkOutTime", listing.checkOutTime ?? "11:00");
+                  }
+                }}
+              />
+              {!flexibleCheckInOut && (
+                <div className="grid grid-cols-2 gap-4">
+                  <FormItem label="Check-in time">
+                    <Input
+                      type="time"
+                      value={listing.checkInTime ?? "15:00"}
+                      onChange={(e) => update("checkInTime", e.target.value)}
+                    />
+                  </FormItem>
+                  <FormItem label="Check-out time">
+                    <Input
+                      type="time"
+                      value={listing.checkOutTime ?? "11:00"}
+                      onChange={(e) => update("checkOutTime", e.target.value)}
+                    />
+                  </FormItem>
+                </div>
+              )}
               <FormItem label="Cancellation policy">
                 <Select
                   value={listing.cancellationPolicy ?? "MODERATE"}
@@ -467,7 +491,7 @@ export default function AddListingWizard({
                     </label>
                   </div>
                   <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                    PNG or JPG, multiple files supported
+                    PNG or JPG, up to 10MB each — larger photos are resized automatically
                   </p>
                 </div>
               </div>
@@ -626,6 +650,38 @@ export default function AddListingWizard({
                   : "No address set"}
               </p>
             </div>
+            {!canPublish && (
+              <div className="mt-2">
+                <h3 className="text-base font-semibold mb-3">Before you publish</h3>
+                <ul className="space-y-2">
+                  {checklist.map((item) => (
+                    <li
+                      key={item.label}
+                      className="flex items-center justify-between gap-4 text-sm"
+                    >
+                      <span
+                        className={
+                          item.done
+                            ? "text-neutral-500 dark:text-neutral-400"
+                            : "text-red-600 dark:text-red-400"
+                        }
+                      >
+                        {item.done ? "✓" : "○"} {item.label}
+                      </span>
+                      {!item.done && (
+                        <button
+                          type="button"
+                          onClick={() => setStepIndex(item.stepIndex)}
+                          className="text-primary-6000 underline text-xs flex-shrink-0"
+                        >
+                          Fix
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </>
         );
     }
@@ -672,13 +728,21 @@ export default function AddListingWizard({
               <ButtonPrimary
                 disabled={isPending}
                 loading={isPending}
-                onClick={() => saveStepAndAdvance(stepPayload(STEPS[stepIndex], listing, selectedAmenityIds))}
+                onClick={() =>
+                  saveStepAndAdvance(
+                    stepPayload(STEPS[stepIndex], listing, selectedAmenityIds, flexibleCheckInOut),
+                  )
+                }
               >
                 Continue
               </ButtonPrimary>
             )}
             {isLastStep && (
-              <ButtonPrimary disabled={isPending} loading={isPending} onClick={handlePublish}>
+              <ButtonPrimary
+                disabled={isPending || !canPublish}
+                loading={isPending}
+                onClick={handlePublish}
+              >
                 Publish listing
               </ButtonPrimary>
             )}
@@ -708,6 +772,7 @@ function stepPayload(
   step: (typeof STEPS)[number],
   listing: WizardListing,
   selectedAmenityIds: Set<string>,
+  flexibleCheckInOut: boolean,
 ): Record<string, unknown> {
   switch (step) {
     case "Location":
@@ -726,10 +791,12 @@ function stepPayload(
       // (the `value={listing.x ?? "..."}` fallbacks) — otherwise a user who
       // never touches a pre-filled-looking field would save `null` for a
       // field the strict publish-time schema requires to be a real value.
+      // Exception: check-in/out are explicitly null when the host opted into
+      // flexible/self check-in, regardless of what the (hidden) inputs hold.
       return listing.rentalType === "SHORT_TERM"
         ? {
-            checkInTime: listing.checkInTime ?? "15:00",
-            checkOutTime: listing.checkOutTime ?? "11:00",
+            checkInTime: flexibleCheckInOut ? null : (listing.checkInTime ?? "15:00"),
+            checkOutTime: flexibleCheckInOut ? null : (listing.checkOutTime ?? "11:00"),
             cancellationPolicy: listing.cancellationPolicy ?? "MODERATE",
             instantBook: listing.instantBook ?? false,
           }
@@ -762,4 +829,40 @@ function stepPayload(
     default:
       return {};
   }
+}
+
+function getCompletionChecklist(
+  listing: WizardListing,
+): { label: string; done: boolean; stepIndex: number }[] {
+  return [
+    {
+      label: "A complete address",
+      done: Boolean(
+        listing.address?.line1 &&
+          listing.address?.city &&
+          listing.address?.region &&
+          listing.address?.postalCode &&
+          listing.address?.country?.length === 2,
+      ),
+      stepIndex: STEPS.indexOf("Location"),
+    },
+    {
+      label: "A description (at least 20 characters)",
+      done: listing.description.trim().length >= 20,
+      stepIndex: STEPS.indexOf("Description"),
+    },
+    {
+      label: "At least one photo",
+      done: listing.images.length > 0,
+      stepIndex: STEPS.indexOf("Photos"),
+    },
+    {
+      label: listing.rentalType === "SHORT_TERM" ? "A nightly price" : "A monthly rent",
+      done:
+        listing.rentalType === "SHORT_TERM"
+          ? Boolean(listing.nightlyPrice && listing.nightlyPrice > 0)
+          : Boolean(listing.monthlyRent && listing.monthlyRent > 0),
+      stepIndex: STEPS.indexOf("Pricing"),
+    },
+  ];
 }

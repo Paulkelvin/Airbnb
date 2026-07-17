@@ -56,8 +56,8 @@ export interface ListingDetailViewModel {
         maxNights: number | null;
         weeklyDiscountPercent: number | null;
         monthlyDiscountPercent: number | null;
-        checkInTime: string;
-        checkOutTime: string;
+        checkInTime: string | null;
+        checkOutTime: string | null;
         instantBook: boolean;
         cancellationPolicy: string;
       }
@@ -96,8 +96,8 @@ export function toDetailViewModel(
           monthlyDiscountPercent: listing.monthlyDiscountPercent
             ? toNumber(listing.monthlyDiscountPercent)
             : null,
-          checkInTime: listing.checkInTime ?? "15:00",
-          checkOutTime: listing.checkOutTime ?? "11:00",
+          checkInTime: listing.checkInTime,
+          checkOutTime: listing.checkOutTime,
           instantBook: listing.instantBook ?? false,
           cancellationPolicy: listing.cancellationPolicy ?? "MODERATE",
         }

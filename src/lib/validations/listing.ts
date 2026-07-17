@@ -44,8 +44,10 @@ const shortTermFields = {
   maxNights: z.coerce.number().int().min(1).nullish(),
   weeklyDiscountPercent: z.coerce.number().min(0).max(100).nullish(),
   monthlyDiscountPercent: z.coerce.number().min(0).max(100).nullish(),
-  checkInTime: z.string().regex(/^\d{2}:\d{2}$/),
-  checkOutTime: z.string().regex(/^\d{2}:\d{2}$/),
+  // Nullable: a host can opt out of a fixed check-in/check-out window
+  // (self check-in, flexible arrival) instead of being forced to pick a time.
+  checkInTime: z.string().regex(/^\d{2}:\d{2}$/).nullish(),
+  checkOutTime: z.string().regex(/^\d{2}:\d{2}$/).nullish(),
   instantBook: z.boolean().default(false),
   cancellationPolicy: z.enum(["FLEXIBLE", "MODERATE", "STRICT"]),
 };
