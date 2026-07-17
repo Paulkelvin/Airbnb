@@ -14,6 +14,10 @@ const PageLogin = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
+  const safeCallbackUrl =
+    callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+      ? callbackUrl
+      : null;
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -38,8 +42,8 @@ const PageLogin = () => {
         return;
       }
 
-      if (callbackUrl) {
-        router.push(callbackUrl as Route);
+      if (safeCallbackUrl) {
+        router.push(safeCallbackUrl as Route);
       } else {
         const session = await getSession();
         router.push(getDefaultDashboardPath(session?.user.roles ?? ["CUSTOMER"]));
