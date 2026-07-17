@@ -6,12 +6,12 @@ import {
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import React, { useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { PathName } from "@/routers/types";
 import MenuBar from "@/components/ui/MenuBar";
 import isInViewport from "@/utils/isInViewport";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 
 let WIN_PREV_POSITION = 0;
 if (typeof window !== "undefined") {
@@ -24,7 +24,7 @@ interface NavItem {
   icon: any;
 }
 
-const STATIC_NAV: NavItem[] = [
+const NAV_LOGGED_OUT: NavItem[] = [
   {
     name: "Explore",
     link: "/",
@@ -37,11 +37,34 @@ const STATIC_NAV: NavItem[] = [
   },
 ];
 
+const NAV_LOGGED_IN: NavItem[] = [
+  {
+    name: "Explore",
+    link: "/",
+    icon: MagnifyingGlassIcon,
+  },
+  {
+    name: "Wishlists",
+    link: "/account-savelists",
+    icon: HeartIcon,
+  },
+  {
+    name: "Account",
+    link: "/account",
+    icon: UserCircleIcon,
+  },
+  {
+    name: "Menu",
+    icon: MenuBar,
+  },
+];
+
 const FooterNav = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { status } = useSession();
 
   const pathname = usePathname();
+  const NAV = status === "authenticated" ? NAV_LOGGED_IN : NAV_LOGGED_OUT;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -57,14 +80,9 @@ const FooterNav = () => {
   };
 
   const showHideHeaderMenu = () => {
-    // if (typeof window === "undefined" || window?.innerWidth >= 768) {
-    //   return null;
-    // }
-
     let currentScrollPos = window.pageYOffset;
     if (!containerRef.current) return;
 
-    // SHOW _ HIDE MAIN MENU
     if (currentScrollPos > WIN_PREV_POSITION) {
       if (
         isInViewport(containerRef.current) &&
@@ -120,17 +138,6 @@ const FooterNav = () => {
     );
   };
 
-  const accountItem: NavItem =
-    status === "authenticated"
-      ? { name: "Account", link: "/account" as PathName, icon: UserCircleIcon }
-      : { name: "Log in", link: "/login" as PathName, icon: UserCircleIcon };
-
-  const NAV: NavItem[] = [
-    ...STATIC_NAV,
-    accountItem,
-    { name: "Menu", icon: MenuBar },
-  ];
-
   return (
     <div
       ref={containerRef}
@@ -146,3 +153,4 @@ const FooterNav = () => {
 };
 
 export default FooterNav;
+

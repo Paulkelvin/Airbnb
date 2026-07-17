@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useSession, signOut } from "next-auth/react";
 import ButtonClose from "@/components/ui/ButtonClose";
 import Logo from "@/components/ui/Logo";
 import { Disclosure, Transition } from "@headlessui/react";
@@ -149,9 +150,17 @@ const NavMobile: React.FC<NavMobileProps> = ({
       </ul>
       <div className="flex items-center justify-between py-6 px-5 gap-3">
         {status === "authenticated" ? (
-          <Link href="/account" className="flex-1" onClick={onClickClose}>
-            <ButtonPrimary className="w-full">My account</ButtonPrimary>
-          </Link>
+          <>
+            <Link href="/account" className="flex-1" onClick={onClickClose}>
+              <ButtonPrimary className="w-full">My account</ButtonPrimary>
+            </Link>
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="px-4 py-2.5 rounded-full border border-neutral-300 dark:border-neutral-600 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              Log out
+            </button>
+          </>
         ) : (
           <>
             <Link href="/login" className="flex-1" onClick={onClickClose}>
