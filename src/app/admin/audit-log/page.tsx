@@ -1,7 +1,9 @@
 import { getAuditLogs } from "@/modules/admin/queries";
-import Link from "next/link";
+import { AdminPageHeader, AdminFilterPills, AdminTableCard, AdminPagination } from "../AdminUI";
 
 export const metadata = { title: "Audit Log" };
+
+const TARGET_TYPES = ["ALL", "User", "Listing", "Booking", "Review", "Conversation", "Payment", "PlatformSetting"] as const;
 
 export default async function AdminAuditLogPage({
   searchParams,
@@ -14,35 +16,18 @@ export default async function AdminAuditLogPage({
     targetType: searchParams.targetType,
   });
 
-  const TARGET_TYPES = ["ALL", "User", "Listing", "Booking", "Review", "Conversation", "Payment", "PlatformSetting"];
-
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-6">
-        Audit Log
-      </h2>
+      <AdminPageHeader title="Audit Log" description={`${total} total entries`} />
 
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {TARGET_TYPES.map((t) => {
-          const isActive = (searchParams.targetType ?? "ALL") === t;
-          const href = t === "ALL" ? "/admin/audit-log" : `/admin/audit-log?targetType=${t}`;
-          return (
-            <Link
-              key={t}
-              href={href as never}
-              className={`px-3 py-1.5 text-sm rounded-full border ${
-                isActive
-                  ? "bg-primary-6000 text-white border-primary-6000"
-                  : "border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
-              }`}
-            >
-              {t}
-            </Link>
-          );
-        })}
-      </div>
+      <AdminFilterPills
+        options={TARGET_TYPES}
+        activeValue={searchParams.targetType ?? "ALL"}
+        basePath="/admin/audit-log"
+        paramName="targetType"
+      />
 
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+      <AdminTableCard>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-200 dark:border-neutral-700 text-left">
@@ -90,27 +75,14 @@ export default async function AdminAuditLogPage({
             )}
           </tbody>
         </table>
-      </div>
+      </AdminTableCard>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-4">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <Link
-              key={p}
-              href={`/admin/audit-log?page=${p}${searchParams.targetType ? `&targetType=${searchParams.targetType}` : ""}` as never}
-              className={`px-3 py-1 text-sm rounded ${
-                p === page
-                  ? "bg-primary-6000 text-white"
-                  : "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300"
-              }`}
-            >
-              {p}
-            </Link>
-          ))}
-        </div>
-      )}
-
-      <p className="mt-2 text-xs text-neutral-400 text-center">{total} total entries</p>
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        basePath="/admin/audit-log"
+        extraParams={searchParams.targetType ? `&targetType=${searchParams.targetType}` : ""}
+      />
     </div>
   );
 }

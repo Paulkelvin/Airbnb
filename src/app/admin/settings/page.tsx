@@ -1,5 +1,6 @@
 import { getPlatformSettings } from "@/modules/admin/queries";
 import { SettingsForm } from "./SettingsForm";
+import { AdminPageHeader } from "../AdminUI";
 
 export const metadata = { title: "Platform Settings" };
 
@@ -13,9 +14,10 @@ export default async function AdminSettingsPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-6">
-        Platform Settings
-      </h2>
+      <AdminPageHeader
+        title="Platform Settings"
+        description="Global configuration that affects every listing and booking."
+      />
       <SettingsForm settings={settingsMap} />
     </div>
   );

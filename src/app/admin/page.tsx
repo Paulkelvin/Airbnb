@@ -9,6 +9,7 @@ import {
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
 import { getAdminStats } from "@/modules/admin/queries";
+import { AdminPageHeader } from "./AdminUI";
 
 export const metadata = { title: "Admin Dashboard" };
 
@@ -53,14 +54,10 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="space-y-10">
-      <div>
-        <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          Platform Overview
-        </h2>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          A snapshot of Potomac's activity right now.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Platform Overview"
+        description="A snapshot of Potomac's activity right now."
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((card) => (
