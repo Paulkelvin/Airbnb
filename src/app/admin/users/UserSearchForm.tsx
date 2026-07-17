@@ -14,7 +14,7 @@ export function UserSearchForm({ defaultValue }: { defaultValue?: string }) {
     const q = inputRef.current?.value.trim() ?? "";
     const params = new URLSearchParams();
     if (q) params.set("search", q);
-    router.push(`${pathname}?${params.toString()}`);
+    router.push(`${pathname}?${params.toString()}` as never);
   }
 
   return (

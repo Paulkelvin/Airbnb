@@ -16,7 +16,7 @@ import {
   ArrowLeftIcon,
   Bars3Icon,
   XMarkIcon,
-  ArrowRightStartOnRectangleIcon,
+  ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 
 const NAV_ITEMS = [
@@ -111,7 +111,7 @@ export default function AdminNav({
         onClick={() => signOut({ callbackUrl: "/" })}
         className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border-t border-neutral-200 dark:border-neutral-700"
       >
-        <ArrowRightStartOnRectangleIcon className="w-4 h-4" />
+        <ArrowRightOnRectangleIcon className="w-4 h-4" />
         Log out
       </button>
     </div>

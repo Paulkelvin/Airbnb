@@ -35,6 +35,15 @@ const NAV_LOGGED_OUT: NavItem[] = [
     link: "/account-savelists",
     icon: HeartIcon,
   },
+  {
+    name: "Log in",
+    link: "/login",
+    icon: UserCircleIcon,
+  },
+  {
+    name: "Menu",
+    icon: MenuBar,
+  },
 ];
 
 const NAV_LOGGED_IN: NavItem[] = [
