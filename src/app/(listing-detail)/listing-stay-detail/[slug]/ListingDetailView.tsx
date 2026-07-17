@@ -424,6 +424,10 @@ export default function ListingDetailView({
                 <ButtonPrimary href={`/add-listing/${listing.id}` as Route}>
                   Manage listing
                 </ButtonPrimary>
+              ) : listing.status !== "PUBLISHED" ? (
+                <p className="text-center text-sm text-neutral-500 dark:text-neutral-400">
+                  This listing isn&apos;t published yet, so it can&apos;t be booked.
+                </p>
               ) : (
                 <BookingWidget
                   listingId={listing.id}
@@ -447,6 +451,7 @@ export default function ListingDetailView({
         maxOccupants={listing.maxOccupants}
         isAuthenticated={isAuthenticated}
         isOwner={isOwner}
+        isPublished={listing.status === "PUBLISHED"}
         pricing={listing.pricing}
         blockedDates={blockedDates}
         serviceFeePercent={serviceFeePercent}

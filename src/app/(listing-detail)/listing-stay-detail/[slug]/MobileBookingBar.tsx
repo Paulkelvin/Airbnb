@@ -24,6 +24,7 @@ export default function MobileBookingBar({
   maxOccupants,
   isAuthenticated,
   isOwner,
+  isPublished,
   pricing,
   blockedDates,
   serviceFeePercent,
@@ -34,6 +35,7 @@ export default function MobileBookingBar({
   maxOccupants: number;
   isAuthenticated: boolean;
   isOwner: boolean;
+  isPublished: boolean;
   pricing: ListingDetailViewModel["pricing"];
   blockedDates: string[];
   serviceFeePercent: number;
@@ -62,6 +64,8 @@ export default function MobileBookingBar({
           <ButtonPrimary sizeClass="px-6 py-3 !rounded-2xl" href={`/add-listing/${listingId}` as Route}>
             Manage listing
           </ButtonPrimary>
+        ) : !isPublished ? (
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">Not published yet</span>
         ) : (
           <ButtonPrimary sizeClass="px-6 py-3 !rounded-2xl" onClick={() => setIsOpen(true)}>
             {pricing.rentalType === "SHORT_TERM" && !pricing.instantBook ? "Request to book" : "Reserve"}
