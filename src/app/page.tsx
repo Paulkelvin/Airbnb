@@ -8,14 +8,15 @@ import SectionBlogHighlights from "@/components/SectionBlogHighlights";
 import SectionFaqHighlights from "@/components/SectionFaqHighlights";
 import { searchListings } from "@/modules/listings/search";
 import { searchParamsSchema } from "@/lib/validations/search";
-import { getTopCities } from "@/modules/listings/queries";
+import { getTopCities, getTopCityCategories } from "@/modules/listings/queries";
 
 export const dynamic = "force-dynamic";
 
 async function PageHome() {
-  const [{ items: featuredListings }, topCities] = await Promise.all([
+  const [{ items: featuredListings }, topCities, cityCategories] = await Promise.all([
     searchListings(searchParamsSchema.parse({ limit: 6, sort: "rating" })),
     getTopCities(6),
+    getTopCityCategories(8),
   ]);
 
   return (
@@ -28,6 +29,7 @@ async function PageHome() {
         <SectionSliderNewCategories
           heading="Top cities to explore"
           subHeading="The cities guests love most"
+          categories={cityCategories}
         />
 
         <SectionWhyBookWithUs />

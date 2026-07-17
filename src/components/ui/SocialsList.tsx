@@ -38,6 +38,20 @@ const SocialsList: FC<SocialsListProps> = ({
     >
       {socials.map((item, i) => {
         const Icon = ICONS_BY_NAME[item.name];
+        const isPlaceholder = !item.href || item.href === "#";
+
+        if (isPlaceholder) {
+          return (
+            <span
+              key={i}
+              className={`${itemClass} opacity-40 cursor-default`}
+              title={`${item.name} — coming soon`}
+            >
+              {Icon && <Icon className="w-5 h-5" />}
+            </span>
+          );
+        }
+
         return (
           <a
             key={i}

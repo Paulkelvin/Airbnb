@@ -74,6 +74,7 @@ const FooterNav = () => {
 
   const pathname = usePathname();
   const NAV = status === "authenticated" ? NAV_LOGGED_IN : NAV_LOGGED_OUT;
+  const isListingDetail = pathname.startsWith("/listing-stay-detail");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -119,6 +120,10 @@ const FooterNav = () => {
     WIN_PREV_POSITION = currentScrollPos;
   };
 
+  if (isListingDetail) {
+    return null;
+  }
+
   const renderItem = (item: NavItem, index: number) => {
     const isActive = pathname === item.link;
 
@@ -126,6 +131,7 @@ const FooterNav = () => {
       <Link
         key={index}
         href={item.link}
+        aria-current={isActive ? "page" : undefined}
         className={`flex flex-col items-center justify-between text-neutral-500 dark:text-neutral-300/90 ${
           isActive ? "text-neutral-900 dark:text-neutral-100" : ""
         }`}
@@ -153,16 +159,17 @@ const FooterNav = () => {
   };
 
   return (
-    <div
+    <nav
       ref={containerRef}
-      className="FooterNav block md:!hidden p-2 bg-white dark:bg-neutral-800 fixed top-auto bottom-0 inset-x-0 z-30 border-t border-neutral-300 dark:border-neutral-700 
+      aria-label="Mobile navigation"
+      className="FooterNav block md:!hidden p-2 bg-white dark:bg-neutral-800 fixed top-auto bottom-0 inset-x-0 z-30 border-t border-neutral-300 dark:border-neutral-700
       transition-transform duration-300 ease-in-out"
     >
       <div className="w-full max-w-lg flex justify-around mx-auto text-sm text-center ">
         {/* MENU */}
         {NAV.map(renderItem)}
       </div>
-    </div>
+    </nav>
   );
 };
 

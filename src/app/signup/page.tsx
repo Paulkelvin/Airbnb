@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useMemo } from "react";
 import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Input from "@/components/ui/Input";
@@ -10,11 +10,33 @@ import Link from "next/link";
 import { register } from "@/actions/auth";
 import { getDefaultDashboardPath } from "@/lib/dashboard-path";
 
+function getPasswordStrength(password: string): {
+  score: number;
+  label: string;
+  color: string;
+  bgColor: string;
+} {
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+
+  if (score <= 1) return { score, label: "Weak", color: "bg-red-500", bgColor: "bg-red-100 dark:bg-red-900/30" };
+  if (score <= 2) return { score, label: "Fair", color: "bg-orange-500", bgColor: "bg-orange-100 dark:bg-orange-900/30" };
+  if (score <= 3) return { score, label: "Good", color: "bg-yellow-500", bgColor: "bg-yellow-100 dark:bg-yellow-900/30" };
+  return { score, label: "Strong", color: "bg-green-500", bgColor: "bg-green-100 dark:bg-green-900/30" };
+}
+
 const PageSignUp = () => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[] | undefined>>();
+  const [password, setPassword] = useState("");
+
+  const strength = useMemo(() => getPasswordStrength(password), [password]);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -88,13 +110,48 @@ const PageSignUp = () => {
                 <span className="text-xs text-red-600">{fieldErrors.email[0]}</span>
               )}
             </label>
-            <label className="block">
-              <span className="text-neutral-800 dark:text-neutral-200">Password</span>
-              <PasswordInput name="password" placeholder="Create a password" required className="mt-1" />
+            <div className="block">
+              <label className="block">
+                <span className="text-neutral-800 dark:text-neutral-200">Password</span>
+                <PasswordInput
+                  name="password"
+                  placeholder="Create a password"
+                  required
+                  className="mt-1"
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </label>
               {fieldErrors?.password && (
                 <span className="text-xs text-red-600">{fieldErrors.password[0]}</span>
               )}
-            </label>
+              {/* Password strength indicator */}
+              {password.length > 0 && (
+                <div className="mt-2 space-y-1.5">
+                  <div className={`h-1.5 w-full rounded-full ${strength.bgColor}`}>
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ease-out ${strength.color}`}
+                      style={{ width: `${(strength.score / 5) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+                    Password strength:{" "}
+                    <span
+                      className={
+                        strength.label === "Weak"
+                          ? "text-red-600 dark:text-red-400"
+                          : strength.label === "Fair"
+                            ? "text-orange-600 dark:text-orange-400"
+                            : strength.label === "Good"
+                              ? "text-yellow-600 dark:text-yellow-400"
+                              : "text-green-600 dark:text-green-400"
+                      }
+                    >
+                      {strength.label}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
             <label className="block">
               <span className="text-neutral-800 dark:text-neutral-200">Confirm password</span>
               <PasswordInput name="confirmPassword" placeholder="Confirm your password" required className="mt-1" />

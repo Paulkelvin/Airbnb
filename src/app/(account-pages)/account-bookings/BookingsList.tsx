@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useCallback, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import {
   confirmBooking,
   declineBooking,
@@ -62,6 +64,22 @@ export default function BookingsList({
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmState, setConfirmState] = useState<{
+    open: boolean;
+    action: (() => void) | null;
+    title: string;
+    message: string;
+  }>({ open: false, action: null, title: "", message: "" });
+
+  const openConfirm = useCallback(
+    (title: string, message: string, action: () => void) =>
+      setConfirmState({ open: true, action, title, message }),
+    [],
+  );
+  const closeConfirm = useCallback(
+    () => setConfirmState({ open: false, action: null, title: "", message: "" }),
+    [],
+  );
 
   function run(
     id: string,
@@ -114,6 +132,15 @@ export default function BookingsList({
   return (
     <div className="space-y-4">
       {error && <div className="rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 text-sm px-4 py-3">{error}</div>}
+      <ConfirmModal
+        open={confirmState.open}
+        onClose={closeConfirm}
+        onConfirm={() => confirmState.action?.()}
+        title={confirmState.title}
+        message={confirmState.message}
+        variant="danger"
+        confirmLabel="Yes, continue"
+      />
       <div className="divide-y divide-neutral-200 dark:divide-neutral-700 rounded-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
         {rows.map((b) => {
           const isRowPending = isPending && pendingId === b.id;
@@ -132,10 +159,9 @@ export default function BookingsList({
 
           return (
             <div key={b.id} className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-5">
-              <div className="w-full sm:w-28 h-20 flex-shrink-0 rounded-lg bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
+              <div className="w-full sm:w-28 h-20 flex-shrink-0 rounded-lg bg-neutral-100 dark:bg-neutral-800 overflow-hidden relative">
                 {b.listingImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={b.listingImageUrl} alt={b.listingTitle} className="w-full h-full object-cover" />
+                  <Image src={b.listingImageUrl} alt={b.listingTitle} fill className="object-cover" sizes="(min-width: 640px) 112px, 100vw" />
                 ) : null}
               </div>
 
@@ -183,11 +209,13 @@ export default function BookingsList({
                 {viewerRole === "guest" && (b.status === "PENDING" || b.status === "CONFIRMED") && (
                   <button
                     disabled={isRowPending}
-                    onClick={() => {
-                      if (confirm("Cancel this booking?")) {
-                        run(b.id, cancelBooking, "CANCELLED_BY_GUEST");
-                      }
-                    }}
+                    onClick={() =>
+                      openConfirm(
+                        "Cancel booking",
+                        "Are you sure you want to cancel this booking?",
+                        () => run(b.id, cancelBooking, "CANCELLED_BY_GUEST"),
+                      )
+                    }
                     className="px-4 py-2 text-sm font-medium rounded-full text-red-600 hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50"
                   >
                     Cancel
@@ -197,11 +225,13 @@ export default function BookingsList({
                 {viewerRole === "host" && b.status === "CONFIRMED" && (
                   <button
                     disabled={isRowPending}
-                    onClick={() => {
-                      if (confirm("Cancel this booking?")) {
-                        run(b.id, cancelBooking, "CANCELLED_BY_HOST");
-                      }
-                    }}
+                    onClick={() =>
+                      openConfirm(
+                        "Cancel booking",
+                        "Are you sure you want to cancel this booking?",
+                        () => run(b.id, cancelBooking, "CANCELLED_BY_HOST"),
+                      )
+                    }
                     className="px-4 py-2 text-sm font-medium rounded-full text-red-600 hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50"
                   >
                     Cancel
@@ -211,11 +241,13 @@ export default function BookingsList({
                 {b.rentalType === "LONG_TERM" && b.status === "ACTIVE" && (
                   <button
                     disabled={isRowPending}
-                    onClick={() => {
-                      if (confirm("End this lease early?")) {
-                        runTerminate(b.id);
-                      }
-                    }}
+                    onClick={() =>
+                      openConfirm(
+                        "Terminate lease",
+                        "Are you sure you want to end this lease early?",
+                        () => runTerminate(b.id),
+                      )
+                    }
                     className="px-4 py-2 text-sm font-medium rounded-full text-red-600 hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50"
                   >
                     Terminate lease

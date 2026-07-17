@@ -142,3 +142,43 @@ export async function getTopCities(limit = 6): Promise<string[]> {
   });
   return rows.map((row) => row.city);
 }
+
+const CITY_THUMBNAILS: Record<string, string> = {
+  "New York":
+    "https://images.pexels.com/photos/2190283/pexels-photo-2190283.jpeg?auto=compress&cs=tinysrgb&w=600",
+  Miami:
+    "https://images.pexels.com/photos/3601425/pexels-photo-3601425.jpeg?auto=compress&cs=tinysrgb&w=600",
+  "Los Angeles":
+    "https://images.pexels.com/photos/2695679/pexels-photo-2695679.jpeg?auto=compress&cs=tinysrgb&w=600",
+  Chicago:
+    "https://images.pexels.com/photos/1769370/pexels-photo-1769370.jpeg?auto=compress&cs=tinysrgb&w=600",
+  "San Diego":
+    "https://images.pexels.com/photos/2476632/pexels-photo-2476632.jpeg?auto=compress&cs=tinysrgb&w=600",
+  Austin:
+    "https://images.pexels.com/photos/1563256/pexels-photo-1563256.jpeg?auto=compress&cs=tinysrgb&w=600",
+  Denver:
+    "https://images.pexels.com/photos/2706750/pexels-photo-2706750.jpeg?auto=compress&cs=tinysrgb&w=600",
+  Charleston:
+    "https://images.pexels.com/photos/3935350/pexels-photo-3935350.jpeg?auto=compress&cs=tinysrgb&w=600",
+};
+
+import type { TaxonomyType } from "@/data/types";
+
+export async function getTopCityCategories(limit = 8): Promise<TaxonomyType[]> {
+  const rows = await prisma.address.groupBy({
+    by: ["city"],
+    where: { listing: { status: "PUBLISHED" } },
+    _count: { city: true },
+    orderBy: { _count: { city: "desc" } },
+    take: limit,
+  });
+
+  return rows.map((row, i) => ({
+    id: String(i + 1),
+    href: `/listing-stay?city=${encodeURIComponent(row.city)}` as any,
+    name: row.city,
+    taxonomy: "category" as const,
+    count: row._count.city,
+    thumbnail: CITY_THUMBNAILS[row.city] ?? CITY_THUMBNAILS["New York"],
+  }));
+}

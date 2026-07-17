@@ -1,7 +1,7 @@
 "use client";
 
 import { MapPinIcon } from "@heroicons/react/24/outline";
-import React, { useState, useRef, useEffect, FC } from "react";
+import React, { useState, useRef, useEffect, useCallback, FC } from "react";
 import ClearDataButton from "./ClearDataButton";
 import { US_CITIES } from "@/data/usCities";
 
@@ -13,6 +13,8 @@ export interface LocationInputProps {
   autoFocus?: boolean;
   onInputDone?: (value: string) => void;
 }
+
+const LISTBOX_ID = "location-suggestions-listbox";
 
 const LocationInput: FC<LocationInputProps> = ({
   autoFocus = false,
@@ -27,6 +29,14 @@ const LocationInput: FC<LocationInputProps> = ({
 
   const [value, setValue] = useState("");
   const [showPopover, setShowPopover] = useState(autoFocus);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+
+  const getFilteredCities = useCallback(() => {
+    if (!value) return US_CITIES;
+    return US_CITIES.filter((city) =>
+      city.toLowerCase().includes(value.toLowerCase()),
+    );
+  }, [value]);
 
   useEffect(() => {
     setShowPopover(autoFocus);
@@ -49,6 +59,11 @@ const LocationInput: FC<LocationInputProps> = ({
     }
   }, [showPopover]);
 
+  // Reset focused index when value changes or popover opens/closes
+  useEffect(() => {
+    setFocusedIndex(-1);
+  }, [value, showPopover]);
+
   const eventClickOutsideDiv = (event: MouseEvent) => {
     if (!containerRef.current) return;
     // CLICK IN_SIDE
@@ -65,18 +80,51 @@ const LocationInput: FC<LocationInputProps> = ({
     setShowPopover(false);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showPopover) return;
+
+    const items = getFilteredCities();
+    const itemCount = items.length;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setFocusedIndex((prev) => (prev < itemCount - 1 ? prev + 1 : 0));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setFocusedIndex((prev) => (prev > 0 ? prev - 1 : itemCount - 1));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (focusedIndex >= 0 && focusedIndex < itemCount) {
+          handleSelectLocation(items[focusedIndex]);
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        setShowPopover(false);
+        break;
+    }
+  };
+
   const renderPopularDestinations = () => {
     return (
       <>
         <h3 className="block mt-2 sm:mt-0 px-4 sm:px-8 font-semibold text-base sm:text-lg text-neutral-800 dark:text-neutral-100">
           Popular destinations
         </h3>
-        <div className="mt-2">
-          {US_CITIES.map((item) => (
-            <span
+        <div className="mt-2" role="listbox" id={LISTBOX_ID} aria-label="Location suggestions">
+          {US_CITIES.map((item, index) => (
+            <button
+              type="button"
               onClick={() => handleSelectLocation(item)}
               key={item}
-              className="flex px-4 sm:px-8 items-center space-x-3 sm:space-x-4 py-4 hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer"
+              role="option"
+              aria-selected={focusedIndex === index}
+              className={`flex w-full px-4 sm:px-8 items-center space-x-3 sm:space-x-4 py-4 hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer text-left ${
+                focusedIndex === index ? "bg-neutral-100 dark:bg-neutral-700" : ""
+              }`}
             >
               <span className="block text-neutral-400">
                 <MapPinIcon className="h-4 sm:h-6 w-4 sm:w-6" />
@@ -84,7 +132,7 @@ const LocationInput: FC<LocationInputProps> = ({
               <span className=" block font-medium text-neutral-700 dark:text-neutral-200">
                 {item}
               </span>
-            </span>
+            </button>
           ))}
         </div>
       </>
@@ -92,16 +140,19 @@ const LocationInput: FC<LocationInputProps> = ({
   };
 
   const renderSearchValue = () => {
-    const filtered = US_CITIES.filter((city) =>
-      city.toLowerCase().includes(value.toLowerCase()),
-    );
+    const filtered = getFilteredCities();
     return (
-      <>
-        {filtered.map((item) => (
-          <span
+      <div role="listbox" id={LISTBOX_ID} aria-label="Location suggestions">
+        {filtered.map((item, index) => (
+          <button
+            type="button"
             onClick={() => handleSelectLocation(item)}
             key={item}
-            className="flex px-4 sm:px-8 items-center space-x-3 sm:space-x-4 py-4 hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer"
+            role="option"
+            aria-selected={focusedIndex === index}
+            className={`flex w-full px-4 sm:px-8 items-center space-x-3 sm:space-x-4 py-4 hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer text-left ${
+              focusedIndex === index ? "bg-neutral-100 dark:bg-neutral-700" : ""
+            }`}
           >
             <span className="block text-neutral-400">
               <MapPinIcon className="h-4 w-4 sm:h-6 sm:w-6" />
@@ -109,9 +160,9 @@ const LocationInput: FC<LocationInputProps> = ({
             <span className="block font-medium text-neutral-700 dark:text-neutral-200">
               {item}
             </span>
-          </span>
+          </button>
         ))}
-      </>
+      </div>
     );
   };
 
@@ -136,7 +187,18 @@ const LocationInput: FC<LocationInputProps> = ({
               setValue(e.currentTarget.value);
               onInputDone?.(e.currentTarget.value);
             }}
+            onKeyDown={handleKeyDown}
             ref={inputRef}
+            aria-label="Search location"
+            aria-expanded={showPopover}
+            aria-controls={showPopover ? LISTBOX_ID : undefined}
+            aria-autocomplete="list"
+            aria-activedescendant={
+              focusedIndex >= 0
+                ? `location-option-${focusedIndex}`
+                : undefined
+            }
+            role="combobox"
           />
           <span className="block mt-0.5 text-sm text-neutral-400 font-light ">
             <span className="line-clamp-1">{!!value ? placeHolder : desc}</span>
