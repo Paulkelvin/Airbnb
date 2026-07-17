@@ -47,10 +47,17 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
+        // Sanity Studio (an embedded, independently-versioned React app
+        // behind its own login) needs its own network/script permissions
+        // that don't fit this app's baseline CSP — excluded here rather
+        // than trying to keep the policy in sync with Studio's internals.
+        source: "/((?!studio).*)",
         headers: securityHeaders,
       },
     ];
+  },
+  compiler: {
+    styledComponents: true,
   },
   images: {
     remotePatterns: [
