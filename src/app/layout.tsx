@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import SiteHeader from "./(client-components)/(Header)/SiteHeader";
 import ClientCommons from "./ClientCommons";
 import "./globals.css";
+import "react-datepicker/dist/react-datepicker.css";
 import "@/styles/index.scss";
 import "rc-slider/assets/index.css";
 import Footer from "@/components/Footer";
