@@ -15,7 +15,7 @@ const SectionBlogHighlights: React.FC = () => {
     <div className="nc-SectionBlogHighlights">
       <div className="flex items-center justify-between">
         <Heading desc="Tips, guides, and stories for guests and hosts">
-          From the blog
+          Latest stories
         </Heading>
         <Link
           href={BLOG_HREF}

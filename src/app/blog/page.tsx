@@ -14,7 +14,7 @@ const BlogPage: React.FC = () => {
     <div className="nc-BlogPage overflow-hidden relative">
       <BgGlassmorphism />
       <div className="container relative py-16 lg:py-28">
-        <h2 className="text-3xl md:text-4xl font-semibold">Blog</h2>
+        <h2 className="text-3xl md:text-4xl font-semibold">Stories &amp; Guides</h2>
         <span className="block mt-3 text-neutral-500 dark:text-neutral-400 text-lg">
           Insights, tips, and stories about finding your perfect stay.
         </span>

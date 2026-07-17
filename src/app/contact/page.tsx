@@ -36,7 +36,7 @@ const PageContact: React.FC = () => {
     <div className="nc-PageContact overflow-hidden">
       <div className="mb-24 lg:mb-32">
         <h2 className="my-16 sm:my-20 flex items-center text-3xl leading-[115%] md:text-5xl md:leading-[115%] font-semibold text-neutral-900 dark:text-neutral-100 justify-center">
-          Contact Us
+          We&apos;re Here to Help
         </h2>
         <div className="container max-w-7xl mx-auto">
           <div className="flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-12">
@@ -51,10 +51,10 @@ const PageContact: React.FC = () => {
               </div>
               <div>
                 <h3 className="uppercase font-semibold text-sm dark:text-neutral-200 tracking-wider">
-                  Phone
+                  Response time
                 </h3>
                 <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-                  (202) 555-0100
+                  We typically reply within a few hours — our support team is available 24/7.
                 </span>
               </div>
             </div>

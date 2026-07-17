@@ -41,7 +41,7 @@ const PageAbout: React.FC = () => {
         {/* HERO */}
         <div className="max-w-3xl">
           <h2 className="text-3xl md:text-4xl font-semibold">
-            About Potomac
+            Our Story
           </h2>
           <span className="block mt-3 text-neutral-500 dark:text-neutral-400 text-lg">
             Connecting travelers with unforgettable places to stay.

@@ -39,7 +39,7 @@ const SectionWhyBookWithUs = () => {
       <div className="relative px-6 py-16 sm:px-12 sm:py-20 lg:py-24">
         <div className="max-w-2xl mx-auto text-center mb-14">
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-white">
-            Why book with Potomac
+            Book with confidence
           </h2>
           <p className="mt-3 text-primary-50">
             We handle the details so you can focus on the trip.

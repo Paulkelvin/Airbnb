@@ -16,31 +16,23 @@ const widgetMenus: WidgetFooterMenu[] = [
     id: "1",
     title: "Explore",
     menus: [
-      { href: "/listing-stay", label: "Browse listings" },
+      { href: "/listing-stay", label: "Browse stays" },
       { href: "/listing-stay-map", label: "Map view" },
-      { href: "/blog", label: "Blog" },
+      { href: "/blog", label: "Stories & guides" },
       { href: "/about", label: "About us" },
     ],
   },
   {
     id: "2",
-    title: "Hosting",
+    title: "Hosts",
     menus: [
-      { href: "/add-listing", label: "List your property" },
-      { href: "/faq", label: "Help center" },
+      { href: "/add-listing", label: "List your space" },
+      { href: "/faq", label: "Help centre" },
       { href: "/contact", label: "Contact us" },
     ],
   },
   {
     id: "3",
-    title: "Support",
-    menus: [
-      { href: "/faq", label: "Help & FAQ" },
-      { href: "/contact", label: "Contact support" },
-    ],
-  },
-  {
-    id: "4",
     title: "Legal",
     menus: [
       { href: "/privacy", label: "Privacy policy" },
@@ -76,7 +68,7 @@ const Footer: React.FC = () => {
   return (
     <>
       <div className="nc-Footer relative py-16 lg:py-20 border-t border-neutral-200 dark:border-neutral-700">
-        <div className="container grid grid-cols-2 gap-y-10 gap-x-5 sm:gap-x-8 md:grid-cols-4 lg:grid-cols-5 lg:gap-x-10 ">
+        <div className="container grid grid-cols-2 gap-y-10 gap-x-5 sm:gap-x-8 md:grid-cols-4 lg:grid-cols-4 lg:gap-x-10 ">
           <div className="grid grid-cols-4 gap-5 col-span-2 md:col-span-4 lg:md:col-span-1 lg:flex lg:flex-col">
             <div className="col-span-2 md:col-span-1">
               <Logo />

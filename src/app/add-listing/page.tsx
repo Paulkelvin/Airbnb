@@ -17,7 +17,7 @@ export default async function AddListingStartPage() {
     <div className="px-4 max-w-2xl mx-auto pb-24 pt-14 sm:py-24">
       <div className="space-y-11">
         <div>
-          <h2 className="text-2xl font-semibold">Let&apos;s start your listing</h2>
+          <h2 className="text-2xl font-semibold">Create your listing</h2>
           <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
             A few basics to get your draft started — you can fill in everything
             else over the next few steps, and your progress is saved as you go.

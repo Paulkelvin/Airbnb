@@ -15,7 +15,7 @@ const FaqPage: React.FC = () => {
       <BgGlassmorphism />
       <div className="container relative py-16 lg:py-28">
         <h2 className="text-3xl md:text-4xl font-semibold">
-          Frequently asked questions
+          Help Centre
         </h2>
         <span className="block mt-3 text-neutral-500 dark:text-neutral-400 text-lg">
           Everything you need to know about booking, hosting, and staying with Potomac.
