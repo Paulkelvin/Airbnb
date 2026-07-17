@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
@@ -113,6 +114,8 @@ export default function AddListingWizard({
   >();
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [flexibleCheckInOut, setFlexibleCheckInOut] = useState(
     initialListing.checkInTime === null && initialListing.checkOutTime === null,
   );
@@ -190,6 +193,17 @@ export default function AddListingWizard({
         .map((img, i) => ({ ...img, position: i, isCover: i === 0 }));
       update("images", remaining);
     });
+  }
+
+  function reorderImages(fromIndex: number, toIndex: number) {
+    if (fromIndex === toIndex) return;
+    const next = [...listing.images];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    update(
+      "images",
+      next.map((img, i) => ({ ...img, position: i, isCover: i === 0 })),
+    );
   }
 
   function handlePublish() {
@@ -467,7 +481,7 @@ export default function AddListingWizard({
           <>
             <h2 className="text-2xl font-semibold">Add photos</h2>
             <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-              The first photo is used as the cover image.
+              The first photo is used as the cover image. Drag photos to reorder.
             </span>
             <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
             <div className="space-y-6">
@@ -498,13 +512,42 @@ export default function AddListingWizard({
               </div>
               {listing.images.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {listing.images.map((img) => (
-                    <div key={img.publicId} className="relative">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                  {listing.images.map((img, index) => (
+                    <div
+                      key={img.publicId}
+                      draggable
+                      onDragStart={() => setDraggedIndex(index)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        if (draggedIndex !== null && draggedIndex !== index) {
+                          setDragOverIndex(index);
+                        }
+                      }}
+                      onDragLeave={() => setDragOverIndex((prev) => (prev === index ? null : prev))}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (draggedIndex !== null) {
+                          reorderImages(draggedIndex, index);
+                        }
+                        setDraggedIndex(null);
+                        setDragOverIndex(null);
+                      }}
+                      onDragEnd={() => {
+                        setDraggedIndex(null);
+                        setDragOverIndex(null);
+                      }}
+                      className={`relative cursor-grab active:cursor-grabbing rounded-lg ring-2 transition-all ${
+                        dragOverIndex === index
+                          ? "ring-primary-6000"
+                          : "ring-transparent"
+                      } ${draggedIndex === index ? "opacity-40" : ""}`}
+                    >
+                      <Image
                         src={img.url}
                         alt=""
-                        className="w-full h-32 object-cover rounded-lg"
+                        width={img.width ?? 400}
+                        height={img.height ?? 300}
+                        className="w-full h-32 object-cover rounded-lg pointer-events-none"
                       />
                       {img.isCover && (
                         <span className="absolute top-2 left-2 text-xs bg-white/90 px-2 py-0.5 rounded-full font-medium">

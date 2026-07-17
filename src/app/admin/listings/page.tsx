@@ -1,6 +1,7 @@
 import { getAdminListings } from "@/modules/admin/queries";
 import { ListingActions } from "./ListingActions";
 import Link from "next/link";
+import Image from "next/image";
 import {
   AdminPageHeader,
   AdminFilterPills,
@@ -54,9 +55,11 @@ export default async function AdminListingsPage({
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     {listing.images[0] && (
-                      <img
+                      <Image
                         src={listing.images[0].url}
                         alt=""
+                        width={40}
+                        height={40}
                         className="w-10 h-10 rounded object-cover"
                       />
                     )}

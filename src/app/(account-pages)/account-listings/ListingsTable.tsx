@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useTransition } from "react";
+import Image from "next/image";
 import Badge from "@/components/ui/Badge";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import ConfirmModal from "@/components/ui/ConfirmModal";
@@ -75,13 +76,14 @@ export default function ListingsTable({ listings }: { listings: ListingRow[] }) 
             key={listing.id}
             className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-5"
           >
-            <div className="w-full sm:w-28 h-20 flex-shrink-0 rounded-lg bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
+            <div className="w-full sm:w-28 h-20 flex-shrink-0 rounded-lg bg-neutral-100 dark:bg-neutral-800 overflow-hidden relative">
               {listing.coverImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={listing.coverImageUrl}
                   alt={listing.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(min-width: 640px) 112px, 100vw"
                 />
               ) : null}
             </div>
