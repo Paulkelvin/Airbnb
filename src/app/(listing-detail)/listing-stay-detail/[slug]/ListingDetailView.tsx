@@ -22,6 +22,7 @@ import FavoriteButton from "./FavoriteButton";
 import ReviewsSection, { type ListingReview } from "./ReviewsSection";
 import type { ListingDetailViewModel } from "@/modules/listings/types";
 import type { Route } from "@/routers/types";
+import { cloudinaryLoader } from "@/lib/cloudinary-image-loader";
 
 const AMENITY_CATEGORY_LABELS: Record<string, string> = {
   BASIC: "Basic",
@@ -105,6 +106,7 @@ export default function ListingDetailView({
             {images[0]?.url && (
               <Image
                 fill
+                loader={cloudinaryLoader}
                 className="object-cover rounded-md sm:rounded-xl"
                 src={images[0].url}
                 alt={listing.title}
@@ -124,6 +126,7 @@ export default function ListingDetailView({
                 {img.url && (
                   <Image
                     fill
+                    loader={cloudinaryLoader}
                     className="object-cover rounded-md sm:rounded-xl"
                     src={img.url}
                     alt=""

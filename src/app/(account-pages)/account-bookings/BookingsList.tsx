@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useTransition } from "react";
 import Image from "next/image";
+import { cloudinaryLoader } from "@/lib/cloudinary-image-loader";
 import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
@@ -161,7 +162,7 @@ export default function BookingsList({
             <div key={b.id} className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-5">
               <div className="w-full sm:w-28 h-20 flex-shrink-0 rounded-lg bg-neutral-100 dark:bg-neutral-800 overflow-hidden relative">
                 {b.listingImageUrl ? (
-                  <Image src={b.listingImageUrl} alt={b.listingTitle} fill className="object-cover" sizes="(min-width: 640px) 112px, 100vw" />
+                  <Image src={b.listingImageUrl} loader={cloudinaryLoader} alt={b.listingTitle} fill className="object-cover" sizes="(min-width: 640px) 112px, 100vw" />
                 ) : null}
               </div>
 

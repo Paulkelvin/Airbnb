@@ -1,5 +1,26 @@
+// react-datepicker's own base stylesheet is light-mode only (hardcoded
+// #fff/#f0f0f0/#000) — these cover the outer chrome (container, header,
+// nav arrows, popper arrow) that the day-grid rules below don't touch.
 .react-datepicker {
+  @apply bg-white border border-neutral-200 text-neutral-900;
+  @apply dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-100;
   @apply relative grid grid-cols-1 gap-10 md:grid-cols-2;
+}
+.react-datepicker__header {
+  @apply bg-white border-b border-neutral-200;
+  @apply dark:bg-neutral-800 dark:border-neutral-700;
+}
+.react-datepicker-time__header,
+.react-datepicker-year-header {
+  @apply dark:text-neutral-100;
+}
+.react-datepicker__navigation-icon::before {
+  @apply dark:border-neutral-400;
+}
+.react-datepicker__triangle::before,
+.react-datepicker__triangle::after {
+  @apply dark:border-b-neutral-800 #{!important};
+  @apply dark:border-t-neutral-800 #{!important};
 }
 .react-datepicker__aria-live {
   @apply hidden;

@@ -32,6 +32,11 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
         <span className="block font-semibold text-xl sm:text-2xl">
           {` When's your trip?`}
         </span>
+        <span className="block mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          {startDate && !endDate
+            ? "Now pick your check-out date"
+            : "Pick a check-in date, then a check-out date"}
+        </span>
       </div>
       <div
         className={`relative flex-shrink-0 flex justify-center z-10 py-5 transition-all duration-300 ease-in-out ${className} `}

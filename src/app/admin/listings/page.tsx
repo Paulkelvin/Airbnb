@@ -2,6 +2,7 @@ import { getAdminListings } from "@/modules/admin/queries";
 import { ListingActions } from "./ListingActions";
 import Link from "next/link";
 import Image from "next/image";
+import { cloudinaryLoader } from "@/lib/cloudinary-image-loader";
 import {
   AdminPageHeader,
   AdminFilterPills,
@@ -57,6 +58,7 @@ export default async function AdminListingsPage({
                     {listing.images[0] && (
                       <Image
                         src={listing.images[0].url}
+                        loader={cloudinaryLoader}
                         alt=""
                         width={40}
                         height={40}

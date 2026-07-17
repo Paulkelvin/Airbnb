@@ -8,6 +8,7 @@ const avatarColors = [
 ];
 import Image, { StaticImageData } from "next/image";
 import { CheckIcon } from "@heroicons/react/24/solid";
+import { cloudinaryLoader } from "@/lib/cloudinary-image-loader";
 
 export interface AvatarProps {
   containerClassName?: string;
@@ -46,7 +47,9 @@ const Avatar: FC<AvatarProps> = ({
         <Image
           className={`absolute inset-0 w-full h-full object-cover ${radius}`}
           src={url}
+          loader={cloudinaryLoader}
           alt={name}
+          fill
         />
       )}
       <span className="wil-avatar__name">{name[0]}</span>

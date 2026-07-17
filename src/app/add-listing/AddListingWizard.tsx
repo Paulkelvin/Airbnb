@@ -3,6 +3,7 @@
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { cloudinaryLoader } from "@/lib/cloudinary-image-loader";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Textarea from "@/components/ui/Textarea";
@@ -544,6 +545,7 @@ export default function AddListingWizard({
                     >
                       <Image
                         src={img.url}
+                        loader={cloudinaryLoader}
                         alt=""
                         width={img.width ?? 400}
                         height={img.height ?? 300}

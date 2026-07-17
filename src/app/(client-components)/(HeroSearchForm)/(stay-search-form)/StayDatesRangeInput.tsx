@@ -88,6 +88,11 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
           >
             <Popover.Panel className="absolute left-1/2 z-10 mt-3 top-full w-screen max-w-sm -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl">
               <div className="overflow-hidden rounded-3xl shadow-lg ring-1 ring-black ring-opacity-5 bg-white dark:bg-neutral-800 p-8">
+                <span className="block mb-3 text-sm text-neutral-500 dark:text-neutral-400">
+                  {startDate && !endDate
+                    ? "Now pick your check-out date"
+                    : "Pick a check-in date, then a check-out date"}
+                </span>
                 <DatePicker
                   selected={startDate}
                   onChange={onChangeDate}

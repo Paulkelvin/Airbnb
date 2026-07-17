@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import Image from "next/image";
+import { cloudinaryLoader } from "@/lib/cloudinary-image-loader";
 import { useState } from "react";
 import { useSwipeable } from "react-swipeable";
 import { DEMO_IMAGE } from "../ListingImageGallery";
@@ -87,6 +88,7 @@ export default function SharedModal({
               >
                 <Image
                   src={currentImage?.url || ""}
+                  loader={cloudinaryLoader}
                   width={navigation ? 1280 : 1920}
                   height={navigation ? 853 : 1280}
                   priority
@@ -204,6 +206,7 @@ export default function SharedModal({
                     >
                       <Image
                         alt="small photos on the bottom"
+                        loader={cloudinaryLoader}
                         width={180}
                         height={120}
                         className={`${

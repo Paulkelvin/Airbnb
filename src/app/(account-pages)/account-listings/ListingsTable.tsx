@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useTransition } from "react";
 import Image from "next/image";
+import { cloudinaryLoader } from "@/lib/cloudinary-image-loader";
 import Badge from "@/components/ui/Badge";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import ConfirmModal from "@/components/ui/ConfirmModal";
@@ -80,6 +81,7 @@ export default function ListingsTable({ listings }: { listings: ListingRow[] }) 
               {listing.coverImageUrl ? (
                 <Image
                   src={listing.coverImageUrl}
+                  loader={cloudinaryLoader}
                   alt={listing.title}
                   fill
                   className="object-cover"

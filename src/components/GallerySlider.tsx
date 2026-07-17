@@ -8,6 +8,7 @@ import { useSwipeable } from "react-swipeable";
 import { variants } from "@/utils/animationVariants";
 import Link from "next/link";
 import { Route } from "@/routers/types";
+import { cloudinaryLoader } from "@/lib/cloudinary-image-loader";
 
 export interface GallerySliderProps {
   className?: string;
@@ -90,6 +91,7 @@ export default function GallerySlider({
               >
                 <Image
                   src={currentImage || ""}
+                  loader={cloudinaryLoader}
                   fill
                   alt={`Property photo ${index + 1}`}
                   className={`object-cover ${imageClass}`}
