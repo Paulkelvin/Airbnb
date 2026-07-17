@@ -54,6 +54,15 @@ Setup notes: Postgres 15+; confirm `postgis` and `pgcrypto` show as available un
 | `RESEND_API_KEY` | Resend | Dashboard → **API Keys** → create key | Required only when `NOTIFICATIONS_PROVIDER=resend` | Server-side only. |
 | `RESEND_FROM_EMAIL` | Resend | A verified sending domain/address in the Resend dashboard | Required only when `NOTIFICATIONS_PROVIDER=resend` | The `from` address on every transactional email — must belong to a domain verified in Resend or sends will fail. |
 
+## Content — Sanity CMS
+
+| Variable | Service | Where to obtain | Required | Purpose |
+|---|---|---|---|---|
+| `NEXT_PUBLIC_SANITY_PROJECT_ID` | Sanity | Dashboard → project settings, or `sanity.config.ts`/`sanity.json` in a linked Studio | Both | Client config for both the public read client (`src/lib/sanity/client.ts`) and the admin write client (`src/modules/cms/sanity-admin-client.ts`). |
+| `NEXT_PUBLIC_SANITY_DATASET` | Sanity | Dashboard → **Datasets** | Both | Defaults to `"production"` if unset. |
+| `SANITY_API_TOKEN` | Sanity | Dashboard → **API** → **Tokens** → create a token with **Editor** (write) permissions | Both | Server-side only. Powers every admin CMS write (`/admin/content/*`) — without it, the admin editor can read but not save. |
+| `SANITY_REVALIDATE_SECRET` | Self-generated | Generate with `openssl rand -base64 32` | Both | Verifies `POST /api/sanity/revalidate` webhook requests from Sanity's own webhook config, so a content edit made directly in Sanity Studio (if anyone still uses it — see `docs/project-status.md` §10 finding C4) also revalidates the public site's cache. |
+
 ## Maps
 
 | Variable | Service | Where to obtain | Required | Purpose |
