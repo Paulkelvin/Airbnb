@@ -29,6 +29,18 @@ interface AmenityItem {
   isActive: boolean;
 }
 
+const AMENITY_CATEGORIES = [
+  { value: "", label: "No category" },
+  { value: "BASIC", label: "Basic" },
+  { value: "SAFETY", label: "Safety" },
+  { value: "OUTDOOR", label: "Outdoor" },
+  { value: "KITCHEN", label: "Kitchen" },
+  { value: "ENTERTAINMENT", label: "Entertainment" },
+  { value: "ACCESSIBILITY", label: "Accessibility" },
+  { value: "PARKING", label: "Parking" },
+  { value: "CLIMATE", label: "Climate" },
+] as const;
+
 export function TaxonomyManager({
   propertyTypes,
   amenities,
@@ -40,8 +52,10 @@ export function TaxonomyManager({
   const router = useRouter();
   const [newPT, setNewPT] = useState("");
   const [newAmenity, setNewAmenity] = useState("");
+  const [newAmenityCategory, setNewAmenityCategory] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
+  const [editingCategory, setEditingCategory] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   function handleCreatePT() {
@@ -83,8 +97,9 @@ export function TaxonomyManager({
   function handleCreateAmenity() {
     if (!newAmenity.trim()) return;
     startTransition(async () => {
-      await createAmenity({ name: newAmenity.trim() });
+      await createAmenity({ name: newAmenity.trim(), category: newAmenityCategory || undefined });
       setNewAmenity("");
+      setNewAmenityCategory("");
       router.refresh();
     });
   }
@@ -100,7 +115,7 @@ export function TaxonomyManager({
     if (!editingValue.trim()) return;
     startTransition(async () => {
       setError(null);
-      await updateAmenity(id, { name: editingValue.trim() });
+      await updateAmenity(id, { name: editingValue.trim(), category: editingCategory });
       setEditingId(null);
       router.refresh();
     });
@@ -116,10 +131,11 @@ export function TaxonomyManager({
     });
   }
 
-  function startEditing(id: string, currentName: string) {
+  function startEditing(id: string, currentName: string, currentCategory?: string | null) {
     setError(null);
     setEditingId(id);
     setEditingValue(currentName);
+    setEditingCategory(currentCategory ?? "");
   }
 
   return (
@@ -232,15 +248,26 @@ export function TaxonomyManager({
         <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
           Amenities
         </h3>
-        <div className="flex gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           <input
             type="text"
             value={newAmenity}
             onChange={(e) => setNewAmenity(e.target.value)}
             placeholder="New amenity name"
-            className="flex-1 px-3 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+            className="flex-1 min-w-[160px] px-3 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
             onKeyDown={(e) => e.key === "Enter" && handleCreateAmenity()}
           />
+          <select
+            value={newAmenityCategory}
+            onChange={(e) => setNewAmenityCategory(e.target.value)}
+            className="px-3 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+          >
+            {AMENITY_CATEGORIES.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
           <button
             onClick={handleCreateAmenity}
             disabled={isPending || !newAmenity.trim()}
@@ -253,24 +280,39 @@ export function TaxonomyManager({
           {amenities.map((a) => (
             <div key={a.id} className="flex items-center justify-between px-4 py-3 gap-2">
               {editingId === a.id ? (
-                <input
-                  autoFocus
-                  type="text"
-                  value={editingValue}
-                  onChange={(e) => setEditingValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleRenameAmenity(a.id);
-                    if (e.key === "Escape") setEditingId(null);
-                  }}
-                  className="flex-1 px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
-                />
+                <div className="flex flex-1 gap-2 min-w-0">
+                  <input
+                    autoFocus
+                    type="text"
+                    value={editingValue}
+                    onChange={(e) => setEditingValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleRenameAmenity(a.id);
+                      if (e.key === "Escape") setEditingId(null);
+                    }}
+                    className="flex-1 min-w-0 px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+                  />
+                  <select
+                    value={editingCategory}
+                    onChange={(e) => setEditingCategory(e.target.value)}
+                    className="px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+                  >
+                    {AMENITY_CATEGORIES.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               ) : (
                 <div className="min-w-0">
                   <span className={`text-sm ${a.isActive ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-400 line-through"}`}>
                     {a.name}
                   </span>
                   {a.category && (
-                    <span className="ml-2 text-xs text-neutral-400">{a.category}</span>
+                    <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">
+                      {a.category}
+                    </span>
                   )}
                 </div>
               )}
@@ -294,10 +336,10 @@ export function TaxonomyManager({
                 ) : (
                   <>
                     <button
-                      onClick={() => startEditing(a.id, a.name)}
+                      onClick={() => startEditing(a.id, a.name, a.category)}
                       className="px-2 py-1 text-xs rounded text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-700"
                     >
-                      Rename
+                      Edit
                     </button>
                     <button
                       onClick={() => handleToggleAmenity(a.id, a.isActive)}

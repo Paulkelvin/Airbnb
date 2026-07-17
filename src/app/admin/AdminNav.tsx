@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   Squares2X2Icon,
   UsersIcon,
@@ -15,6 +16,7 @@ import {
   ArrowLeftIcon,
   Bars3Icon,
   XMarkIcon,
+  ArrowRightStartOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 
 const NAV_ITEMS = [
@@ -95,20 +97,30 @@ export default function AdminNav({
     </div>
   );
 
-  const backToSite = (
-    <Link
-      href="/"
-      className="flex items-center gap-2 px-4 py-4 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-primary-6000 border-t border-neutral-200 dark:border-neutral-700"
-    >
-      <ArrowLeftIcon className="w-4 h-4" />
-      Back to site
-    </Link>
+  const bottomActions = (
+    <div className="border-t border-neutral-200 dark:border-neutral-700">
+      <Link
+        href="/"
+        className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-primary-6000"
+      >
+        <ArrowLeftIcon className="w-4 h-4" />
+        Back to site
+      </Link>
+      <button
+        type="button"
+        onClick={() => signOut({ callbackUrl: "/" })}
+        className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border-t border-neutral-200 dark:border-neutral-700"
+      >
+        <ArrowRightStartOnRectangleIcon className="w-4 h-4" />
+        Log out
+      </button>
+    </div>
   );
 
   return (
     <>
       {/* Mobile top bar */}
-      <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+      <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary-6000 text-white flex items-center justify-center font-semibold text-xs">
             P
@@ -147,7 +159,7 @@ export default function AdminNav({
               </button>
             </div>
             <NavLinks pathname={pathname} onNavigate={() => setMobileOpen(false)} />
-            {backToSite}
+            {bottomActions}
           </div>
         </div>
       )}
@@ -156,7 +168,7 @@ export default function AdminNav({
       <div className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:sticky lg:top-0 lg:h-screen border-r border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
         {brand}
         <NavLinks pathname={pathname} />
-        {backToSite}
+        {bottomActions}
       </div>
     </>
   );

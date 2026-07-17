@@ -1,6 +1,8 @@
 import { getAdminUsers } from "@/modules/admin/queries";
 import { getCurrentUser } from "@/lib/auth";
 import { UserActions } from "./UserActions";
+import { UserSearchForm } from "./UserSearchForm";
+import { CreateAdminButton } from "./CreateAdminModal";
 import {
   AdminPageHeader,
   AdminFilterPills,
@@ -31,13 +33,19 @@ export default async function AdminUsersPage({
 
   return (
     <div>
-      <AdminPageHeader title="User Management" description={`${total} total users`} />
+      <AdminPageHeader
+        title="User Management"
+        description={`${total} total users`}
+        actions={<CreateAdminButton />}
+      />
 
       <AdminFilterPills
         options={STATUSES}
         activeValue={searchParams.status ?? "ALL"}
         basePath="/admin/users"
       />
+
+      <UserSearchForm defaultValue={searchParams.search} />
 
       <AdminTableCard>
         <table className="w-full text-sm">
@@ -54,54 +62,66 @@ export default async function AdminUsersPage({
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td className="px-4 py-3">
-                  <div className="font-medium text-neutral-900 dark:text-neutral-100">
-                    {user.firstName} {user.lastName}
-                  </div>
-                  <div className="text-neutral-500 dark:text-neutral-400 text-xs">
-                    {user.email}
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-1 flex-wrap">
-                    {user.roles.map((r) => (
-                      <span
-                        key={r}
-                        className="px-1.5 py-0.5 text-xs rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300"
-                      >
-                        {r}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <AdminBadge tone={userStatusTone(user.status)}>{user.status}</AdminBadge>
-                </td>
-                <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300">
-                  {user.isVerified ? "Yes" : "No"}
-                </td>
-                <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300">
-                  {user._count.listings}
-                </td>
-                <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300">
-                  {user._count.bookingsAsGuest}
-                </td>
-                <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400 text-xs">
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-3">
-                  <UserActions
-                    userId={user.id}
-                    status={user.status}
-                    isVerified={user.isVerified}
-                    roles={user.roles}
-                    isSelf={user.id === currentUser?.id}
-                  />
-                </td>
-              </tr>
-            ))}
+            {users.map((user) => {
+              const isSelf = user.id === currentUser?.id;
+              return (
+                <tr key={user.id} className={isSelf ? "bg-primary-50/40 dark:bg-primary-900/10" : ""}>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                          {user.firstName} {user.lastName}
+                          {isSelf && (
+                            <span className="ml-2 px-1.5 py-0.5 text-xs rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300 font-medium">
+                              You
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-neutral-500 dark:text-neutral-400 text-xs">
+                          {user.email}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1 flex-wrap">
+                      {user.roles.map((r) => (
+                        <span
+                          key={r}
+                          className="px-1.5 py-0.5 text-xs rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300"
+                        >
+                          {r}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <AdminBadge tone={userStatusTone(user.status)}>{user.status}</AdminBadge>
+                  </td>
+                  <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300">
+                    {user.isVerified ? "Yes" : "No"}
+                  </td>
+                  <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300">
+                    {user._count.listings}
+                  </td>
+                  <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300">
+                    {user._count.bookingsAsGuest}
+                  </td>
+                  <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400 text-xs">
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <UserActions
+                      userId={user.id}
+                      status={user.status}
+                      isVerified={user.isVerified}
+                      roles={user.roles}
+                      isSelf={isSelf}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
             {users.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-neutral-500 dark:text-neutral-400">

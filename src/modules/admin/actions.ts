@@ -1,5 +1,6 @@
 "use server";
 
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -76,6 +77,46 @@ export async function setAdminRole(userId: string, makeAdmin: boolean): Promise<
   await auditLog(admin.id, makeAdmin ? "user.grantAdmin" : "user.revokeAdmin", "User", userId);
   revalidatePath("/admin/users");
   return { success: true, data: { id: userId } };
+}
+
+/** Creates a brand-new user with ADMIN + CUSTOMER roles, verified by default. */
+export async function createAdminUser(data: {
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+}): Promise<ActionResult<{ id: string }>> {
+  const admin = await requireAdmin();
+
+  const email = data.email.toLowerCase().trim();
+
+  if (!email || !data.firstName.trim() || !data.lastName.trim() || !data.password) {
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "All fields are required" } };
+  }
+  if (data.password.length < 8) {
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "Password must be at least 8 characters" } };
+  }
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    return { success: false, error: { code: "CONFLICT", message: "An account with this email already exists" } };
+  }
+
+  const passwordHash = await bcrypt.hash(data.password, 12);
+
+  const user = await prisma.user.create({
+    data: {
+      email,
+      passwordHash,
+      firstName: data.firstName.trim(),
+      lastName: data.lastName.trim(),
+      roles: ["CUSTOMER", "ADMIN"],
+      isVerified: true,
+    },
+  });
+  await auditLog(admin.id, "user.createAdmin", "User", user.id, { email });
+  revalidatePath("/admin/users");
+  return { success: true, data: { id: user.id } };
 }
 
 // ─── Listing Moderation ──────────────────────────────────────────────────────
@@ -267,7 +308,7 @@ export async function createAmenity(data: { name: string; category?: string; ico
   return { success: true, data: { id: amenity.id } };
 }
 
-export async function updateAmenity(id: string, data: { name?: string; category?: string; icon?: string; isActive?: boolean }): Promise<ActionResult<{ id: string }>> {
+export async function updateAmenity(id: string, data: { name?: string; category?: string | null; icon?: string; isActive?: boolean }): Promise<ActionResult<{ id: string }>> {
   const admin = await requireAdmin();
   const existing = await prisma.amenity.findUnique({ where: { id } });
   if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "Amenity not found" } };
@@ -277,7 +318,7 @@ export async function updateAmenity(id: string, data: { name?: string; category?
     updateData.name = data.name;
     updateData.slug = slugify(data.name);
   }
-  if (data.category !== undefined) updateData.category = data.category;
+  if (data.category !== undefined) updateData.category = data.category || null;
   if (data.icon !== undefined) updateData.icon = data.icon;
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
