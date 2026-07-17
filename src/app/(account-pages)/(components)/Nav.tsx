@@ -5,6 +5,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 
+const LABELS: Record<string, string> = {
+  "/account": "Profile",
+  "/account-bookings": "Trips",
+  "/account-messages": "Messages",
+  "/account-listings": "Listings",
+  "/account-savelists": "Saved",
+  "/account-notifications": "Notifications",
+  "/account-password": "Security",
+  "/account-billing": "Payments",
+};
+
 export const Nav = () => {
   const pathname = usePathname();
 
@@ -28,13 +39,13 @@ export const Nav = () => {
             <Link
               key={item}
               href={item}
-              className={`block py-5 md:py-8 border-b-2 flex-shrink-0 capitalize ${
+              className={`block py-5 md:py-8 border-b-2 flex-shrink-0 ${
                 isActive
                   ? "border-primary-500 font-medium"
                   : "border-transparent"
               }`}
             >
-              {item.replace("-", " ").replace("/", " ")}
+              {LABELS[item] ?? item}
             </Link>
           );
         })}

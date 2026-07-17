@@ -34,7 +34,7 @@ const PageForgotPassword = () => {
         </h2>
         <div className="max-w-md mx-auto space-y-6">
           {submitted ? (
-            <div className="rounded-lg bg-green-50 text-green-700 text-sm px-4 py-3">
+            <div className="rounded-lg bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 text-sm px-4 py-3">
               If an account exists with that email, a reset link has been sent. Check your inbox.
             </div>
           ) : (
@@ -44,7 +44,7 @@ const PageForgotPassword = () => {
                 your password.
               </p>
               {error && (
-                <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">{error}</div>
+                <div className="rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 text-sm px-4 py-3">{error}</div>
               )}
               <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
                 <label className="block">

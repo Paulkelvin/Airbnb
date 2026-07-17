@@ -51,12 +51,12 @@ const PageSignUp = () => {
   return (
     <div className={`nc-PageSignUp`}>
       <div className="container mb-24 lg:mb-32">
-        <h2 className="my-20 flex items-center text-3xl leading-[115%] md:text-5xl md:leading-[115%] font-semibold text-neutral-900 dark:text-neutral-100 justify-center">
+        <h1 className="my-20 flex items-center text-3xl leading-[115%] md:text-5xl md:leading-[115%] font-semibold text-neutral-900 dark:text-neutral-100 justify-center">
           Create your account
-        </h2>
+        </h1>
         <div className="max-w-md mx-auto space-y-6">
           {error && (
-            <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">{error}</div>
+            <div className="rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 text-sm px-4 py-3">{error}</div>
           )}
           <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-4">

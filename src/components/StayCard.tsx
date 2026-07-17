@@ -44,7 +44,7 @@ const StayCard: FC<StayCardProps> = ({
           href={href}
           galleryClass={size === "default" ? undefined : ""}
         />
-        <BtnLikeIcon isLiked={like} className="absolute right-3 top-3 z-[1]" />
+        <BtnLikeIcon isLiked={like} listingId={String(id)} className="absolute right-3 top-3 z-[1]" />
         {saleOff && <SaleOffBadge className="absolute left-3 top-3" />}
       </div>
     );

@@ -35,9 +35,9 @@ const PageContact: React.FC = () => {
   return (
     <div className="nc-PageContact overflow-hidden">
       <div className="mb-24 lg:mb-32">
-        <h2 className="my-16 sm:my-20 flex items-center text-3xl leading-[115%] md:text-5xl md:leading-[115%] font-semibold text-neutral-900 dark:text-neutral-100 justify-center">
+        <h1 className="my-16 sm:my-20 flex items-center text-3xl leading-[115%] md:text-5xl md:leading-[115%] font-semibold text-neutral-900 dark:text-neutral-100 justify-center">
           We&apos;re Here to Help
-        </h2>
+        </h1>
         <div className="container max-w-7xl mx-auto">
           <div className="flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-12">
             <div className="max-w-sm space-y-8">
@@ -69,7 +69,7 @@ const PageContact: React.FC = () => {
               ) : (
                 <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
                   {error && (
-                    <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">{error}</div>
+                    <div className="rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 text-sm px-4 py-3">{error}</div>
                   )}
                   <label className="block">
                     <Label>Full name</Label>

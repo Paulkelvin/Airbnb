@@ -1,12 +1,15 @@
 import React from "react";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { getSession } from "@/lib/auth";
 import { Nav } from "./(components)/Nav";
 
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session?.user) {
-    redirect("/login");
+    const headersList = await headers();
+    const pathname = headersList.get("x-next-pathname") ?? headersList.get("x-invoke-path") ?? "/account";
+    redirect(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
   }
 
   return (

@@ -91,7 +91,7 @@ export default function GallerySlider({
                 <Image
                   src={currentImage || ""}
                   fill
-                  alt="listing card gallery"
+                  alt={`Property photo ${index + 1}`}
                   className={`object-cover ${imageClass}`}
                   onLoadingComplete={() => setLoaded(true)}
                   sizes="(max-width: 1025px) 100vw, 300px"
@@ -111,6 +111,7 @@ export default function GallerySlider({
                   className="absolute w-8 h-8 left-3 top-[calc(50%-16px)] bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-6000 dark:hover:border-neutral-500 rounded-full flex items-center justify-center hover:border-neutral-300 focus:outline-none"
                   style={{ transform: "translate3d(0, 0, 0)" }}
                   onClick={() => changePhotoId(index - 1)}
+                  aria-label="Previous photo"
                 >
                   <ChevronLeftIcon className="h-4 w-4" />
                 </button>
@@ -120,6 +121,7 @@ export default function GallerySlider({
                   className="absolute w-8 h-8 right-3 top-[calc(50%-16px)] bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-6000 dark:hover:border-neutral-500 rounded-full flex items-center justify-center hover:border-neutral-300 focus:outline-none"
                   style={{ transform: "translate3d(0, 0, 0)" }}
                   onClick={() => changePhotoId(index + 1)}
+                  aria-label="Next photo"
                 >
                   <ChevronRightIcon className="h-4 w-4" />
                 </button>
@@ -137,6 +139,7 @@ export default function GallerySlider({
                 }`}
                 onClick={() => changePhotoId(i)}
                 key={i}
+                aria-label={`Go to photo ${i + 1}`}
               />
             ))}
           </div>

@@ -17,9 +17,9 @@ export default function Error({
 
   return (
     <div className="container flex flex-col items-center justify-center text-center py-24 lg:py-32 space-y-5">
-      <h2 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+      <h1 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
         Something went wrong
-      </h2>
+      </h1>
       <p className="max-w-md text-neutral-500 dark:text-neutral-400">
         We hit an unexpected error loading this page. You can try again, or head back to the
         homepage.

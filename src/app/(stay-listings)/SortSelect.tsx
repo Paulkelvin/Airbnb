@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Select from "@/components/ui/Select";
 import { buildSearchUrl } from "./searchParamsUtil";
@@ -13,7 +14,7 @@ const SORT_LABELS: Record<string, string> = {
   distance: "Nearest",
 };
 
-export default function SortSelect({ availableSorts }: { availableSorts: string[] }) {
+function SortSelectInner({ availableSorts }: { availableSorts: string[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -37,5 +38,13 @@ export default function SortSelect({ availableSorts }: { availableSorts: string[
         </option>
       ))}
     </Select>
+  );
+}
+
+export default function SortSelect(props: { availableSorts: string[] }) {
+  return (
+    <Suspense>
+      <SortSelectInner {...props} />
+    </Suspense>
   );
 }

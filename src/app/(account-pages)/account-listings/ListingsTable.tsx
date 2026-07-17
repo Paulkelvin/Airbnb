@@ -66,7 +66,7 @@ export default function ListingsTable({ listings }: { listings: ListingRow[] }) 
   return (
     <div className="space-y-4">
       {error && (
-        <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">{error}</div>
+        <div className="rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 text-sm px-4 py-3">{error}</div>
       )}
       <div className="divide-y divide-neutral-200 dark:divide-neutral-700 rounded-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
         {rows.map((listing) => (

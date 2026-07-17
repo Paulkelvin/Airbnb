@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Suspense, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import StayCard from "@/components/StayCard";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import { loadMoreListings } from "@/modules/listings/search-actions";
 import type { StayDataType } from "@/data/types";
 
-export default function LoadMoreResults({
+function LoadMoreResultsInner({
   initialItems,
   initialNextCursor,
 }: {
@@ -49,5 +49,16 @@ export default function LoadMoreResults({
         </div>
       )}
     </>
+  );
+}
+
+export default function LoadMoreResults(props: {
+  initialItems: StayDataType[];
+  initialNextCursor: string | null;
+}) {
+  return (
+    <Suspense>
+      <LoadMoreResultsInner {...props} />
+    </Suspense>
   );
 }

@@ -145,6 +145,7 @@ const LocationInput: FC<LocationInputProps> = ({
             <ClearDataButton
               onClick={() => {
                 setValue("");
+                onInputDone?.("");
               }}
             />
           )}

@@ -18,7 +18,7 @@ const AccountBilling = async () => {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <h2 className="text-3xl font-semibold">Payments &amp; Payouts</h2>
+      <h1 className="text-3xl font-semibold">Payments &amp; Payouts</h1>
       <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
       <div className="max-w-2xl">
         <span className="text-xl font-semibold block">Payout account</span>

@@ -35,7 +35,7 @@ export default function BookingWidget({
         <p className="text-neutral-600 dark:text-neutral-300">
           Log in to book this {pricing.rentalType === "SHORT_TERM" ? "stay" : "lease"}.
         </p>
-        <ButtonPrimary href={"/login" as Route}>Log in</ButtonPrimary>
+        <ButtonPrimary href={`/login?callbackUrl=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}` as Route}>Log in</ButtonPrimary>
       </div>
     );
   }
@@ -265,13 +265,20 @@ function LongTermBookingForm({
           <span>Monthly rent</span>
           <span>${pricing.monthlyRent.toFixed(2)}</span>
         </div>
+        <div className="flex justify-between">
+          <span>{leaseTermMonths} month{leaseTermMonths !== 1 ? "s" : ""} x ${pricing.monthlyRent.toFixed(2)}/mo</span>
+          <span>${(leaseTermMonths * pricing.monthlyRent).toFixed(2)}</span>
+        </div>
         {pricing.securityDeposit !== null && (
           <div className="flex justify-between">
             <span>Security deposit</span>
             <span>${pricing.securityDeposit.toFixed(2)}</span>
           </div>
         )}
-        <div className="text-xs text-neutral-500">Currency: {currency}</div>
+        <div className="border-t border-neutral-200 dark:border-neutral-700 pt-2 flex justify-between font-semibold">
+          <span>Total ({currency})</span>
+          <span>${((leaseTermMonths * pricing.monthlyRent) + (pricing.securityDeposit ?? 0)).toFixed(2)}</span>
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

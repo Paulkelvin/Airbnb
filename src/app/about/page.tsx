@@ -40,9 +40,9 @@ const PageAbout: React.FC = () => {
       <div className="container py-16 lg:py-28 space-y-16 lg:space-y-28">
         {/* HERO */}
         <div className="max-w-3xl">
-          <h2 className="text-3xl md:text-4xl font-semibold">
+          <h1 className="text-3xl md:text-4xl font-semibold">
             Our Story
-          </h2>
+          </h1>
           <span className="block mt-3 text-neutral-500 dark:text-neutral-400 text-lg">
             Connecting travelers with unforgettable places to stay.
           </span>

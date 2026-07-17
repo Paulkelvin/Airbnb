@@ -79,6 +79,11 @@ const FooterNav = () => {
     if (typeof window !== "undefined") {
       window.addEventListener("scroll", handleEvent);
     }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("scroll", handleEvent);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

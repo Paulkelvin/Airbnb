@@ -44,7 +44,7 @@ const ResetPasswordForm = () => {
             Reset password
           </h2>
           <div className="max-w-md mx-auto space-y-6">
-            <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">
+            <div className="rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 text-sm px-4 py-3">
               This reset link is missing its token. Please use the link from your email, or request a new
               one.
             </div>
@@ -67,13 +67,13 @@ const ResetPasswordForm = () => {
         </h2>
         <div className="max-w-md mx-auto space-y-6">
           {success ? (
-            <div className="rounded-lg bg-green-50 text-green-700 text-sm px-4 py-3">
+            <div className="rounded-lg bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 text-sm px-4 py-3">
               Password reset successfully. Redirecting you to log in&hellip;
             </div>
           ) : (
             <>
               {error && (
-                <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">{error}</div>
+                <div className="rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 text-sm px-4 py-3">{error}</div>
               )}
               <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
                 <label className="block">

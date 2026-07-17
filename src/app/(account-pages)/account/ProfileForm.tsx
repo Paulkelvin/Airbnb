@@ -106,10 +106,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       </div>
       <div className="flex-grow mt-10 md:mt-0 md:pl-16 max-w-3xl space-y-6">
         {error && (
-          <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">{error}</div>
+          <div className="rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 text-sm px-4 py-3">{error}</div>
         )}
         {saved && (
-          <div className="rounded-lg bg-green-50 text-green-700 text-sm px-4 py-3">
+          <div className="rounded-lg bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 text-sm px-4 py-3">
             Your profile has been updated.
           </div>
         )}

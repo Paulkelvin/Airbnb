@@ -15,6 +15,22 @@ export default function GlobalError({
 
   return (
     <html lang="en">
+      <head>
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              @media (prefers-color-scheme: dark) {
+                body { background: #171717; color: #f5f5f5; }
+                .ge-subtitle { color: #a3a3a3 !important; }
+                .ge-try-btn { background: #262626 !important; border-color: #525252 !important; color: #f5f5f5 !important; }
+                .ge-try-btn:hover { background: #404040 !important; }
+                .ge-home-btn { background: #6366f1 !important; }
+                .ge-home-btn:hover { background: #818cf8 !important; }
+              }
+            `,
+          }}
+        />
+      </head>
       <body>
         <div
           style={{
@@ -29,12 +45,13 @@ export default function GlobalError({
             fontFamily: "sans-serif",
           }}
         >
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 600 }}>Something went wrong</h2>
-          <p style={{ maxWidth: 420, color: "#737373" }}>
-            We hit an unexpected error loading Potomac. Please try again.
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 600 }}>Something went wrong</h1>
+          <p className="ge-subtitle" style={{ maxWidth: 420, color: "#737373" }}>
+            We hit an unexpected error loading this page. Please try again.
           </p>
           <div style={{ display: "flex", gap: "0.75rem" }}>
             <button
+              className="ge-try-btn"
               onClick={() => reset()}
               style={{
                 padding: "0.625rem 1.25rem",
@@ -47,6 +64,7 @@ export default function GlobalError({
               Try again
             </button>
             <a
+              className="ge-home-btn"
               href="/"
               style={{
                 padding: "0.625rem 1.25rem",

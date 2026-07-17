@@ -308,6 +308,7 @@ export default function AddListingWizard({
               <FormItem label="Size (sqft, optional)">
                 <Input
                   type="number"
+                  min={0}
                   value={listing.sizeSqft ?? ""}
                   onChange={(e) =>
                     update("sizeSqft", e.target.value ? Number(e.target.value) : null)
@@ -700,7 +701,7 @@ export default function AddListingWizard({
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">
+          <div className="rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 text-sm px-4 py-3">
             {error}
             {fieldErrors && (
               <ul className="mt-2 list-disc list-inside">

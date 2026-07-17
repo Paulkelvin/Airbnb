@@ -1,28 +1,54 @@
 "use client";
 
 import React, { FC, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { toggleFavorite } from "@/modules/favorites/actions";
 
 export interface BtnLikeIconProps {
   className?: string;
   colorClass?: string;
   isLiked?: boolean;
+  listingId: string;
 }
 
 const BtnLikeIcon: FC<BtnLikeIconProps> = ({
   className = "",
   colorClass = "text-white bg-black bg-opacity-30 hover:bg-opacity-50",
   isLiked = false,
+  listingId,
 }) => {
   const [likedState, setLikedState] = useState(isLiked);
+  const { status } = useSession();
+  const router = useRouter();
+
+  const handleClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (status !== "authenticated") {
+      router.push("/login");
+      return;
+    }
+
+    setLikedState(!likedState);
+    const result = await toggleFavorite(listingId);
+    if (result.success) {
+      setLikedState(result.data.favorited);
+    } else {
+      setLikedState(likedState);
+    }
+  };
 
   return (
-    <div
+    <button
+      type="button"
       className={`nc-BtnLikeIcon w-8 h-8 flex items-center justify-center rounded-full cursor-pointer ${
         likedState ? "nc-BtnLikeIcon--liked" : ""
       }  ${colorClass} ${className}`}
       data-nc-id="BtnLikeIcon"
-      title="Save"
-      onClick={() => setLikedState(!likedState)}
+      aria-label={likedState ? "Remove from wishlist" : "Save to wishlist"}
+      onClick={handleClick}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -40,7 +66,7 @@ const BtnLikeIcon: FC<BtnLikeIconProps> = ({
           d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
         />
       </svg>
-    </div>
+    </button>
   );
 };
 

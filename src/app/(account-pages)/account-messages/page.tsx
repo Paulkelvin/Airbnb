@@ -23,12 +23,15 @@ export default async function AccountMessagesPage() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <h2 className="text-3xl font-semibold">Messages</h2>
+      <h1 className="text-3xl font-semibold">Messages</h1>
       <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
 
       {conversations.length === 0 ? (
         <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 p-12 text-center">
           <p className="text-neutral-500 dark:text-neutral-400">No conversations yet.</p>
+          <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-2">
+            Messages from hosts and guests will appear here once you book a stay or receive a booking.
+          </p>
         </div>
       ) : (
         <div className="divide-y divide-neutral-200 dark:divide-neutral-700 rounded-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">

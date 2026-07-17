@@ -9,7 +9,7 @@ const PagePrivacy: React.FC = () => {
     <div className="nc-PagePrivacy overflow-hidden">
       <div className="container py-16 lg:py-28">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-semibold">Privacy Policy</h2>
+          <h1 className="text-3xl md:text-4xl font-semibold">Privacy Policy</h1>
           <p className="mt-3 text-neutral-500 dark:text-neutral-400">
             Last updated: July 16, 2026
           </p>

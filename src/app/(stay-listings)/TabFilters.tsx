@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Fragment, useState } from "react";
+import React, { Fragment, Suspense, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Dialog, Popover, Transition } from "@headlessui/react";
 import NcInputNumber from "@/components/NcInputNumber";
@@ -10,7 +10,7 @@ import ButtonClose from "@/components/ui/ButtonClose";
 import Checkbox from "@/components/ui/Checkbox";
 import Slider from "rc-slider";
 import convertNumbThousand from "@/utils/convertNumbThousand";
-import { ChevronDownIcon } from "@heroicons/react/24/solid";
+import { ChevronDownIcon, FunnelIcon } from "@heroicons/react/24/solid";
 import { buildSearchUrl } from "./searchParamsUtil";
 
 export interface TabFiltersProps {
@@ -20,13 +20,14 @@ export interface TabFiltersProps {
 
 const PRICE_MAX = 2000;
 
-const TabFilters: React.FC<TabFiltersProps> = ({ propertyTypes, amenities }) => {
+const TabFiltersInner: React.FC<TabFiltersProps> = ({ propertyTypes, amenities }) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [isOpenMoreFilter, setIsOpenMoreFilter] = useState(false);
   const [isOpenMoreFilterMobile, setIsOpenMoreFilterMobile] = useState(false);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   const currentPropertyType = searchParams.get("propertyType") ?? "";
   const currentMinPrice = Number(searchParams.get("minPrice") ?? 0);
@@ -185,10 +186,22 @@ const TabFilters: React.FC<TabFiltersProps> = ({ propertyTypes, amenities }) => 
       {({ open, close }) => (
         <>
           <Popover.Button
-            className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border border-neutral-300 dark:border-neutral-700 focus:outline-none`}
+            className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border ${
+              bedrooms > 0 || bathrooms > 0
+                ? "border-primary-500 bg-primary-50 text-primary-700"
+                : "border-neutral-300 dark:border-neutral-700"
+            } focus:outline-none`}
           >
             <span>Rooms</span>
-            <ChevronDownIcon className="w-4 h-4 ml-2" />
+            {(bedrooms > 0 || bathrooms > 0) ? (
+              renderXClear(() => {
+                setBedrooms(0);
+                setBathrooms(0);
+                navigate({ bedrooms: undefined, bathrooms: undefined });
+              })
+            ) : (
+              <ChevronDownIcon className="w-4 h-4 ml-2" />
+            )}
           </Popover.Button>
           <Transition
             as={Fragment}
@@ -234,9 +247,21 @@ const TabFilters: React.FC<TabFiltersProps> = ({ propertyTypes, amenities }) => 
       {({ close }) => (
         <>
           <Popover.Button
-            className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border border-primary-500 bg-primary-50 text-primary-700 focus:outline-none`}
+            className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border ${
+              rangePrices[0] > 0 || rangePrices[1] < PRICE_MAX
+                ? "border-primary-500 bg-primary-50 text-primary-700"
+                : "border-neutral-300 dark:border-neutral-700"
+            } focus:outline-none`}
           >
             <span>{`$${convertNumbThousand(rangePrices[0])} - $${convertNumbThousand(rangePrices[1])}`}</span>
+            {(rangePrices[0] > 0 || rangePrices[1] < PRICE_MAX) ? (
+              renderXClear(() => {
+                setRangePrices([0, PRICE_MAX]);
+                navigate({ minPrice: undefined, maxPrice: undefined });
+              })
+            ) : (
+              <ChevronDownIcon className="w-4 h-4 ml-2" />
+            )}
           </Popover.Button>
           <Transition
             as={Fragment}
@@ -389,8 +414,146 @@ const TabFilters: React.FC<TabFiltersProps> = ({ propertyTypes, amenities }) => 
     );
   };
 
+  function applyAllMobileFilters() {
+    navigate({
+      propertyType: selectedPropertyType || undefined,
+      minPrice: rangePrices[0] > 0 ? rangePrices[0] : undefined,
+      maxPrice: rangePrices[1] < PRICE_MAX ? rangePrices[1] : undefined,
+      bedrooms: bedrooms > 0 ? bedrooms : undefined,
+      bathrooms: bathrooms > 0 ? bathrooms : undefined,
+    });
+    setIsMobileFiltersOpen(false);
+  }
+
+  function clearAllMobileFilters() {
+    setSelectedPropertyType("");
+    setRangePrices([0, PRICE_MAX]);
+    setBedrooms(0);
+    setBathrooms(0);
+    navigate({
+      propertyType: undefined,
+      minPrice: undefined,
+      maxPrice: undefined,
+      bedrooms: undefined,
+      bathrooms: undefined,
+    });
+    setIsMobileFiltersOpen(false);
+  }
+
+  const mobileFilterCount =
+    (currentPropertyType ? 1 : 0) +
+    (currentMinPrice > 0 || currentMaxPrice < PRICE_MAX ? 1 : 0) +
+    (currentBedrooms > 0 ? 1 : 0) +
+    (currentBathrooms > 0 ? 1 : 0);
+
+  const renderMobileFiltersButton = () => (
+    <>
+      <button
+        className="flex lg:hidden items-center justify-center px-4 py-2 text-sm rounded-full border border-neutral-300 dark:border-neutral-700 focus:outline-none gap-2"
+        onClick={() => setIsMobileFiltersOpen(true)}
+      >
+        <FunnelIcon className="w-4 h-4" />
+        <span>Filters{mobileFilterCount > 0 ? ` (${mobileFilterCount})` : ""}</span>
+      </button>
+
+      <Transition appear show={isMobileFiltersOpen} as={Fragment}>
+        <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={() => setIsMobileFiltersOpen(false)}>
+          <div className="min-h-screen text-center">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-40 dark:bg-opacity-60" />
+            </Transition.Child>
+            <span className="inline-block h-screen align-middle" aria-hidden="true">
+              &#8203;
+            </span>
+            <Transition.Child
+              className="inline-block py-8 px-2 h-screen w-full max-w-lg"
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <div className="inline-flex flex-col w-full text-left align-middle transition-all transform overflow-hidden rounded-2xl bg-white dark:bg-neutral-900 dark:border dark:border-neutral-700 dark:text-neutral-100 shadow-xl h-full">
+                <div className="relative flex-shrink-0 px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 text-center">
+                  <Dialog.Title as="h3" className="text-lg font-medium leading-6">
+                    Filters
+                  </Dialog.Title>
+                  <span className="absolute left-3 top-3">
+                    <ButtonClose onClick={() => setIsMobileFiltersOpen(false)} />
+                  </span>
+                </div>
+
+                <div className="flex-grow overflow-y-auto px-6 py-6 space-y-8">
+                  {/* Property Type */}
+                  <div className="space-y-3">
+                    <span className="font-medium">Type of place</span>
+                    <div className="space-y-2">
+                      {propertyTypes.map((pt) => (
+                        <Checkbox
+                          key={pt.id}
+                          name={`mobile-${pt.slug}`}
+                          label={pt.name}
+                          defaultChecked={selectedPropertyType === pt.slug}
+                          onChange={(checked) => setSelectedPropertyType(checked ? pt.slug : "")}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Price Range */}
+                  <div className="space-y-5">
+                    <span className="font-medium">Price range</span>
+                    <Slider
+                      range
+                      className="text-red-400"
+                      min={0}
+                      max={PRICE_MAX}
+                      value={rangePrices}
+                      allowCross={false}
+                      onChange={(e) => setRangePrices(e as number[])}
+                    />
+                    <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-300">
+                      <span>${rangePrices[0]}</span>
+                      <span>${rangePrices[1]}</span>
+                    </div>
+                  </div>
+
+                  {/* Rooms */}
+                  <div className="space-y-5">
+                    <span className="font-medium">Rooms</span>
+                    <NcInputNumber label="Bedrooms" max={10} defaultValue={bedrooms} onChange={setBedrooms} />
+                    <NcInputNumber label="Bathrooms" max={10} defaultValue={bathrooms} onChange={setBathrooms} />
+                  </div>
+                </div>
+
+                <div className="p-6 flex-shrink-0 bg-neutral-50 dark:bg-neutral-900 dark:border-t dark:border-neutral-800 flex items-center justify-between">
+                  <ButtonThird onClick={clearAllMobileFilters} sizeClass="px-4 py-2 sm:px-5">
+                    Clear all
+                  </ButtonThird>
+                  <ButtonPrimary onClick={applyAllMobileFilters} sizeClass="px-4 py-2 sm:px-5">
+                    Apply
+                  </ButtonPrimary>
+                </div>
+              </div>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition>
+    </>
+  );
+
   return (
     <div className="flex flex-wrap gap-3 lg:gap-4">
+      {renderMobileFiltersButton()}
       <div className="hidden lg:flex flex-wrap gap-4">
         {renderTabPropertyType()}
         {renderTabPriceRange()}
@@ -401,5 +564,11 @@ const TabFilters: React.FC<TabFiltersProps> = ({ propertyTypes, amenities }) => 
     </div>
   );
 };
+
+const TabFilters: React.FC<TabFiltersProps> = (props) => (
+  <Suspense>
+    <TabFiltersInner {...props} />
+  </Suspense>
+);
 
 export default TabFilters;

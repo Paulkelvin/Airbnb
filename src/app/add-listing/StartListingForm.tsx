@@ -36,7 +36,7 @@ export default function StartListingForm({ propertyTypes }: StartListingFormProp
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {error && (
-        <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">{error}</div>
+        <div className="rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 text-sm px-4 py-3">{error}</div>
       )}
       <FormItem
         label="Place name"

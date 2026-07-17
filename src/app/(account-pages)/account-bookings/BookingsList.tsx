@@ -101,13 +101,19 @@ export default function BookingsList({
     return (
       <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 p-12 text-center">
         <p className="text-neutral-500 dark:text-neutral-400">{emptyMessage}</p>
+        <Link
+          href={"/listing-stay" as Route}
+          className="mt-4 inline-block rounded-full border border-neutral-300 dark:border-neutral-600 px-5 py-2 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+        >
+          Browse stays
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {error && <div className="rounded-lg bg-red-50 text-red-700 text-sm px-4 py-3">{error}</div>}
+      {error && <div className="rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 text-sm px-4 py-3">{error}</div>}
       <div className="divide-y divide-neutral-200 dark:divide-neutral-700 rounded-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
         {rows.map((b) => {
           const isRowPending = isPending && pendingId === b.id;
