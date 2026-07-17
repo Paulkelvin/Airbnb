@@ -1,6 +1,13 @@
 import { getAdminBookings } from "@/modules/admin/queries";
 import { BookingActions } from "./BookingActions";
-import Link from "next/link";
+import {
+  AdminPageHeader,
+  AdminFilterPills,
+  AdminTableCard,
+  AdminBadge,
+  AdminPagination,
+  bookingStatusTone,
+} from "../AdminUI";
 
 export const metadata = { title: "Booking Oversight" };
 
@@ -19,31 +26,16 @@ export default async function AdminBookingsPage({
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-6">
-        Booking Oversight
-      </h2>
+      <AdminPageHeader title="Booking Oversight" description={`${total} total bookings`} />
 
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {STATUSES.map((s) => {
-          const isActive = (searchParams.status ?? "ALL") === s;
-          const href = s === "ALL" ? "/admin/bookings" : `/admin/bookings?status=${s}`;
-          return (
-            <Link
-              key={s}
-              href={href as never}
-              className={`px-3 py-1.5 text-sm rounded-full border ${
-                isActive
-                  ? "bg-primary-6000 text-white border-primary-6000"
-                  : "border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
-              }`}
-            >
-              {s.replace(/_/g, " ")}
-            </Link>
-          );
-        })}
-      </div>
+      <AdminFilterPills
+        options={STATUSES}
+        activeValue={searchParams.status ?? "ALL"}
+        basePath="/admin/bookings"
+        formatLabel={(s) => s.replace(/_/g, " ")}
+      />
 
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+      <AdminTableCard>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-200 dark:border-neutral-700 text-left">
@@ -70,19 +62,9 @@ export default async function AdminBookingsPage({
                   <div className="text-xs text-neutral-400">{booking.guest.email}</div>
                 </td>
                 <td className="px-4 py-3">
-                  <span
-                    className={`px-2 py-0.5 text-xs rounded-full ${
-                      booking.status === "DISPUTED"
-                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                        : booking.status === "COMPLETED"
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                          : booking.status === "CONFIRMED" || booking.status === "ACTIVE"
-                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                            : "bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
-                    }`}
-                  >
+                  <AdminBadge tone={bookingStatusTone(booking.status)}>
                     {booking.status.replace(/_/g, " ")}
-                  </span>
+                  </AdminBadge>
                 </td>
                 <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300 text-xs">
                   {booking.rentalType.replace("_", " ")}
@@ -112,27 +94,14 @@ export default async function AdminBookingsPage({
             )}
           </tbody>
         </table>
-      </div>
+      </AdminTableCard>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-4">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <Link
-              key={p}
-              href={`/admin/bookings?page=${p}${searchParams.status ? `&status=${searchParams.status}` : ""}` as never}
-              className={`px-3 py-1 text-sm rounded ${
-                p === page
-                  ? "bg-primary-6000 text-white"
-                  : "bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300"
-              }`}
-            >
-              {p}
-            </Link>
-          ))}
-        </div>
-      )}
-
-      <p className="mt-2 text-xs text-neutral-400 text-center">{total} total bookings</p>
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        basePath="/admin/bookings"
+        extraParams={searchParams.status ? `&status=${searchParams.status}` : ""}
+      />
     </div>
   );
 }
