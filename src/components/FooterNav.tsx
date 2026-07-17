@@ -5,18 +5,12 @@ import {
   MagnifyingGlassIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { useSession } from "next-auth/react";
 import { PathName } from "@/routers/types";
 import MenuBar from "@/components/ui/MenuBar";
-import isInViewport from "@/utils/isInViewport";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-let WIN_PREV_POSITION = 0;
-if (typeof window !== "undefined") {
-  WIN_PREV_POSITION = window.pageYOffset;
-}
 
 interface NavItem {
   name: string;
@@ -69,56 +63,11 @@ const NAV_LOGGED_IN: NavItem[] = [
 ];
 
 const FooterNav = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const { status } = useSession();
 
   const pathname = usePathname();
   const NAV = status === "authenticated" ? NAV_LOGGED_IN : NAV_LOGGED_OUT;
   const isListingDetail = pathname.startsWith("/listing-stay-detail");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.addEventListener("scroll", handleEvent);
-    }
-    return () => {
-      if (typeof window !== "undefined") {
-        window.removeEventListener("scroll", handleEvent);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleEvent = () => {
-    if (typeof window !== "undefined") {
-      window.requestAnimationFrame(showHideHeaderMenu);
-    }
-  };
-
-  const showHideHeaderMenu = () => {
-    let currentScrollPos = window.pageYOffset;
-    if (!containerRef.current) return;
-
-    if (currentScrollPos > WIN_PREV_POSITION) {
-      if (
-        isInViewport(containerRef.current) &&
-        currentScrollPos - WIN_PREV_POSITION < 80
-      ) {
-        return;
-      }
-
-      containerRef.current.classList.add("FooterNav--hide");
-    } else {
-      if (
-        !isInViewport(containerRef.current) &&
-        WIN_PREV_POSITION - currentScrollPos < 80
-      ) {
-        return;
-      }
-      containerRef.current.classList.remove("FooterNav--hide");
-    }
-
-    WIN_PREV_POSITION = currentScrollPos;
-  };
 
   if (isListingDetail) {
     return null;
@@ -160,10 +109,8 @@ const FooterNav = () => {
 
   return (
     <nav
-      ref={containerRef}
       aria-label="Mobile navigation"
-      className="FooterNav block md:!hidden p-2 bg-white dark:bg-neutral-800 fixed top-auto bottom-0 inset-x-0 z-30 border-t border-neutral-300 dark:border-neutral-700
-      transition-transform duration-300 ease-in-out"
+      className="FooterNav block md:!hidden p-2 bg-white dark:bg-neutral-800 fixed top-auto bottom-0 inset-x-0 z-30 border-t border-neutral-300 dark:border-neutral-700"
     >
       <div className="w-full max-w-lg flex justify-around mx-auto text-sm text-center ">
         {/* MENU */}
