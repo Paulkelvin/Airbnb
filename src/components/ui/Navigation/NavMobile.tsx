@@ -146,7 +146,7 @@ const NavMobile: React.FC<NavMobileProps> = ({
         {data.map(_renderItem)}
       </ul>
       <div className="flex items-center justify-between py-6 px-5">
-        <Link href="/login">
+        <Link href="/signup">
           <ButtonPrimary>Sign up</ButtonPrimary>
         </Link>
       </div>

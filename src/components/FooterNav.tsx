@@ -11,6 +11,7 @@ import MenuBar from "@/components/ui/MenuBar";
 import isInViewport from "@/utils/isInViewport";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 let WIN_PREV_POSITION = 0;
 if (typeof window !== "undefined") {
@@ -23,7 +24,7 @@ interface NavItem {
   icon: any;
 }
 
-const NAV: NavItem[] = [
+const STATIC_NAV: NavItem[] = [
   {
     name: "Explore",
     link: "/",
@@ -34,19 +35,11 @@ const NAV: NavItem[] = [
     link: "/account-savelists",
     icon: HeartIcon,
   },
-  {
-    name: "Log in",
-    link: "/login",
-    icon: UserCircleIcon,
-  },
-  {
-    name: "Menu",
-    icon: MenuBar,
-  },
 ];
 
 const FooterNav = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { status } = useSession();
 
   const pathname = usePathname();
 
@@ -126,6 +119,17 @@ const FooterNav = () => {
       </div>
     );
   };
+
+  const accountItem: NavItem =
+    status === "authenticated"
+      ? { name: "Account", link: "/account" as PathName, icon: UserCircleIcon }
+      : { name: "Log in", link: "/login" as PathName, icon: UserCircleIcon };
+
+  const NAV: NavItem[] = [
+    ...STATIC_NAV,
+    accountItem,
+    { name: "Menu", icon: MenuBar },
+  ];
 
   return (
     <div

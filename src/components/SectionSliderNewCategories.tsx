@@ -20,7 +20,7 @@ export interface SectionSliderNewCategoriesProps {
 const DEMO_CATS: TaxonomyType[] = [
   {
     id: "1",
-    href: "/listing-stay-map",
+    href: "/listing-stay-map?city=New+York",
     name: "New York",
     taxonomy: "category",
     count: 320,
@@ -29,7 +29,7 @@ const DEMO_CATS: TaxonomyType[] = [
   },
   {
     id: "2",
-    href: "/listing-stay-map",
+    href: "/listing-stay-map?city=Miami",
     name: "Miami",
     taxonomy: "category",
     count: 215,
@@ -38,7 +38,7 @@ const DEMO_CATS: TaxonomyType[] = [
   },
   {
     id: "3",
-    href: "/listing-stay-map",
+    href: "/listing-stay-map?city=Los+Angeles",
     name: "Los Angeles",
     taxonomy: "category",
     count: 280,
@@ -47,7 +47,7 @@ const DEMO_CATS: TaxonomyType[] = [
   },
   {
     id: "4",
-    href: "/listing-stay-map",
+    href: "/listing-stay-map?city=Chicago",
     name: "Chicago",
     taxonomy: "category",
     count: 175,
@@ -56,7 +56,7 @@ const DEMO_CATS: TaxonomyType[] = [
   },
   {
     id: "5",
-    href: "/listing-stay-map",
+    href: "/listing-stay-map?city=San+Diego",
     name: "San Diego",
     taxonomy: "category",
     count: 140,
@@ -65,7 +65,7 @@ const DEMO_CATS: TaxonomyType[] = [
   },
   {
     id: "6",
-    href: "/listing-stay-map",
+    href: "/listing-stay-map?city=Austin",
     name: "Austin",
     taxonomy: "category",
     count: 195,
@@ -74,7 +74,7 @@ const DEMO_CATS: TaxonomyType[] = [
   },
   {
     id: "7",
-    href: "/listing-stay-map",
+    href: "/listing-stay-map?city=Denver",
     name: "Denver",
     taxonomy: "category",
     count: 130,
@@ -83,7 +83,7 @@ const DEMO_CATS: TaxonomyType[] = [
   },
   {
     id: "8",
-    href: "/listing-stay-map",
+    href: "/listing-stay-map?city=Charleston",
     name: "Charleston",
     taxonomy: "category",
     count: 95,
