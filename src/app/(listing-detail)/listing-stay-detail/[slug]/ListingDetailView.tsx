@@ -286,6 +286,23 @@ export default function ListingDetailView({
                       value={titleCase(listing.pricing.cancellationPolicy)}
                       shaded
                     />
+                    <Row
+                      label="Check-in"
+                      value={
+                        listing.pricing.checkInTime
+                          ? formatTime(listing.pricing.checkInTime)
+                          : "Flexible"
+                      }
+                    />
+                    <Row
+                      label="Check-out"
+                      value={
+                        listing.pricing.checkOutTime
+                          ? formatTime(listing.pricing.checkOutTime)
+                          : "Flexible"
+                      }
+                      shaded
+                    />
                   </>
                 ) : (
                   <>
@@ -431,6 +448,13 @@ function Row({ label, value, shaded }: { label: string; value: string; shaded?: 
       <span>{value}</span>
     </div>
   );
+}
+
+function formatTime(value: string) {
+  const [hours, minutes] = value.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+  return `${hour12}:${String(minutes).padStart(2, "0")} ${period}`;
 }
 
 function titleCase(value: string) {

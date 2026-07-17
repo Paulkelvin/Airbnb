@@ -306,8 +306,8 @@ function toStrictInput(listing: {
       monthlyDiscountPercent: listing.monthlyDiscountPercent
         ? Number(listing.monthlyDiscountPercent)
         : undefined,
-      checkInTime: listing.checkInTime ?? "",
-      checkOutTime: listing.checkOutTime ?? "",
+      checkInTime: listing.checkInTime,
+      checkOutTime: listing.checkOutTime,
       instantBook: listing.instantBook ?? false,
       cancellationPolicy: (listing.cancellationPolicy ?? "") as
         | "FLEXIBLE"
@@ -345,7 +345,7 @@ async function validateListingCompleteness(listing: {
         fieldErrors:
           validation && !validation.success
             ? (validation.error.flatten().fieldErrors as Record<string, string[]>)
-            : undefined,
+            : { address: ["Add a complete address"] },
       },
     };
   }
