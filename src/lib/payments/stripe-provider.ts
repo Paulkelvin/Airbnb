@@ -4,9 +4,11 @@ import type {
   NormalizedPaymentEvent,
   NormalizedPaymentMetadata,
   PayeeAccountStatus,
+  PaymentIntentResult,
   PaymentProvider,
   PayoutResult,
   RefundResult,
+  VerifiedChargeResult,
 } from "./provider";
 
 /**
@@ -20,14 +22,19 @@ import type {
  * without real credentials or network access — no call site outside
  * src/lib/payments/ constructs a `Stripe` client directly.
  *
- * No card-collection UI exists yet (out of scope for this phase — test-mode
- * only, per the client's direction). `createCharge` stands in with a fixed
- * Stripe test PaymentMethod (`pm_card_visa`) rather than accepting one,
- * since the PaymentProvider interface intentionally has no
- * gateway-specific "payment method" parameter (Domain Model Spec §6). Once
- * a real checkout UI collects a payment method (Stripe Elements +
- * SetupIntent), swap the hardcoded token for the guest's saved payment
- * method — no interface or booking-module change required.
+ * `createCharge` still stands in with a fixed Stripe test PaymentMethod
+ * (`pm_card_visa`) for the off-session flows where no guest is present to
+ * confirm a card in the moment — host-approval charging on a "Request to
+ * book" listing, security deposit holds, and the recurring monthly-rent
+ * job (src/jobs/booking-lifecycle.ts). Those need a saved payment method
+ * (Stripe Customer + SetupIntent) to charge for real, which is a separate,
+ * larger piece of work not built yet.
+ *
+ * `createPaymentIntent`/`verifyPaymentIntent` are the real-time, guest-present
+ * counterpart: the guest confirms their own card client-side via Stripe
+ * Elements at instant-book creation, and the server only ever re-verifies
+ * that confirmation — it never sees or stores card data itself (PCI scope
+ * stays minimal per the Platform Architecture Blueprint's hosted-card-UI rule).
  */
 export class StripeConnectProvider implements PaymentProvider {
   constructor(
@@ -64,6 +71,37 @@ export class StripeConnectProvider implements PaymentProvider {
     } catch (err) {
       return chargeFailureResult(err);
     }
+  }
+
+  async createPaymentIntent(
+    amountCents: number,
+    currency: string,
+    payerUserId: string,
+  ): Promise<PaymentIntentResult> {
+    const intent = await this.stripe.paymentIntents.create({
+      amount: amountCents,
+      currency: currency.toLowerCase(),
+      // Cards only, matching createCharge — other payment methods Stripe
+      // could offer (bank debits, some wallets) settle asynchronously
+      // ("processing" rather than an immediate result), which this
+      // synchronous confirm-then-book flow isn't built to wait out.
+      payment_method_types: ["card"],
+      description: `Instant-book charge — payer ${payerUserId}`,
+      metadata: { payerUserId },
+    });
+    if (!intent.client_secret) {
+      throw new Error("Stripe did not return a client_secret for the new PaymentIntent");
+    }
+    return { paymentIntentId: intent.id, clientSecret: intent.client_secret };
+  }
+
+  async verifyPaymentIntent(paymentIntentId: string): Promise<VerifiedChargeResult> {
+    const intent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+    return {
+      providerTransactionRef: intent.id,
+      status: mapIntentStatus(intent.status),
+      amountCents: intent.amount,
+    };
   }
 
   async refund(providerTransactionRef: string, amountCents?: number): Promise<RefundResult> {

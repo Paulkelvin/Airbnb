@@ -4,9 +4,11 @@ import type {
   NormalizedPaymentEvent,
   NormalizedPaymentMetadata,
   PayeeAccountStatus,
+  PaymentIntentResult,
   PaymentProvider,
   PayoutResult,
   RefundResult,
+  VerifiedChargeResult,
 } from "./provider";
 
 /**
@@ -35,6 +37,30 @@ export class StubPaymentProvider implements PaymentProvider {
       providerTransactionRef: `stub_ch_${crypto.randomUUID()}`,
       status: "SUCCEEDED",
     };
+  }
+
+  async createPaymentIntent(
+    amountCents: number,
+    _currency: string,
+    _payerUserId: string,
+  ): Promise<PaymentIntentResult> {
+    // Encodes the amount into the fake id so verifyPaymentIntent (below) can
+    // echo it back — there's no real Stripe.js session in stub mode to
+    // confirm anything against, so this is never exercised by the actual
+    // Elements UI (that requires a real publishable key), only by direct
+    // server-side calls/tests.
+    return {
+      paymentIntentId: `stub_pi_${amountCents}_${crypto.randomUUID()}`,
+      clientSecret: `stub_secret_${crypto.randomUUID()}`,
+    };
+  }
+
+  async verifyPaymentIntent(paymentIntentId: string): Promise<VerifiedChargeResult> {
+    const match = /^stub_pi_(\d+)_/.exec(paymentIntentId);
+    if (!match) {
+      return { providerTransactionRef: paymentIntentId, status: "FAILED", amountCents: 0, failureReason: "Unknown stub PaymentIntent" };
+    }
+    return { providerTransactionRef: paymentIntentId, status: "SUCCEEDED", amountCents: Number(match[1]) };
   }
 
   async refund(providerTransactionRef: string, _amountCents?: number): Promise<RefundResult> {

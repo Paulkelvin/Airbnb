@@ -1,14 +1,24 @@
 "use client";
 
-import React, { useMemo, useState, useTransition } from "react";
+import React, { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import DatePicker from "react-datepicker";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import NcInputNumber from "@/components/NcInputNumber";
-import { createShortTermBooking, createLongTermBooking } from "@/modules/bookings/actions";
+import {
+  createShortTermBooking,
+  createBookingPaymentIntent,
+  createLongTermBooking,
+} from "@/modules/bookings/actions";
 import { computeShortTermQuote, nightsBetween } from "@/modules/bookings/pricing";
+import { isStripeCheckoutConfigured, getStripePublishableKey } from "@/lib/payments/client-config";
+import StripePaymentStep from "./StripePaymentStep";
 import type { ListingDetailViewModel } from "@/modules/listings/types";
 import type { Route } from "@/routers/types";
+
+const stripePromise = isStripeCheckoutConfigured() ? loadStripe(getStripePublishableKey()) : null;
 
 interface BookingWidgetProps {
   listingId: string;
@@ -76,6 +86,16 @@ function ShortTermBookingForm({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  // Real card collection (embedded Stripe Elements) only applies to instant
+  // book: "Request to book" doesn't charge until the host approves, so
+  // there's nothing to pay yet at this step. Falls back to the pre-existing
+  // one-step flow (no paymentIntentId) whenever Stripe isn't configured —
+  // that path still works exactly as before via createCharge's dev/stub
+  // handling.
+  const needsCardCollection = pricing.instantBook && isStripeCheckoutConfigured();
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isFetchingIntent, setIsFetchingIntent] = useState(false);
+
   const excludeDates = useMemo(() => blockedDates.map((d) => new Date(d)), [blockedDates]);
 
   const nights = checkInDate && checkOutDate ? nightsBetween(checkInDate, checkOutDate) : 0;
@@ -85,6 +105,13 @@ function ShortTermBookingForm({
     () => crypto.randomUUID(),
     [checkInDate?.getTime(), checkOutDate?.getTime(), guestCount],
   );
+
+  // A previously-fetched PaymentIntent was priced for the dates/guest count
+  // at the time — invalidate it the moment any of those change so a stale
+  // intent (wrong amount) can never be confirmed against a different quote.
+  useEffect(() => {
+    setClientSecret(null);
+  }, [checkInDate?.getTime(), checkOutDate?.getTime(), guestCount]);
 
   const nightsTooFew = nights > 0 && nights < pricing.minNights;
   const nightsTooMany = pricing.maxNights !== null && nights > pricing.maxNights;
@@ -100,6 +127,46 @@ function ShortTermBookingForm({
         checkOutDate,
         guestCount,
         idempotencyKey,
+      });
+      if (!result.success) {
+        setError(result.error.message);
+        return;
+      }
+      router.push(`/account-bookings/${result.data.id}` as Route);
+    });
+  }
+
+  function handleContinueToPayment() {
+    if (!checkInDate || !checkOutDate || !canSubmit) return;
+    setError(null);
+    setIsFetchingIntent(true);
+    startTransition(async () => {
+      const result = await createBookingPaymentIntent({
+        listingId,
+        checkInDate,
+        checkOutDate,
+        guestCount,
+      });
+      setIsFetchingIntent(false);
+      if (!result.success) {
+        setError(result.error.message);
+        return;
+      }
+      setClientSecret(result.data.clientSecret);
+    });
+  }
+
+  function handlePaymentConfirmed(paymentIntentId: string) {
+    if (!checkInDate || !checkOutDate) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await createShortTermBooking({
+        listingId,
+        checkInDate,
+        checkOutDate,
+        guestCount,
+        idempotencyKey,
+        paymentIntentId,
       });
       if (!result.success) {
         setError(result.error.message);
@@ -184,13 +251,41 @@ function ShortTermBookingForm({
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <ButtonPrimary disabled={!canSubmit || isPending} loading={isPending} onClick={handleSubmit}>
-        {pricing.instantBook ? "Reserve" : "Request to book"}
-      </ButtonPrimary>
-      {!pricing.instantBook && (
-        <p className="text-xs text-center text-neutral-500">
-          You won&apos;t be charged yet — the host will confirm your request.
-        </p>
+      {needsCardCollection ? (
+        clientSecret && stripePromise ? (
+          <Elements
+            stripe={stripePromise}
+            options={{
+              clientSecret,
+              appearance: {
+                theme: typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+                  ? "night"
+                  : "stripe",
+              },
+            }}
+          >
+            <StripePaymentStep onConfirmed={handlePaymentConfirmed} buttonLabel="Pay & Reserve" />
+          </Elements>
+        ) : (
+          <ButtonPrimary
+            disabled={!canSubmit || isFetchingIntent}
+            loading={isFetchingIntent}
+            onClick={handleContinueToPayment}
+          >
+            Continue to payment
+          </ButtonPrimary>
+        )
+      ) : (
+        <>
+          <ButtonPrimary disabled={!canSubmit || isPending} loading={isPending} onClick={handleSubmit}>
+            {pricing.instantBook ? "Reserve" : "Request to book"}
+          </ButtonPrimary>
+          {!pricing.instantBook && (
+            <p className="text-xs text-center text-neutral-500">
+              You won&apos;t be charged yet — the host will confirm your request.
+            </p>
+          )}
+        </>
       )}
     </div>
   );

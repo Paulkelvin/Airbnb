@@ -13,11 +13,13 @@ import {
 } from "@/lib/pricing-policy";
 import {
   createShortTermBookingSchema,
+  createBookingPaymentIntentSchema,
   createLongTermBookingSchema,
   cancelBookingSchema,
   acceptDeclineBookingSchema,
   terminateLeaseSchema,
   type CreateShortTermBookingInput,
+  type CreateBookingPaymentIntentInput,
   type CreateLongTermBookingInput,
   type CancelBookingInput,
   type AcceptDeclineBookingInput,
@@ -178,6 +180,7 @@ export async function createShortTermBooking(
           payeeUserId: listing.hostId,
           amountDollars: quote.totalPrice,
           currency: listing.currency,
+          paymentIntentId: data.paymentIntentId,
         });
       }
 
@@ -205,6 +208,92 @@ export async function createShortTermBooking(
   revalidatePath("/account-bookings");
 
   return { success: true, data: { id: bookingId } };
+}
+
+/**
+ * Prices a stay and creates an unconfirmed Stripe PaymentIntent for the
+ * guest's browser to confirm with their own card via embedded Elements —
+ * called before any booking row exists (see createShortTermBooking's
+ * paymentIntentId param for what happens once the guest confirms it).
+ * Mirrors createShortTermBooking's listing/date/guest validation exactly,
+ * since the amount charged here must match what createShortTermBooking
+ * computes later — never trust a client-supplied total.
+ */
+export async function createBookingPaymentIntent(
+  input: CreateBookingPaymentIntentInput,
+): Promise<ActionResult<{ clientSecret: string; paymentIntentId: string }>> {
+  const user = await requireAuth();
+
+  const parsed = createBookingPaymentIntentSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Invalid booking request",
+        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      },
+    };
+  }
+  const data = parsed.data;
+
+  const listing = await getListingForBooking(data.listingId);
+  if (!listing || listing.status !== "PUBLISHED" || listing.rentalType !== "SHORT_TERM") {
+    return { success: false, error: { code: "NOT_FOUND", message: "Listing not found" } };
+  }
+  if (listing.hostId === user.id) {
+    return {
+      success: false,
+      error: { code: "FORBIDDEN", message: "You cannot book your own listing" },
+    };
+  }
+
+  const nights = nightsBetween(data.checkInDate, data.checkOutDate);
+  const minNights = listing.minNights ?? 1;
+  if (nights < minNights || (listing.maxNights && nights > listing.maxNights)) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message:
+          listing.maxNights && nights > listing.maxNights
+            ? `This listing allows at most ${listing.maxNights} nights`
+            : `This listing requires a minimum stay of ${minNights} nights`,
+      },
+    };
+  }
+  if (data.guestCount > listing.maxOccupants) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: `This listing sleeps at most ${listing.maxOccupants} guests`,
+      },
+    };
+  }
+
+  const serviceFeePercent = (await getServiceFeePercent()) / 100;
+  const quote = computeShortTermQuote({
+    nightlyPrice: Number(listing.nightlyPrice),
+    cleaningFee: listing.cleaningFee ? Number(listing.cleaningFee) : null,
+    weeklyDiscountPercent: listing.weeklyDiscountPercent
+      ? Number(listing.weeklyDiscountPercent)
+      : null,
+    monthlyDiscountPercent: listing.monthlyDiscountPercent
+      ? Number(listing.monthlyDiscountPercent)
+      : null,
+    nights,
+    serviceFeePercent,
+  });
+
+  const provider = getPaymentProvider();
+  const { paymentIntentId, clientSecret } = await provider.createPaymentIntent(
+    dollarsToCents(quote.totalPrice),
+    listing.currency,
+    user.id,
+  );
+
+  return { success: true, data: { clientSecret, paymentIntentId } };
 }
 
 export async function createLongTermBooking(
@@ -317,6 +406,25 @@ async function getListingTitle(listingId: string): Promise<string> {
   return listing?.title ?? "your listing";
 }
 
+/** Never trust a client-supplied paymentIntentId at face value — re-verify
+ * server-side that it actually succeeded and for the exact amount the
+ * server itself computed, not whatever the client claims. */
+async function verifyPaymentAmount(
+  provider: ReturnType<typeof getPaymentProvider>,
+  paymentIntentId: string,
+  expectedAmountCents: number,
+): Promise<{ providerTransactionRef: string; status: "SUCCEEDED" | "PENDING" | "FAILED"; failureReason?: string }> {
+  const verified = await provider.verifyPaymentIntent(paymentIntentId);
+  if (verified.amountCents !== expectedAmountCents) {
+    return {
+      providerTransactionRef: verified.providerTransactionRef,
+      status: "FAILED",
+      failureReason: "Payment amount does not match the booking total",
+    };
+  }
+  return verified;
+}
+
 async function chargeBookingTx(
   tx: Tx,
   args: {
@@ -326,16 +434,26 @@ async function chargeBookingTx(
     amountDollars: number;
     currency: string;
     type?: "CHARGE" | "SECURITY_DEPOSIT_HOLD";
+    /** Set when the guest already confirmed payment client-side via
+     * embedded Stripe Elements (isStripeCheckoutConfigured() true) —
+     * re-verifies that PaymentIntent instead of creating a new charge, and
+     * rejects it outright if its amount doesn't match amountDollars. Absent
+     * in stub/dev mode, where createCharge's existing test-card path runs
+     * unchanged. */
+    paymentIntentId?: string;
   },
 ) {
   const amountCents = dollarsToCents(args.amountDollars);
   const provider = getPaymentProvider();
-  const result = await provider.createCharge(amountCents, args.currency, args.payerUserId, {
-    bookingId: args.bookingId,
-    payerUserId: args.payerUserId,
-    payeeUserId: args.payeeUserId,
-    paymentType: args.type ?? "CHARGE",
-  });
+
+  const result = args.paymentIntentId
+    ? await verifyPaymentAmount(provider, args.paymentIntentId, amountCents)
+    : await provider.createCharge(amountCents, args.currency, args.payerUserId, {
+        bookingId: args.bookingId,
+        payerUserId: args.payerUserId,
+        payeeUserId: args.payeeUserId,
+        paymentType: args.type ?? "CHARGE",
+      });
 
   // PENDING is a legitimate outcome (Payment lifecycle: PENDING -> SUCCEEDED once a
   // webhook confirms — Domain Model Spec §2.14) — only a definite FAILED rolls back.

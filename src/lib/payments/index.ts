@@ -8,9 +8,11 @@ export type {
   NormalizedPaymentEvent,
   NormalizedPaymentMetadata,
   PayeeAccountStatus,
+  PaymentIntentResult,
   PaymentProvider,
   PayoutResult,
   RefundResult,
+  VerifiedChargeResult,
 } from "./provider";
 
 let cachedProvider: PaymentProvider | null = null;

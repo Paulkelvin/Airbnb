@@ -28,6 +28,19 @@ export interface ChargeResult {
   failureReason?: string;
 }
 
+export interface PaymentIntentResult {
+  paymentIntentId: string;
+  clientSecret: string;
+}
+
+/** Adds the actual charged amount so the caller can verify it against the
+ * server-computed quote before trusting a client-supplied paymentIntentId —
+ * never assume the intent that was confirmed client-side is for the amount
+ * we expect. */
+export interface VerifiedChargeResult extends ChargeResult {
+  amountCents: number;
+}
+
 export interface RefundResult {
   providerTransactionRef: string;
   status: "SUCCEEDED" | "PENDING" | "FAILED";
@@ -94,6 +107,30 @@ export interface PaymentProvider {
     payerRef: string,
     metadata: NormalizedPaymentMetadata,
   ): Promise<ChargeResult>;
+
+  /**
+   * Real-time, guest-present flow only (embedded Stripe Elements at
+   * instant-book creation): creates an unconfirmed PaymentIntent for the
+   * guest's browser to confirm with their own card via Stripe.js. Never
+   * hardcodes a payment method — that's the whole point over createCharge's
+   * existing test-card stand-in. No bookingId parameter — this is called
+   * before a booking row exists (the guest confirms payment before
+   * createShortTermBooking runs); the eventual Payment row's
+   * providerTransactionRef is what actually links it back to a booking.
+   */
+  createPaymentIntent(
+    amountCents: number,
+    currency: string,
+    payerUserId: string,
+  ): Promise<PaymentIntentResult>;
+
+  /**
+   * Server-side re-verification of a client-confirmed PaymentIntent —
+   * never trust the client's claim that payment succeeded. Returns the
+   * actual charged amount so the caller can reject a mismatch against the
+   * server-computed quote.
+   */
+  verifyPaymentIntent(paymentIntentId: string): Promise<VerifiedChargeResult>;
 
   refund(providerTransactionRef: string, amountCents?: number): Promise<RefundResult>;
 
