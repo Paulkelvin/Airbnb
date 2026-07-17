@@ -12,7 +12,6 @@ import SocialsList from "@/components/ui/SocialsList";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import SwitchDarkMode from "@/components/ui/SwitchDarkMode";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 
 export interface NavMobileProps {
   data?: NavItemType[];
