@@ -351,6 +351,68 @@ export async function deleteAmenity(id: string): Promise<ActionResult<{ id: stri
   return { success: true, data: { id } };
 }
 
+// ─── City Taxonomy ────────────────────────────────────────────────────────────
+
+function slugifyCity(name: string, region: string): string {
+  return `${slugify(name)}-${region.toLowerCase()}`;
+}
+
+export async function createCity(data: { name: string; region: string }): Promise<ActionResult<{ id: string }>> {
+  const admin = await requireAdmin();
+  const name = data.name.trim();
+  const region = data.region.trim().toUpperCase();
+  if (!name || !region) {
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "City name and region are required" } };
+  }
+
+  const slug = slugifyCity(name, region);
+  const existing = await prisma.city.findFirst({ where: { OR: [{ name, region }, { slug }] } });
+  if (existing) return { success: false, error: { code: "DUPLICATE", message: "This city already exists" } };
+
+  const city = await prisma.city.create({ data: { name, region, slug } });
+  await auditLog(admin.id, "taxonomy.createCity", "City", city.id, { name, region, slug });
+  revalidatePath("/admin/cities");
+  return { success: true, data: { id: city.id } };
+}
+
+export async function updateCity(
+  id: string,
+  data: { name?: string; region?: string; isActive?: boolean },
+): Promise<ActionResult<{ id: string }>> {
+  const admin = await requireAdmin();
+  const existing = await prisma.city.findUnique({ where: { id } });
+  if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "City not found" } };
+
+  const name = data.name !== undefined ? data.name.trim() : existing.name;
+  const region = data.region !== undefined ? data.region.trim().toUpperCase() : existing.region;
+
+  const updateData: Record<string, unknown> = {};
+  if (data.name !== undefined || data.region !== undefined) {
+    updateData.name = name;
+    updateData.region = region;
+    updateData.slug = slugifyCity(name, region);
+  }
+  if (data.isActive !== undefined) updateData.isActive = data.isActive;
+
+  await prisma.city.update({ where: { id }, data: updateData });
+  await auditLog(admin.id, "taxonomy.updateCity", "City", id, data as Record<string, unknown>);
+  revalidatePath("/admin/cities");
+  revalidatePath("/");
+  return { success: true, data: { id } };
+}
+
+export async function deleteCity(id: string): Promise<ActionResult<{ id: string }>> {
+  const admin = await requireAdmin();
+  const existing = await prisma.city.findUnique({ where: { id }, select: { id: true, name: true } });
+  if (!existing) return { success: false, error: { code: "NOT_FOUND", message: "City not found" } };
+
+  await prisma.city.delete({ where: { id } });
+  await auditLog(admin.id, "taxonomy.deleteCity", "City", id, { name: existing.name });
+  revalidatePath("/admin/cities");
+  revalidatePath("/");
+  return { success: true, data: { id } };
+}
+
 // ─── Platform Settings ───────────────────────────────────────────────────────
 
 export async function updatePlatformSetting(key: string, value: string): Promise<ActionResult<null>> {

@@ -218,6 +218,18 @@ export async function getAmenities() {
   return prisma.amenity.findMany({ orderBy: { name: "asc" } });
 }
 
+export async function getCities(opts: { search?: string } = {}) {
+  await requireAdmin();
+  const where: Record<string, unknown> = {};
+  if (opts.search) {
+    where.OR = [
+      { name: { contains: opts.search, mode: "insensitive" } },
+      { region: { contains: opts.search, mode: "insensitive" } },
+    ];
+  }
+  return prisma.city.findMany({ where, orderBy: [{ region: "asc" }, { name: "asc" }] });
+}
+
 export async function getPlatformSettings() {
   await requireAdmin();
   return prisma.platformSetting.findMany({ orderBy: { key: "asc" } });

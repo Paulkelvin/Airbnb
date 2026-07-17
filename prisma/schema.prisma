@@ -241,6 +241,24 @@ model PropertyType {
   listings Listing[]
 }
 
+// ─── City ────────────────────────────────────────────────────────────────────
+// Admin-curated location taxonomy. Hosts can still type a custom city on their
+// listing (Address.city stays a plain string), but only cities in this table
+// are eligible for the homepage's "Top cities to explore" curation — keeps a
+// handful of misspelled/free-typed entries from fragmenting that list.
+
+model City {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  region    String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, region])
+}
+
 // ─── Amenity ─────────────────────────────────────────────────────────────────
 
 model Amenity {

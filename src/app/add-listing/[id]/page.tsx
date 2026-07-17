@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getOwnedListingById, getActivePropertyTypes, getActiveAmenities } from "@/modules/listings/queries";
+import { getOwnedListingById, getActivePropertyTypes, getActiveAmenities, getActiveCities } from "@/modules/listings/queries";
 import AddListingWizard from "../AddListingWizard";
 import type { WizardListing } from "../AddListingWizard";
 
@@ -21,9 +21,10 @@ export default async function AddListingContinuePage({
     notFound();
   }
 
-  const [propertyTypes, amenities] = await Promise.all([
+  const [propertyTypes, amenities, cities] = await Promise.all([
     getActivePropertyTypes(),
     getActiveAmenities(),
+    getActiveCities(),
   ]);
 
   const initialListing: WizardListing = {
@@ -93,6 +94,7 @@ export default async function AddListingContinuePage({
       initialListing={initialListing}
       propertyTypes={propertyTypes}
       amenities={amenities}
+      cities={cities}
     />
   );
 }
