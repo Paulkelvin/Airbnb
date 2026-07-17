@@ -28,7 +28,7 @@ const NAV_ITEMS = [
   { href: "/admin/taxonomy", label: "Taxonomy", icon: TagIcon },
   { href: "/admin/audit-log", label: "Audit Log", icon: ClipboardDocumentListIcon },
   { href: "/admin/settings", label: "Settings", icon: Cog6ToothIcon },
-  { href: "/studio", label: "CMS", icon: PencilSquareIcon },
+  { href: "/admin/content", label: "Content", icon: PencilSquareIcon },
 ] as const;
 
 function NavLinks({ pathname, onNavigate }: { pathname: string | null; onNavigate?: () => void }) {
