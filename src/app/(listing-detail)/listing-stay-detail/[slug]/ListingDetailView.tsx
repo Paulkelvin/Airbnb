@@ -2,7 +2,13 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { Squares2X2Icon, CheckIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import {
+  Squares2X2Icon,
+  CheckIcon,
+  ChevronDownIcon,
+  UsersIcon,
+  HomeModernIcon,
+} from "@heroicons/react/24/outline";
 import StartRating from "@/components/StartRating";
 import Avatar from "@/components/ui/Avatar";
 import Badge from "@/components/ui/Badge";
@@ -182,27 +188,27 @@ export default function ListingDetailView({
               </span>
             </div>
             <div className="w-full border-b border-neutral-100 dark:border-neutral-700" />
-            <div className="flex items-center justify-between xl:justify-start space-x-8 xl:space-x-12 text-sm text-neutral-700 dark:text-neutral-300">
-              <div className="flex items-center space-x-3">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-neutral-700 dark:text-neutral-300">
+              <div className="flex items-center gap-1.5">
+                <UsersIcon className="w-4 h-4 text-neutral-400 flex-shrink-0" />
                 <span>
-                  {listing.maxOccupants} <span className="hidden sm:inline-block">guests</span>
+                  {listing.maxOccupants} guest{listing.maxOccupants !== 1 ? "s" : ""}
                 </span>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-1.5">
+                <HomeModernIcon className="w-4 h-4 text-neutral-400 flex-shrink-0" />
                 <span>
-                  {listing.bedrooms} <span className="hidden sm:inline-block">bedrooms</span>
+                  {listing.bedrooms} bedroom{listing.bedrooms !== 1 ? "s" : ""}
                 </span>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-1.5">
                 <span>
-                  {listing.bathrooms} <span className="hidden sm:inline-block">baths</span>
+                  {listing.bathrooms} bath{listing.bathrooms !== 1 ? "s" : ""}
                 </span>
               </div>
               {listing.sizeSqft && (
-                <div className="flex items-center space-x-3">
-                  <span>
-                    {listing.sizeSqft} <span className="hidden sm:inline-block">sqft</span>
-                  </span>
+                <div className="flex items-center gap-1.5">
+                  <span>{listing.sizeSqft} sqft</span>
                 </div>
               )}
             </div>

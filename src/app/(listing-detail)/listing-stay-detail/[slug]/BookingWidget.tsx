@@ -131,6 +131,8 @@ function ShortTermBookingForm({
             monthsShown={1}
             className="w-full text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 bg-transparent"
             placeholderText="Add dates"
+            portalId="datepicker-portal"
+            popperClassName="!z-[100]"
           />
         </div>
         <NcInputNumber
@@ -249,6 +251,8 @@ function LongTermBookingForm({
             minDate={earliestStart}
             className="w-full text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 bg-transparent"
             placeholderText="Select a date"
+            portalId="datepicker-portal"
+            popperClassName="!z-[100]"
           />
         </div>
         <NcInputNumber

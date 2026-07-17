@@ -17,6 +17,7 @@ import {
   Bars3Icon,
   XMarkIcon,
   ArrowRightOnRectangleIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 
 const NAV_ITEMS = [
@@ -27,7 +28,12 @@ const NAV_ITEMS = [
   { href: "/admin/taxonomy", label: "Taxonomy", icon: TagIcon },
   { href: "/admin/audit-log", label: "Audit Log", icon: ClipboardDocumentListIcon },
   { href: "/admin/settings", label: "Settings", icon: Cog6ToothIcon },
-  { href: "https://potomac.sanity.studio", label: "CMS", icon: PencilSquareIcon, external: true },
+  {
+    href: `https://www.sanity.io/manage/project/${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}`,
+    label: "CMS",
+    icon: PencilSquareIcon,
+    external: true,
+  },
 ] as const;
 
 function NavLinks({ pathname, onNavigate }: { pathname: string | null; onNavigate?: () => void }) {
@@ -97,6 +103,18 @@ export default function AdminNav({
     </div>
   );
 
+  const createListingButton = (
+    <div className="px-3 pb-3">
+      <Link
+        href={"/add-listing" as never}
+        className="flex items-center justify-center gap-2 rounded-lg bg-primary-6000 text-white text-sm font-medium px-3 py-2.5 hover:bg-primary-700 transition-colors"
+      >
+        <PlusIcon className="w-4 h-4" />
+        Create listing
+      </Link>
+    </div>
+  );
+
   const bottomActions = (
     <div className="border-t border-neutral-200 dark:border-neutral-700">
       <Link
@@ -158,6 +176,7 @@ export default function AdminNav({
                 <XMarkIcon className="w-6 h-6" />
               </button>
             </div>
+            {createListingButton}
             <NavLinks pathname={pathname} onNavigate={() => setMobileOpen(false)} />
             {bottomActions}
           </div>
@@ -167,6 +186,7 @@ export default function AdminNav({
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:sticky lg:top-0 lg:h-screen border-r border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
         {brand}
+        {createListingButton}
         <NavLinks pathname={pathname} />
         {bottomActions}
       </div>

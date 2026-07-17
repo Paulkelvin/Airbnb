@@ -22,7 +22,8 @@ const NavMobile: React.FC<NavMobileProps> = ({
   data = NAVIGATION_DEMO,
   onClickClose,
 }) => {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
+  const isAdmin = session?.user.roles?.includes("ADMIN");
   const _renderMenuChild = (item: NavItemType) => {
     return (
       <ul className="nav-mobile-sub-menu pl-6 pb-1 text-base">
@@ -147,21 +148,34 @@ const NavMobile: React.FC<NavMobileProps> = ({
       <ul className="flex flex-col py-6 px-2 space-y-1">
         {data.map(_renderItem)}
       </ul>
-      <div className="flex items-center justify-between py-6 px-5 gap-3">
+      <div className="py-6 px-5 space-y-3">
         {status === "authenticated" ? (
           <>
-            <Link href="/account" className="flex-1" onClick={onClickClose}>
-              <ButtonPrimary className="w-full">My account</ButtonPrimary>
-            </Link>
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="px-4 py-2.5 rounded-full border border-neutral-300 dark:border-neutral-600 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-            >
-              Log out
-            </button>
+            {isAdmin && (
+              <Link href={"/admin" as never} className="block" onClick={onClickClose}>
+                <ButtonPrimary className="w-full">Admin dashboard</ButtonPrimary>
+              </Link>
+            )}
+            <div className="flex items-center gap-3">
+              <Link href="/account" className="flex-1" onClick={onClickClose}>
+                {isAdmin ? (
+                  <button className="w-full px-4 py-2.5 rounded-full border border-neutral-300 dark:border-neutral-600 text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                    My account
+                  </button>
+                ) : (
+                  <ButtonPrimary className="w-full">My account</ButtonPrimary>
+                )}
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="px-4 py-2.5 rounded-full border border-neutral-300 dark:border-neutral-600 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
+                Log out
+              </button>
+            </div>
           </>
         ) : (
-          <>
+          <div className="flex items-center gap-3">
             <Link href="/login" className="flex-1" onClick={onClickClose}>
               <button className="w-full px-4 py-2.5 rounded-full border border-neutral-300 dark:border-neutral-600 text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
                 Log in
@@ -170,7 +184,7 @@ const NavMobile: React.FC<NavMobileProps> = ({
             <Link href="/signup" className="flex-1" onClick={onClickClose}>
               <ButtonPrimary className="w-full">Sign up</ButtonPrimary>
             </Link>
-          </>
+          </div>
         )}
       </div>
     </div>
