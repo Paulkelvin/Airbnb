@@ -7,7 +7,7 @@ import fs from "fs";
 // minimal manual parser rather than process.loadEnvFile (Node 20.6+) so this
 // doesn't depend on @types/node picking up that API under the project's
 // tsconfig.
-function loadEnvFile(filePath: string) {
+function loadEnvFile(filePath: string, force: boolean) {
   for (const line of fs.readFileSync(filePath, "utf-8").split("\n")) {
     const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
     if (!match) continue;
@@ -15,20 +15,26 @@ function loadEnvFile(filePath: string) {
     let value = (match[2] ?? "").trim();
     if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
     if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
-    if (!(key in process.env)) process.env[key] = value;
+    if (force || !(key in process.env)) process.env[key] = value;
   }
 }
 
 // Test-database safety (project-status.md §10, finding C5): this suite runs
 // real DB-writing integration tests. `.env.test` (gitignored, not committed)
-// is the intended place to point at a dedicated test database.
+// is the intended place to point at a dedicated test database. `.env.test`
+// is loaded with `force: true` — it exists specifically to *redirect* the
+// test run to a safe database, so it must win over an already-set ambient
+// DATABASE_URL (exactly the case in Vercel, CI, and this project's own
+// sandbox sessions, per the comment below) rather than being silently
+// no-op'd by the usual "don't clobber a real env var" dotenv convention,
+// which is what `.env`'s fallback load below intentionally keeps.
 const testEnvPath = path.resolve(__dirname, ".env.test");
 const envPath = path.resolve(__dirname, ".env");
 const hasDedicatedTestEnv = fs.existsSync(testEnvPath);
 if (hasDedicatedTestEnv) {
-  loadEnvFile(testEnvPath);
+  loadEnvFile(testEnvPath, true);
 } else if (fs.existsSync(envPath)) {
-  loadEnvFile(envPath);
+  loadEnvFile(envPath, false);
 }
 
 // The check above only covers *files* — it doesn't catch DATABASE_URL

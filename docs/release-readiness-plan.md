@@ -75,7 +75,7 @@ The Phase 9 Follow-up audit (documented in `project-status.md`) already verified
 - [ ] **ENHANCEMENT** — CSRF is implicitly handled by Next.js Server Actions' same-origin enforcement, but this has not been explicitly verified against a cross-origin POST attempt in this project. Worth one explicit test.
 - [ ] **ENHANCEMENT** — Formal external penetration test / bug bounty, once launched and there's real traffic worth attacking.
 - [x] **`project-status.md` §10, C4 — resolved 2026-07-18** — the orphaned `/studio` Sanity Studio route, `sanity.config.ts`, and the Studio-only schema files were removed; `sanity`/`@sanity/vision` dropped from `package.json`.
-- [ ] **ENHANCEMENT, new finding (`project-status.md` §10, C5)** — no dedicated test/staging database exists; this project's own integration test suite would write directly to production data if run from a machine with full network access to the configured Neon instance. Provision a separate branch/database for test runs.
+- [ ] **ENHANCEMENT, `project-status.md` §10, C5 — partially mitigated 2026-07-18, still open.** A code-level guard in `vitest.config.ts` now refuses to run `npm test` against an unconfirmed `DATABASE_URL` without a dedicated `.env.test` or an explicit override — and a real bug in that guard's first version (it silently failed to redirect the connection when `DATABASE_URL` was already ambient-set, exactly this project's own sandbox setup) was found and fixed the same day. What's still missing: no separate Neon branch or CI-provisioned test database actually exists — the guard prevents an *accidental* run against production, it doesn't provide a safe database to run against instead.
 
 ---
 
