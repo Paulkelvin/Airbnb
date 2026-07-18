@@ -20,6 +20,10 @@ A single-vertical property rental marketplace for short-term stays and long-term
 4. Set up the database: `npx prisma migrate dev`
 5. Run the development server: `npm run dev`
 
+## Testing
+
+`npm test` runs real DB-writing integration tests, so it refuses to run unless it can confirm it's not pointed at production — see `docs/setup/environment-variables.md`'s **Testing — Database Safety** section for how to set up `.env.test`.
+
 ## Project Structure
 
 See `docs/project-status.md` for current implementation progress and `docs/architecture/` for architectural decisions.

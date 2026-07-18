@@ -1,6 +1,25 @@
 import { PrismaClient, AmenityCategory } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+/**
+ * Reference data (property types, amenities) below is safe to re-run against
+ * any environment, including production. The demo admin/host accounts and 15
+ * demo listings further down are not: their credentials are hardcoded and
+ * committed to source control (see `docs/project-status.md` §10 finding C1).
+ * That's a known, intentionally-not-yet-changed tradeoff — the client holds
+ * the current login privately and wants this seed script's behavior
+ * unchanged for now. Do not print, document, or otherwise re-expose those
+ * credentials anywhere outside this file.
+ *
+ * Recommended long-term fix, for whenever this gets prioritized: read the
+ * demo admin/host email+password from environment variables (e.g.
+ * `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`, `SEED_HOST_EMAIL`/
+ * `SEED_HOST_PASSWORD`) with no hardcoded fallback in production, and/or gate
+ * demo-account/demo-listing creation behind the same
+ * non-production+explicit-opt-in guard `prisma/seed-dev-data.ts` already
+ * uses, so a script that's safe to run against prod for reference data can't
+ * also seed a real, source-controlled admin login into it.
+ */
 const prisma = new PrismaClient();
 
 const propertyTypes = [

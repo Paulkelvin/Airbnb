@@ -58,10 +58,10 @@ Setup notes: Postgres 15+; confirm `postgis` and `pgcrypto` show as available un
 
 | Variable | Service | Where to obtain | Required | Purpose |
 |---|---|---|---|---|
-| `NEXT_PUBLIC_SANITY_PROJECT_ID` | Sanity | Dashboard → project settings, or `sanity.config.ts`/`sanity.json` in a linked Studio | Both | Client config for both the public read client (`src/lib/sanity/client.ts`) and the admin write client (`src/modules/cms/sanity-admin-client.ts`). |
+| `NEXT_PUBLIC_SANITY_PROJECT_ID` | Sanity | Sanity's own dashboard → project settings | Both | Client config for both the public read client (`src/lib/sanity/client.ts`) and the admin write client (`src/modules/cms/sanity-admin-client.ts`). |
 | `NEXT_PUBLIC_SANITY_DATASET` | Sanity | Dashboard → **Datasets** | Both | Defaults to `"production"` if unset. |
 | `SANITY_API_TOKEN` | Sanity | Dashboard → **API** → **Tokens** → create a token with **Editor** (write) permissions | Both | Server-side only. Powers every admin CMS write (`/admin/content/*`) — without it, the admin editor can read but not save. |
-| `SANITY_REVALIDATE_SECRET` | Self-generated | Generate with `openssl rand -base64 32` | Both | Verifies `POST /api/sanity/revalidate` webhook requests from Sanity's own webhook config, so a content edit made directly in Sanity Studio (if anyone still uses it — see `docs/project-status.md` §10 finding C4) also revalidates the public site's cache. |
+| `SANITY_REVALIDATE_SECRET` | Self-generated | Generate with `openssl rand -base64 32` | Both | Verifies `POST /api/sanity/revalidate` webhook requests from Sanity's own webhook config, so a content edit made directly in the Sanity dashboard also revalidates the public site's cache. (The embedded `/studio` route was removed 2026-07-18 — `docs/project-status.md` §10 finding C4 — but this webhook still matters for edits made via Sanity's own hosted dashboard/API, outside this app.) |
 
 ## Maps
 
@@ -99,7 +99,20 @@ Two separate seed scripts exist — do not confuse them:
 
 | Script | Command | Safe in production? | Contents |
 |---|---|---|---|
-| `prisma/seed.ts` | `npm run db:seed` | Yes — idempotent reference data | Property types, amenities |
+| `prisma/seed.ts` | `npm run db:seed` | Idempotent, but **also creates a demo admin account, a demo host account, and 15 demo listings with hardcoded credentials** — see `docs/project-status.md` §10 finding C1 before treating this as a routine reference-data script | Property types, amenities, demo admin/host users, 15 demo listings |
 | `prisma/seed-dev-data.ts` | `ALLOW_DEV_SEED=1 npm run db:seed:dev` | **No — refuses to run** | 6 fake listings + a test host, for exercising search/filter/sort locally |
 
 `seed-dev-data.ts` hard-refuses to run unless `NODE_ENV` and `VERCEL_ENV` both look non-production **and** `ALLOW_DEV_SEED=1` is explicitly set — it will not run by accident from a CI job or a misconfigured deploy step. Never wire it into a build/deploy pipeline; it's a manual, local-only command.
+
+---
+
+## Testing — Database Safety
+
+`vitest.config.ts` runs real DB-writing integration tests (`npm test`). Per `docs/project-status.md` §10 finding C5, this project has no dedicated test database provisioned yet, and `DATABASE_URL` — whether from `.env` or set directly in the ambient environment (this is how it's provided in sandboxed sessions) — has pointed at the real production Neon instance. To prevent tests from silently writing to it:
+
+1. **Preferred:** create `.env.test` (gitignored, never committed) with `DATABASE_URL`/`DATABASE_URL_UNPOOLED` pointing at a dedicated test database — a separate Neon branch (with `postgis`/`pgcrypto` enabled and migrations applied) or a local/disposable Postgres 16 instance. When `.env.test` exists, it's the only env file loaded; `npm test` just works.
+2. **Without `.env.test`,** `vitest.config.ts` refuses to start (`Refusing to run tests: no .env.test found...`) rather than silently using whatever `DATABASE_URL` happens to be set. Set `ALLOW_TESTS_AGAINST_DOTENV=1` to override, but only after confirming by hand that the current `DATABASE_URL` is not production — the error message prints the host it resolved to specifically so this can be checked before overriding.
+
+This is a code-level guard, not a substitute for actually provisioning a separate test database (still an open item — see C5). It exists to turn "accidentally wrote test data to prod" into a loud failure instead of a silent one.
+
+`seed.ts` has no equivalent guard — it's designed to be idempotent and safe to re-run against production for the reference-data (property types/amenities) portion, but the demo admin/host/listings portion it also runs was never meant to ship real credentials into production. See `prisma/seed.ts`'s header comment for the current status and recommended long-term fix.
