@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { approveListing, rejectListing, adminUnpublishListing, adminDeleteListing } from "@/modules/admin/actions";
 
@@ -33,6 +34,12 @@ export function ListingActions({
 
   return (
     <div className="flex gap-1 flex-wrap">
+      <Link
+        href={`/add-listing/${listingId}` as never}
+        className="px-2 py-1 text-xs rounded bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
+      >
+        Edit
+      </Link>
       {status === "PENDING_REVIEW" && (
         <>
           <button

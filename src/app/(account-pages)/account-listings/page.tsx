@@ -13,6 +13,11 @@ export default async function AccountListingsPage() {
   if (!user) {
     redirect("/login");
   }
+  // Marketplace mode is off: only ADMIN may manage listings. Re-enabling
+  // public hosting is just removing this check.
+  if (!user.roles.includes("ADMIN")) {
+    redirect("/account");
+  }
 
   const listings = await getMyListings(user.id);
 

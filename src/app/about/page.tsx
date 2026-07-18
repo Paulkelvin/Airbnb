@@ -4,6 +4,7 @@ import Image from "next/image";
 import { sanityClient, urlFor } from "@/lib/sanity/client";
 import { aboutPageQuery } from "@/lib/sanity/queries";
 import PortableTextBody from "@/components/sanity/PortableTextBody";
+import { getCurrentUser } from "@/lib/auth";
 
 export const revalidate = 3600;
 
@@ -51,7 +52,8 @@ const FALLBACK_VALUES = [
 ];
 
 export default async function PageAbout() {
-  const data = await getAboutPage();
+  const [data, user] = await Promise.all([getAboutPage(), getCurrentUser()]);
+  const isAdmin = user?.roles.includes("ADMIN") ?? false;
 
   const heroTitle = data?.heroTitle ?? "Our Story";
   const heroSubtitle = data?.heroSubtitle ?? "Connecting travelers with unforgettable places to stay.";
@@ -191,12 +193,14 @@ export default async function PageAbout() {
             >
               Browse listings
             </a>
-            <a
-              href="/add-listing"
-              className="px-8 py-3 rounded-full border border-neutral-400 text-white font-medium hover:bg-neutral-700 transition-colors"
-            >
-              Become a host
-            </a>
+            {isAdmin && (
+              <a
+                href="/add-listing"
+                className="px-8 py-3 rounded-full border border-neutral-400 text-white font-medium hover:bg-neutral-700 transition-colors"
+              >
+                Become a host
+              </a>
+            )}
           </div>
         </div>
       </div>

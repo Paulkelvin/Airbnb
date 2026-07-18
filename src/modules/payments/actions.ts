@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin, AuthError } from "@/lib/auth";
 import { getPaymentProvider, type PayeeAccountStatus } from "@/lib/payments";
 import type { ActionResult } from "@/lib/validations/auth";
 import { getSiteUrl as getAppUrl } from "@/lib/site-url";
@@ -11,9 +11,21 @@ import { getSiteUrl as getAppUrl } from "@/lib/site-url";
  * Stripe-hosted onboarding link. Safe to call repeatedly — Account Links
  * are single-use/short-lived by design, so "continue onboarding" is just
  * calling this again, not a separate code path.
+ *
+ * Marketplace mode is currently off, so payout onboarding is ADMIN-only
+ * (`requireAdmin()`, not `requireAuth()`) — re-enabling public hosting is
+ * just relaxing this gate back to `requireAuth()`.
  */
 export async function startHostOnboarding(): Promise<ActionResult<{ url: string }>> {
-  const user = await requireAuth();
+  let user;
+  try {
+    user = await requireAdmin();
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return { success: false, error: { code: err.code, message: err.message } };
+    }
+    throw err;
+  }
   const provider = getPaymentProvider();
 
   // Session doesn't carry payoutAccountRef — always read fresh from the DB rather
@@ -53,7 +65,15 @@ export async function startHostOnboarding(): Promise<ActionResult<{ url: string 
 export async function getOnboardingStatus(): Promise<
   ActionResult<{ hasAccount: boolean; status: PayeeAccountStatus | null }>
 > {
-  const user = await requireAuth();
+  let user;
+  try {
+    user = await requireAdmin();
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return { success: false, error: { code: err.code, message: err.message } };
+    }
+    throw err;
+  }
   const dbUser = await prisma.user.findUniqueOrThrow({
     where: { id: user.id },
     select: { payoutAccountRef: true },

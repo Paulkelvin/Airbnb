@@ -4,6 +4,7 @@ import { Route } from "@/routers/types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import { useSession } from "next-auth/react";
 
 const LABELS: Record<string, string> = {
   "/account": "Profile",
@@ -18,8 +19,13 @@ const LABELS: Record<string, string> = {
 
 export const Nav = () => {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const isAdmin = session?.user.roles?.includes("ADMIN");
 
-  const listNav: Route[] = [
+  // Marketplace mode is off: "Listings" and "Payments" (host payout
+  // onboarding) are ADMIN-only capabilities, so hide those tabs for
+  // everyone else. The underlying pages redirect non-admins regardless.
+  const allNav: Route[] = [
     "/account",
     "/account-bookings",
     "/account-messages",
@@ -29,6 +35,8 @@ export const Nav = () => {
     "/account-password",
     "/account-billing",
   ];
+  const adminOnlyNav = new Set(["/account-listings", "/account-billing"]);
+  const listNav = isAdmin ? allNav : allNav.filter((item) => !adminOnlyNav.has(item));
 
   return (
     <div className="container">

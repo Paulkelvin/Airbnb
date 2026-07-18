@@ -31,6 +31,7 @@ export default async function ListingStayDetailPage({
 
   const viewModel = toDetailViewModel(listing);
   const isOwner = user?.id === listing.hostId;
+  const isAdmin = user?.roles.includes("ADMIN") ?? false;
   const [blockedDates, reviewRows, favorited, serviceFeePercentWhole] = await Promise.all([
     listing.rentalType === "SHORT_TERM" ? getBlockedDatesForListing(listing.id) : Promise.resolve([]),
     getReviewsForListing(listing.id),
@@ -53,6 +54,7 @@ export default async function ListingStayDetailPage({
     <ListingDetailView
       listing={viewModel}
       isOwner={isOwner}
+      isAdmin={isAdmin}
       isAuthenticated={Boolean(user)}
       blockedDates={blockedDates}
       reviews={reviews}

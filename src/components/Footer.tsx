@@ -7,6 +7,7 @@ import { Route } from "@/routers/types";
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export interface WidgetFooterMenu {
   id: string;
@@ -27,9 +28,8 @@ const widgetMenus: WidgetFooterMenu[] = [
   },
   {
     id: "2",
-    title: "Hosts",
+    title: "Support",
     menus: [
-      { href: "/add-listing", label: "List your space" },
       { href: "/faq", label: "Help centre" },
       { href: "/contact", label: "Contact us" },
     ],
@@ -46,10 +46,23 @@ const widgetMenus: WidgetFooterMenu[] = [
 
 const Footer: React.FC = () => {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const isAdmin = session?.user.roles?.includes("ADMIN");
   // MobileBookingBar (listing-stay-detail pages) is a taller fixed bottom
   // bar than the site's usual FooterNav — pad the footer so its own fixed
   // bar doesn't sit on top of the Legal/Explore links on small screens.
   const isListingDetail = pathname.startsWith("/listing-stay-detail");
+
+  // Marketplace mode is off: "List your space" is an ADMIN-only capability,
+  // so it's added back into the Support column only for admins rather than
+  // shown to every visitor.
+  const menus = isAdmin
+    ? widgetMenus.map((menu) =>
+        menu.id === "2"
+          ? { ...menu, menus: [{ href: "/add-listing", label: "List your space" }, ...menu.menus] }
+          : menu,
+      )
+    : widgetMenus;
 
   const renderWidgetMenuItem = (menu: WidgetFooterMenu, index: number) => {
     return (
@@ -90,7 +103,7 @@ const Footer: React.FC = () => {
               <SocialsList className="flex items-center space-x-3 lg:space-x-0 lg:flex-col lg:space-y-2.5 lg:items-start" />
             </div>
           </div>
-          {widgetMenus.map(renderWidgetMenuItem)}
+          {menus.map(renderWidgetMenuItem)}
         </div>
       </div>
     </>

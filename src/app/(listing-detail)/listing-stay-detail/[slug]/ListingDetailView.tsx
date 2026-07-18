@@ -38,6 +38,7 @@ const AMENITY_CATEGORY_LABELS: Record<string, string> = {
 export default function ListingDetailView({
   listing,
   isOwner,
+  isAdmin,
   isAuthenticated,
   blockedDates,
   reviews,
@@ -46,6 +47,14 @@ export default function ListingDetailView({
 }: {
   listing: ListingDetailViewModel;
   isOwner: boolean;
+  /**
+   * Marketplace mode is off: only ADMIN may manage listings, so the "Manage
+   * listing" / "Continue editing" CTAs are gated on this rather than
+   * `isOwner`. `isOwner` itself stays as the plain hostId match — it still
+   * legitimately drives unrelated things like hiding the inquiry form and
+   * showing host-response controls on reviews.
+   */
+  isAdmin: boolean;
   isAuthenticated: boolean;
   blockedDates: string[];
   reviews: ListingReview[];
@@ -77,7 +86,7 @@ export default function ListingDetailView({
 
   return (
     <div className="nc-ListingStayDetailPage pb-36 lg:pb-0">
-      {listing.status !== "PUBLISHED" && isOwner && (
+      {listing.status !== "PUBLISHED" && isAdmin && (
         <div className="mb-6 rounded-xl bg-yellow-50 text-yellow-800 px-4 py-3 text-sm">
           This listing is <strong>{listing.status.replace("_", " ").toLowerCase()}</strong> and
           only visible to you.{" "}
@@ -423,7 +432,7 @@ export default function ListingDetailView({
                 <StartRating point={listing.avgRating} reviewCount={listing.reviewCount} />
               </div>
 
-              {isOwner ? (
+              {isAdmin ? (
                 <ButtonPrimary href={`/add-listing/${listing.id}` as Route}>
                   Manage listing
                 </ButtonPrimary>
@@ -453,7 +462,7 @@ export default function ListingDetailView({
         currency={listing.currency}
         maxOccupants={listing.maxOccupants}
         isAuthenticated={isAuthenticated}
-        isOwner={isOwner}
+        canManage={isAdmin}
         isPublished={listing.status === "PUBLISHED"}
         pricing={listing.pricing}
         blockedDates={blockedDates}

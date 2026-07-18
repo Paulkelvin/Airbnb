@@ -23,7 +23,7 @@ export default function MobileBookingBar({
   currency,
   maxOccupants,
   isAuthenticated,
-  isOwner,
+  canManage,
   isPublished,
   pricing,
   blockedDates,
@@ -34,7 +34,7 @@ export default function MobileBookingBar({
   currency: string;
   maxOccupants: number;
   isAuthenticated: boolean;
-  isOwner: boolean;
+  canManage: boolean;
   isPublished: boolean;
   pricing: ListingDetailViewModel["pricing"];
   blockedDates: string[];
@@ -60,7 +60,7 @@ export default function MobileBookingBar({
           </span>
         </span>
 
-        {isOwner ? (
+        {canManage ? (
           <ButtonPrimary sizeClass="px-6 py-3 !rounded-2xl" href={`/add-listing/${listingId}` as Route}>
             Manage listing
           </ButtonPrimary>

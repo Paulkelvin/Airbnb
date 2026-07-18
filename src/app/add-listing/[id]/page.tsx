@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getOwnedListingById, getActivePropertyTypes, getActiveAmenities } from "@/modules/listings/queries";
+import { getListingByIdForAdmin, getActivePropertyTypes, getActiveAmenities } from "@/modules/listings/queries";
 import AddListingWizard from "../AddListingWizard";
 import type { WizardListing } from "../AddListingWizard";
 
@@ -15,8 +15,14 @@ export default async function AddListingContinuePage({
   if (!user) {
     redirect("/login");
   }
+  // Marketplace mode is off: only ADMIN may edit listings, and they may edit
+  // any listing, not just ones they personally own — hence the admin-scoped
+  // query below instead of `getOwnedListingById`.
+  if (!user.roles.includes("ADMIN")) {
+    redirect("/account");
+  }
 
-  const listing = await getOwnedListingById(params.id, user.id);
+  const listing = await getListingByIdForAdmin(params.id);
   if (!listing) {
     notFound();
   }

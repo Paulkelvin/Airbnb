@@ -24,6 +24,10 @@ const NavMobile: React.FC<NavMobileProps> = ({
 }) => {
   const { data: session, status } = useSession();
   const isAdmin = session?.user.roles?.includes("ADMIN");
+  // Marketplace mode is off: hide the host-facing "List Your Space" item
+  // from everyone but ADMIN. Server-side gates on the underlying routes
+  // remain the actual source of truth — this is just UI polish.
+  const items = isAdmin ? data : data.filter((item) => item.href !== "/add-listing");
   const _renderMenuChild = (item: NavItemType) => {
     return (
       <ul className="nav-mobile-sub-menu pl-6 pb-1 text-base">
@@ -146,7 +150,7 @@ const NavMobile: React.FC<NavMobileProps> = ({
         </span>
       </div>
       <ul className="flex flex-col py-6 px-2 space-y-1">
-        {data.map(_renderItem)}
+        {items.map(_renderItem)}
       </ul>
       <div className="py-6 px-5 space-y-3">
         {status === "authenticated" ? (

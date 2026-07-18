@@ -66,6 +66,19 @@ export async function getOwnedListingById(
   return listing;
 }
 
+/**
+ * Unrestricted fetch by id for the edit form, used instead of
+ * `getOwnedListingById` when the caller is already known to be an ADMIN —
+ * marketplace mode is off, so admins manage every listing, not just ones
+ * they personally own.
+ */
+export async function getListingByIdForAdmin(id: string): Promise<ListingWithRelations | null> {
+  return prisma.listing.findUnique({
+    where: { id },
+    include: listingInclude,
+  });
+}
+
 export async function getMyListings(
   hostId: string,
 ): Promise<ListingWithRelations[]> {

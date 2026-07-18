@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { requireAuth, requireOwnership, AuthError } from "@/lib/auth";
+import { requireAdmin, AuthError } from "@/lib/auth";
 import { deleteCloudinaryImage } from "@/lib/cloudinary";
 import {
   createListingSchema,
@@ -36,19 +36,40 @@ async function generateUniqueSlug(title: string): Promise<string> {
   return slug;
 }
 
+// Self-serve hosting (a CUSTOMER becoming a HOST by creating their first
+// listing) is disabled while marketplace mode is off — see the module-level
+// note above `createDraftListing`. Kept, unused, so re-enabling marketplace
+// mode is just: call this again from createDraftListing and relax that
+// action's requireAdmin() gate back to requireAuth().
 async function ensureHostRole(userId: string, currentRoles: string[]) {
   if (!currentRoles.includes("HOST")) {
-    // Self-serve hosting: a CUSTOMER becomes a HOST by creating their first
-    // listing — there's no separate host-application flow in this phase.
     await prisma.user.update({ where: { id: userId }, data: { roles: { push: "HOST" } } });
   }
 }
 
-/** Step 1: creates a minimal DRAFT row. The CHECK constraints exempt DRAFT status, so every other field can be filled in incrementally via saveListingDraft. */
+/**
+ * Step 1: creates a minimal DRAFT row. The CHECK constraints exempt DRAFT
+ * status, so every other field can be filled in incrementally via
+ * saveListingDraft.
+ *
+ * Marketplace mode is currently off: Potomac is not a public host
+ * marketplace, so only ADMIN may create listings (`requireAdmin()`, not
+ * `requireAuth()`). The multi-listing architecture itself is untouched —
+ * re-enabling public hosting is just relaxing this gate back to
+ * `requireAuth()` and restoring the `ensureHostRole` call below.
+ */
 export async function createDraftListing(
   input: CreateDraftListingInput,
 ): Promise<ActionResult<{ id: string; slug: string }>> {
-  const user = await requireAuth();
+  let user;
+  try {
+    user = await requireAdmin();
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return { success: false, error: { code: err.code, message: err.message } };
+    }
+    throw err;
+  }
 
   const parsed = createDraftListingSchema.safeParse(input);
   if (!parsed.success) {
@@ -64,8 +85,6 @@ export async function createDraftListing(
 
   const data = parsed.data;
   const slug = await generateUniqueSlug(data.title);
-
-  await ensureHostRole(user.id, user.roles);
 
   const listing = await prisma.listing.create({
     data: {
@@ -93,7 +112,14 @@ export async function createDraftListing(
 export async function saveListingDraft(
   input: DraftUpdateInput,
 ): Promise<ActionResult<{ id: string }>> {
-  const user = await requireAuth();
+  try {
+    await requireAdmin();
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return { success: false, error: { code: err.code, message: err.message } };
+    }
+    throw err;
+  }
 
   const parsed = draftUpdateSchema.safeParse(input);
   if (!parsed.success) {
@@ -116,15 +142,6 @@ export async function saveListingDraft(
 
   if (!existing) {
     return { success: false, error: { code: "NOT_FOUND", message: "Listing not found" } };
-  }
-
-  try {
-    await requireOwnership(existing.hostId);
-  } catch (err) {
-    if (err instanceof AuthError) {
-      return { success: false, error: { code: err.code, message: err.message } };
-    }
-    throw err;
   }
 
   const removedImages =
@@ -364,6 +381,15 @@ async function transitionStatus(
   id: string,
   nextStatus: "PUBLISHED" | "PENDING_REVIEW" | "PAUSED" | "ARCHIVED",
 ): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireAdmin();
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return { success: false, error: { code: err.code, message: err.message } };
+    }
+    throw err;
+  }
+
   const listing = await prisma.listing.findUnique({
     where: { id },
     include: { images: true, address: true, amenities: true },
@@ -371,15 +397,6 @@ async function transitionStatus(
 
   if (!listing) {
     return { success: false, error: { code: "NOT_FOUND", message: "Listing not found" } };
-  }
-
-  try {
-    await requireOwnership(listing.hostId);
-  } catch (err) {
-    if (err instanceof AuthError) {
-      return { success: false, error: { code: err.code, message: err.message } };
-    }
-    throw err;
   }
 
   if (nextStatus === "PUBLISHED" || nextStatus === "PENDING_REVIEW") {
@@ -423,7 +440,14 @@ export async function archiveListing(id: string) {
 }
 
 export async function deleteUploadedImage(publicId: string): Promise<ActionResult<null>> {
-  await requireAuth();
+  try {
+    await requireAdmin();
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return { success: false, error: { code: err.code, message: err.message } };
+    }
+    throw err;
+  }
   await deleteCloudinaryImage(publicId);
   return { success: true, data: null };
 }

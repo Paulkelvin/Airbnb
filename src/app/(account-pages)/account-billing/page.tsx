@@ -12,6 +12,11 @@ const AccountBilling = async () => {
   if (!user) {
     redirect("/login");
   }
+  // Marketplace mode is off: payout onboarding is ADMIN-only. Re-enabling
+  // public hosting is just removing this check.
+  if (!user.roles.includes("ADMIN")) {
+    redirect("/account");
+  }
 
   const result = await getOnboardingStatus();
   const initialStatus = result.success ? result.data : { hasAccount: false, status: null };
