@@ -20,7 +20,10 @@ import MobileBookingBar from "./MobileBookingBar";
 import InquiryForm from "./InquiryForm";
 import FavoriteButton from "./FavoriteButton";
 import ReviewsSection, { type ListingReview } from "./ReviewsSection";
+import AttractionCard from "@/components/AttractionCard";
+import Link from "next/link";
 import type { ListingDetailViewModel } from "@/modules/listings/types";
+import type { Attraction } from "@/data/attractions";
 import type { Route } from "@/routers/types";
 import { cloudinaryLoader } from "@/lib/cloudinary-image-loader";
 
@@ -44,6 +47,7 @@ export default function ListingDetailView({
   reviews,
   isFavorited,
   serviceFeePercent,
+  attractions,
 }: {
   listing: ListingDetailViewModel;
   isOwner: boolean;
@@ -60,6 +64,7 @@ export default function ListingDetailView({
   reviews: ListingReview[];
   isFavorited: boolean;
   serviceFeePercent: number;
+  attractions: Attraction[];
 }) {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
@@ -414,6 +419,29 @@ export default function ListingDetailView({
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* SECTION 8: EXPLORE THE AREA */}
+          {attractions.length > 0 && (
+            <div className="listingSection__wrap">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-semibold">Explore the Area</h2>
+                <Link
+                  href={"/explore-the-area" as Route}
+                  className="text-sm font-medium text-primary-6000 hover:text-primary-700"
+                >
+                  See more
+                </Link>
+              </div>
+              <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
+                Restaurants, parks, and waterfronts within easy reach of the cottage
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                {attractions.slice(0, 3).map((attraction) => (
+                  <AttractionCard key={attraction.id} data={attraction} />
+                ))}
+              </div>
             </div>
           )}
         </div>

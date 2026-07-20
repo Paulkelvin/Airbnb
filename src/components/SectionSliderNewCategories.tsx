@@ -15,6 +15,7 @@ export interface SectionSliderNewCategoriesProps {
   categories?: TaxonomyType[];
   itemPerRow?: 4 | 5;
   sliderStyle?: "style1" | "style2";
+  countLabel?: string;
 }
 
 const DEMO_CATS: TaxonomyType[] = [
@@ -100,6 +101,7 @@ const SectionSliderNewCategories: FC<SectionSliderNewCategoriesProps> = ({
   categories = DEMO_CATS,
   itemPerRow = 5,
   sliderStyle = "style1",
+  countLabel,
 }) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
@@ -150,7 +152,7 @@ const SectionSliderNewCategories: FC<SectionSliderNewCategoriesProps> = ({
               key={indx}
               className={`flex-none snap-start ${widthClass} ${itemClassName}`}
             >
-              <CardCategoryBox1 taxonomy={item} />
+              <CardCategoryBox1 taxonomy={item} countLabel={countLabel} />
             </div>
           ))}
         </div>

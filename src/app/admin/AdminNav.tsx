@@ -10,7 +10,6 @@ import {
   HomeModernIcon,
   CalendarDaysIcon,
   TagIcon,
-  MapPinIcon,
   ClipboardDocumentListIcon,
   Cog6ToothIcon,
   PencilSquareIcon,
@@ -21,13 +20,16 @@ import {
   PlusIcon,
 } from "@heroicons/react/24/outline";
 
+// /admin/cities (city-taxonomy curation for a multi-city marketplace) is
+// intentionally left out of the sidebar now that there's a single property
+// in a single location — the page and its data are still live for a future
+// marketplace re-enablement, just not linked from admin nav.
 const NAV_ITEMS = [
   { href: "/admin", label: "Overview", icon: Squares2X2Icon },
   { href: "/admin/users", label: "Users", icon: UsersIcon },
   { href: "/admin/listings", label: "Listings", icon: HomeModernIcon },
   { href: "/admin/bookings", label: "Bookings", icon: CalendarDaysIcon },
   { href: "/admin/taxonomy", label: "Taxonomy", icon: TagIcon },
-  { href: "/admin/cities", label: "Cities", icon: MapPinIcon },
   { href: "/admin/audit-log", label: "Audit Log", icon: ClipboardDocumentListIcon },
   { href: "/admin/settings", label: "Settings", icon: Cog6ToothIcon },
   { href: "/admin/content", label: "Content", icon: PencilSquareIcon },

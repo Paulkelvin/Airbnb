@@ -7,11 +7,13 @@ import Image from "next/image";
 export interface CardCategoryBox1Props {
   className?: string;
   taxonomy: TaxonomyType;
+  countLabel?: string;
 }
 
 const CardCategoryBox1: FC<CardCategoryBox1Props> = ({
   className = "",
   taxonomy,
+  countLabel = "properties",
 }) => {
   const { count, name, thumbnail, href = "/" } = taxonomy;
   return (
@@ -33,7 +35,7 @@ const CardCategoryBox1: FC<CardCategoryBox1Props> = ({
           <span className="line-clamp-1">{name}</span>
         </h3>
         <span className="block mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
-          {convertNumbThousand(count)} properties
+          {convertNumbThousand(count)} {countLabel}
         </span>
       </div>
     </Link>

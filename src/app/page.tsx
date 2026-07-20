@@ -2,22 +2,24 @@ import React from "react";
 import SectionHero from "@/app/(server-components)/SectionHero";
 import BgGlassmorphism from "@/components/BgGlassmorphism";
 import SectionSliderNewCategories from "@/components/SectionSliderNewCategories";
-import SectionFeaturedStays from "@/components/SectionFeaturedStays";
+import SectionExploreArea from "@/components/SectionExploreArea";
 import SectionWhyBookWithUs from "@/components/SectionWhyBookWithUs";
 import SectionBlogHighlights from "@/components/SectionBlogHighlights";
 import SectionFaqHighlights from "@/components/SectionFaqHighlights";
-import { searchListings } from "@/modules/listings/search";
-import { searchParamsSchema } from "@/lib/validations/search";
-import { getTopCities, getTopCityCategories } from "@/modules/listings/queries";
+import {
+  getFeaturedAttractions,
+  getAllAttractions,
+  getAttractionCategoryTaxonomies,
+} from "@/lib/attractions";
 
 export const dynamic = "force-dynamic";
 
 async function PageHome() {
-  const [{ items: featuredListings }, topCities, cityCategories] = await Promise.all([
-    searchListings(searchParamsSchema.parse({ limit: 6, sort: "rating" })),
-    getTopCities(6),
-    getTopCityCategories(8),
+  const [featuredAttractions, allAttractions] = await Promise.all([
+    getFeaturedAttractions(),
+    getAllAttractions(),
   ]);
+  const categoryTaxonomies = getAttractionCategoryTaxonomies(allAttractions);
 
   return (
     <main className="nc-PageHome relative overflow-hidden">
@@ -27,14 +29,15 @@ async function PageHome() {
         <SectionHero className="pt-10 lg:pt-16 lg:pb-16" />
 
         <SectionSliderNewCategories
-          heading="Top cities to explore"
-          subHeading="From weekend coastal escapes to big-city stays — see where guests are booking right now"
-          categories={cityCategories}
+          heading="Explore by category"
+          subHeading="Everything nearby, sorted the way you're already thinking about it"
+          categories={categoryTaxonomies}
+          countLabel="places"
         />
 
         <SectionWhyBookWithUs />
 
-        <SectionFeaturedStays listings={featuredListings} cities={topCities} />
+        <SectionExploreArea attractions={featuredAttractions} />
 
         <SectionBlogHighlights />
 

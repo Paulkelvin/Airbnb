@@ -91,6 +91,22 @@ export const aboutPageQuery = groq`
   }
 `;
 
+export const featuredAttractionsQuery = groq`
+  *[_type == "attraction" && defined(publishedAt) && publishedAt <= now() && featured == true] | order(order asc) {
+    _id, title, category, description, imageUrl, distanceLabel, externalUrl, featured
+  }
+`;
+
+export const allAttractionsQuery = groq`
+  *[_type == "attraction" && defined(publishedAt) && publishedAt <= now()] | order(category asc, order asc) {
+    _id, title, category, description, imageUrl, distanceLabel, externalUrl, featured
+  }
+`;
+
+export const attractionCategoriesQuery = groq`
+  *[_type == "attraction" && defined(publishedAt) && publishedAt <= now()].category
+`;
+
 export const sitemapPostsQuery = groq`
   *[_type == "post" && defined(publishedAt) && publishedAt <= now()] | order(publishedAt desc) {
     "slug": slug.current,

@@ -141,6 +141,38 @@ export async function getAdminFaq(id: string): Promise<CmsFaqItem | null> {
   );
 }
 
+// ---------- Attractions ----------
+
+export interface CmsAttractionItem {
+  _id: string;
+  title: string;
+  category: string;
+  description: string;
+  imageUrl: string;
+  distanceLabel: string;
+  externalUrl: string | null;
+  featured: boolean;
+  order: number;
+  publishedAt: string | null;
+}
+
+export async function getAdminAttractions(): Promise<CmsAttractionItem[]> {
+  return sanityClient.fetch(groq`
+    *[_type == "attraction"] | order(category asc, order asc) {
+      _id, title, category, description, imageUrl, distanceLabel, externalUrl, featured, order, publishedAt
+    }
+  `);
+}
+
+export async function getAdminAttraction(id: string): Promise<CmsAttractionItem | null> {
+  return sanityClient.fetch(
+    groq`*[_type == "attraction" && _id == $id][0] {
+      _id, title, category, description, imageUrl, distanceLabel, externalUrl, featured, order, publishedAt
+    }`,
+    { id },
+  );
+}
+
 // ---------- About page (singleton) ----------
 
 export const ABOUT_PAGE_ID = "aboutPage-singleton";

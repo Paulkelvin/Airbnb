@@ -20,8 +20,7 @@ const widgetMenus: WidgetFooterMenu[] = [
     id: "1",
     title: "Explore",
     menus: [
-      { href: "/listing-stay", label: "Browse stays" },
-      { href: "/listing-stay-map", label: "Map view" },
+      { href: "/explore-the-area", label: "Explore the Area" },
       { href: "/blog", label: "Stories & guides" },
       { href: "/about", label: "About us" },
     ],

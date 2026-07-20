@@ -5,6 +5,7 @@ import {
   TagIcon,
   QuestionMarkCircleIcon,
   InformationCircleIcon,
+  MapPinIcon,
 } from "@heroicons/react/24/outline";
 import { AdminPageHeader } from "../AdminUI";
 import {
@@ -13,20 +14,29 @@ import {
   getAdminCategories,
   getAdminAuthors,
   getAdminFaqs,
+  getAdminAttractions,
 } from "@/modules/cms/queries";
 
 export const metadata = { title: "Content" };
 
 export default async function AdminContentOverviewPage() {
-  const [posts, pages, categories, authors, faqs] = await Promise.all([
+  const [posts, pages, categories, authors, faqs, attractions] = await Promise.all([
     getAdminPosts(),
     getAdminPages(),
     getAdminCategories(),
     getAdminAuthors(),
     getAdminFaqs(),
+    getAdminAttractions(),
   ]);
 
   const sections = [
+    {
+      href: "/admin/content/attractions",
+      label: "Explore the Area",
+      count: attractions.length,
+      icon: MapPinIcon,
+      description: "Nearby restaurants, parks, waterfronts, and activities shown to guests.",
+    },
     {
       href: "/admin/content/posts",
       label: "Blog Posts",

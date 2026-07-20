@@ -6,6 +6,7 @@ import { isFavorited } from "@/modules/favorites/queries";
 import { getCurrentUser } from "@/lib/auth";
 import { getServiceFeePercent } from "@/modules/admin/settings";
 import { toDetailViewModel } from "@/modules/listings/types";
+import { getFeaturedAttractions } from "@/lib/attractions";
 import ListingDetailView from "./ListingDetailView";
 import type { ListingReview } from "./ReviewsSection";
 
@@ -32,11 +33,12 @@ export default async function ListingStayDetailPage({
   const viewModel = toDetailViewModel(listing);
   const isOwner = user?.id === listing.hostId;
   const isAdmin = user?.roles.includes("ADMIN") ?? false;
-  const [blockedDates, reviewRows, favorited, serviceFeePercentWhole] = await Promise.all([
+  const [blockedDates, reviewRows, favorited, serviceFeePercentWhole, attractions] = await Promise.all([
     listing.rentalType === "SHORT_TERM" ? getBlockedDatesForListing(listing.id) : Promise.resolve([]),
     getReviewsForListing(listing.id),
     user ? isFavorited(user.id, listing.id) : Promise.resolve(false),
     getServiceFeePercent(),
+    getFeaturedAttractions(),
   ]);
   const serviceFeePercent = serviceFeePercentWhole / 100;
 
@@ -60,6 +62,7 @@ export default async function ListingStayDetailPage({
       reviews={reviews}
       isFavorited={favorited}
       serviceFeePercent={serviceFeePercent}
+      attractions={attractions}
     />
   );
 }
