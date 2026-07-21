@@ -171,6 +171,7 @@ function ShortTermBookingForm({
     setClientSecret(null);
   }, [checkInDate?.getTime(), checkOutDate?.getTime(), guestCount]);
 
+  const sameDay = checkInDate != null && checkOutDate != null && nights === 0;
   const nightsTooFew = nights > 0 && nights < pricing.minNights;
   const nightsTooMany = pricing.maxNights !== null && nights > pricing.maxNights;
   const canSubmit = nights > 0 && !nightsTooFew && !nightsTooMany;
@@ -301,6 +302,7 @@ function ShortTermBookingForm({
             placeholderText="Add dates"
             portalId="datepicker-portal"
             popperClassName="!z-[100]"
+            readOnly
           />
         </div>
         <GuestSelector
@@ -311,6 +313,11 @@ function ShortTermBookingForm({
         />
       </div>
 
+      <div className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${sameDay ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          <p className="text-sm text-neutral-500">Pick a different check-out date — check-in and check-out can&apos;t be the same day.</p>
+        </div>
+      </div>
       <div className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${nightsTooFew ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
         <div className="overflow-hidden">
           <p className="text-sm text-red-600">Minimum stay is {pricing.minNights} nights</p>
@@ -493,6 +500,7 @@ function LongTermBookingForm({
             placeholderText="Select a date"
             portalId="datepicker-portal"
             popperClassName="!z-[100]"
+            readOnly
           />
         </div>
         <NcInputNumber

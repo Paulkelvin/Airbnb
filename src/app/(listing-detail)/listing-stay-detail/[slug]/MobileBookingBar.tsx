@@ -73,7 +73,7 @@ export default function MobileBookingBar({
   const priceUnit = pricing.rentalType === "SHORT_TERM" ? "/night" : "/month";
 
   return (
-    <div className="lg:hidden fixed bottom-0 inset-x-0 py-3 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 z-40">
+    <div className={`lg:hidden fixed bottom-0 inset-x-0 py-3 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 z-40 transition-opacity duration-200 ${isOpen ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
       <div className="container flex items-center justify-between">
         <span className="text-lg font-semibold">
           {priceLabel}
