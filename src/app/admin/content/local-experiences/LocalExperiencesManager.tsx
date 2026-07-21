@@ -11,6 +11,7 @@ import {
 } from "@/modules/cms/actions";
 import type { CmsLocalExperienceItem } from "@/modules/cms/queries";
 import { EXPERIENCE_CATEGORIES, CATEGORY_EMOJI } from "@/data/local-experiences";
+import { uploadLocalExperienceImage, isImageUploadConfigured } from "@/lib/cloudinary-upload";
 
 // The form manages the gallery as a textarea (one URL per line) rather than
 // an array field directly — same idea as PageForm's plain-text body editor,
@@ -72,6 +73,27 @@ export default function LocalExperiencesManager({
   const [showNewForm, setShowNewForm] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [visible, setVisible] = useState(true);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleImageFile(file: File | undefined) {
+    if (!file) return;
+    if (!isImageUploadConfigured()) {
+      setError(
+        "Image uploads aren't configured yet — set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.",
+      );
+      return;
+    }
+    setError(null);
+    setUploading(true);
+    try {
+      const result = await uploadLocalExperienceImage(file);
+      setForm((f) => ({ ...f, imageUrl: result.url }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   function startEdit(a: CmsLocalExperienceItem) {
     setError(null);
@@ -199,10 +221,34 @@ export default function LocalExperiencesManager({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className={labelClass}>Main image URL</label>
+          <label className={labelClass}>Main image</label>
+          <div className="flex items-center gap-3">
+            {form.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={form.imageUrl}
+                alt=""
+                className="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-neutral-100 dark:bg-neutral-700"
+              />
+            )}
+            <label
+              className={`px-3 py-2 text-sm rounded-lg border border-neutral-300 dark:border-neutral-600 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 ${
+                uploading ? "opacity-50 pointer-events-none" : ""
+              }`}
+            >
+              {uploading ? "Uploading..." : form.imageUrl ? "Replace photo" : "Upload photo"}
+              <input
+                type="file"
+                accept="image/*"
+                disabled={uploading}
+                className="sr-only"
+                onChange={(e) => handleImageFile(e.target.files?.[0])}
+              />
+            </label>
+          </div>
           <input
-            className={inputClass}
-            placeholder="https://..."
+            className={`${inputClass} mt-2`}
+            placeholder="or paste an image URL directly"
             value={form.imageUrl}
             onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
           />

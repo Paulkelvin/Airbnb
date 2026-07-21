@@ -15,9 +15,9 @@ export interface SectionHeroProps {
 // swap this array for real ones and the carousel needs no other changes.
 const HERO_IMAGES = [
   imagePng,
-  "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1200",
-  "https://images.pexels.com/photos/1082355/pexels-photo-1082355.jpeg?auto=compress&cs=tinysrgb&w=1200",
-  "https://images.pexels.com/photos/2724748/pexels-photo-2724748.jpeg?auto=compress&cs=tinysrgb&w=1200",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633020/hero/hero-1.jpg",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633021/hero/hero-2.jpg",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633022/hero/hero-3.jpg",
 ];
 
 const SectionHero: FC<SectionHeroProps> = ({ className = "", listingHref }) => {
