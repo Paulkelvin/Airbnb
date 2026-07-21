@@ -44,7 +44,7 @@ export interface ListingDetailViewModel {
     longitude: number | null;
     formattedAddress: string | null;
   } | null;
-  images: { id: number; url: string }[];
+  images: { id: number; url: string; category: string | null }[];
   amenities: { id: string; name: string; category: string | null; icon: string | null }[];
   host: { id: string; name: string; avatarUrl: string | null };
   pricing:
@@ -153,7 +153,7 @@ export function toDetailViewModel(
       : null,
     images: listing.images
       .sort((a, b) => a.position - b.position)
-      .map((img, i) => ({ id: i, url: img.url })),
+      .map((img, i) => ({ id: i, url: img.url, category: img.category })),
     amenities: listing.amenities.map((la) => ({
       id: la.amenity.id,
       name: la.amenity.name,

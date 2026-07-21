@@ -23,7 +23,17 @@ export interface WizardImage {
   isCover: boolean;
   width?: number | null;
   height?: number | null;
+  category?: string | null;
 }
+
+export const IMAGE_CATEGORIES = [
+  "Bedroom",
+  "Bathroom",
+  "Kitchen",
+  "Living Area",
+  "Outdoor",
+  "Views/Exterior",
+] as const;
 
 export interface WizardListing {
   id: string;
@@ -205,6 +215,15 @@ export default function AddListingWizard({
     update(
       "images",
       next.map((img, i) => ({ ...img, position: i, isCover: i === 0 })),
+    );
+  }
+
+  function updateImageCategory(publicId: string, category: string) {
+    update(
+      "images",
+      listing.images.map((img) =>
+        img.publicId === publicId ? { ...img, category: category || null } : img,
+      ),
     );
   }
 
@@ -577,6 +596,21 @@ export default function AddListingWizard({
                       >
                         ×
                       </button>
+                      <select
+                        value={img.category ?? ""}
+                        onChange={(e) => updateImageCategory(img.publicId, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        draggable={false}
+                        className="absolute bottom-2 left-2 right-2 text-xs rounded-md bg-white/90 dark:bg-neutral-800/90 px-1.5 py-1 pointer-events-auto"
+                      >
+                        <option value="">Uncategorized</option>
+                        {IMAGE_CATEGORIES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   ))}
                 </div>

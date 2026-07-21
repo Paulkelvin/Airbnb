@@ -8,6 +8,7 @@ export const listingImageSchema = z.object({
   width: z.coerce.number().int().positive().nullish(),
   height: z.coerce.number().int().positive().nullish(),
   altText: z.string().max(200).nullish(),
+  category: z.string().max(50).nullish(),
 });
 
 const addressSchema = z.object({

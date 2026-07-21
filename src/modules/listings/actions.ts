@@ -201,6 +201,7 @@ export async function saveListingDraft(
               url: img.url,
               publicId: img.publicId,
               altText: img.altText ?? null,
+              category: img.category ?? null,
               position: img.position ?? i,
               isCover: img.isCover ?? i === 0,
               width: img.width ?? null,
@@ -277,7 +278,7 @@ function toStrictInput(listing: {
     longitude: number | null;
   } | null;
   amenities: { amenityId: string }[];
-  images: { url: string; publicId: string | null; position: number; isCover: boolean }[];
+  images: { url: string; publicId: string | null; position: number; isCover: boolean; category: string | null }[];
 }): CreateListingInput | null {
   if (!listing.address) return null;
 
@@ -296,6 +297,7 @@ function toStrictInput(listing: {
       publicId: img.publicId ?? "",
       position: img.position,
       isCover: img.isCover,
+      category: img.category ?? undefined,
     })),
     petPolicy: (listing.petPolicy ?? "NOT_ALLOWED") as "NOT_ALLOWED" | "ALLOWED" | "CASE_BY_CASE",
     address: {

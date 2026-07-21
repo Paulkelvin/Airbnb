@@ -383,6 +383,9 @@ model Image {
   // Cloudinary public_id — needed to delete the asset from storage when the image is removed.
   publicId  String?
   altText   String?
+  // Free-text room/area grouping (e.g. "Bedroom", "Kitchen", "Outdoor") for
+  // the gallery's category tabs. Nullable — older images predate this field.
+  category  String?
   position  Int
   isCover   Boolean  @default(false)
   width     Int?

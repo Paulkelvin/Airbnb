@@ -3,7 +3,7 @@
 import "./styles/index.css";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { FC, Fragment, useEffect, useRef } from "react";
+import { FC, Fragment, useEffect, useMemo, useRef, useState } from "react";
 import Modal from "./components/Modal";
 import type { ListingGalleryImage } from "./utils/types";
 import { useLastViewedPhoto } from "./utils/useLastViewedPhoto";
@@ -65,6 +65,19 @@ const ListingImageGallery: FC<Props> = ({
   const photoId = searchParams?.get("photoId");
   const router = useRouter();
   const [lastViewedPhoto, setLastViewedPhoto] = useLastViewedPhoto();
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const categories = useMemo(() => {
+    const seen = new Set<string>();
+    for (const img of images) {
+      if (img.category) seen.add(img.category);
+    }
+    return Array.from(seen);
+  }, [images]);
+
+  const visibleImages = activeCategory
+    ? images.filter((img) => img.category === activeCategory)
+    : images;
 
   const lastViewedPhotoRef = useRef<HTMLDivElement>(null);
   const thisPathname = usePathname();
@@ -96,8 +109,41 @@ const ListingImageGallery: FC<Props> = ({
           />
         )}
 
+        {categories.length > 1 && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            <button
+              type="button"
+              onClick={() => setActiveCategory(null)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                activeCategory === null
+                  ? "bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900"
+                  : "border-neutral-300 text-neutral-600 hover:bg-neutral-100 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-800"
+              }`}
+            >
+              All ({images.length})
+            </button>
+            {categories.map((cat) => {
+              const count = images.filter((img) => img.category === cat).length;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                    activeCategory === cat
+                      ? "bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900"
+                      : "border-neutral-300 text-neutral-600 hover:bg-neutral-100 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                  }`}
+                >
+                  {cat} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div className="columns-1 gap-4 sm:columns-2 xl:columns-3">
-          {images.map(({ id, url }) => (
+          {visibleImages.map(({ id, url }) => (
             <div
               key={id}
               onClick={() => {

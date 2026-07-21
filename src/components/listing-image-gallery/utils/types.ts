@@ -2,4 +2,5 @@
 export interface ListingGalleryImage {
   id: number;
   url: string;
+  category?: string | null;
 }

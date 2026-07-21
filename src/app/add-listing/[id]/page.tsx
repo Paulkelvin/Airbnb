@@ -55,6 +55,7 @@ export default async function AddListingContinuePage({
         isCover: img.isCover,
         width: img.width,
         height: img.height,
+        category: img.category,
       })),
     address: listing.address
       ? {
