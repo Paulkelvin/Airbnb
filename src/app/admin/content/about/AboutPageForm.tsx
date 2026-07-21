@@ -14,16 +14,16 @@ export default function AboutPageForm({ aboutPage }: { aboutPage: CmsAboutPage |
 
   const [heroTitle, setHeroTitle] = useState(aboutPage?.heroTitle ?? "Our Story");
   const [heroSubtitle, setHeroSubtitle] = useState(
-    aboutPage?.heroSubtitle ?? "Connecting travelers with unforgettable places to stay.",
+    aboutPage?.heroSubtitle ?? "A private riverside retreat, hosted directly by our team.",
   );
   const [heroBodyText, setHeroBodyText] = useState(() => blocksToPlainText(aboutPage?.heroBody));
   const [stats, setStats] = useState(
     aboutPage?.stats && aboutPage.stats.length > 0
       ? aboutPage.stats
       : [
-          { label: "Properties listed", value: "15+" },
-          { label: "U.S. cities", value: "15" },
-          { label: "Verified hosts", value: "100%" },
+          { label: "Private cottage", value: "1" },
+          { label: "Riverside location", value: "Potomac" },
+          { label: "Locally hosted", value: "100%" },
           { label: "Guest support", value: "24/7" },
         ],
   );
@@ -32,22 +32,22 @@ export default function AboutPageForm({ aboutPage }: { aboutPage: CmsAboutPage |
   const [valuesTitle, setValuesTitle] = useState(aboutPage?.valuesTitle ?? "What We Stand For");
   const [valuesSubtitle, setValuesSubtitle] = useState(
     aboutPage?.valuesSubtitle ??
-      "Our values guide every decision we make, from the features we build to the hosts we partner with.",
+      "Our values guide every detail of the cottage and every recommendation in our area guide.",
   );
   const [values, setValues] = useState(
     aboutPage?.values && aboutPage.values.length > 0
       ? aboutPage.values
       : [
-          { title: "Trust & Safety", description: "Every host is verified, every property is reviewed." },
-          { title: "Local Experience", description: "We believe the best travel means living like a local." },
+          { title: "Trust & Safety", description: "The cottage is maintained and hosted directly by our team." },
+          { title: "Local Experience", description: "We believe the best trips mean living like a local." },
           { title: "Fair Pricing", description: "Transparent pricing with no hidden fees." },
-          { title: "Community First", description: "Building a community of travelers and hosts." },
+          { title: "Guest First", description: "Every detail is designed around your stay." },
         ],
   );
-  const [ctaTitle, setCtaTitle] = useState(aboutPage?.ctaTitle ?? "Ready to find your perfect stay?");
+  const [ctaTitle, setCtaTitle] = useState(aboutPage?.ctaTitle ?? "Ready to plan your stay?");
   const [ctaSubtitle, setCtaSubtitle] = useState(
     aboutPage?.ctaSubtitle ??
-      "Browse thousands of verified properties or list your own space and start earning.",
+      "Check availability for Potomac Vista Cottage, or explore the restaurants, parks, and waterfronts nearby.",
   );
 
   function updateStat(i: number, field: "label" | "value", value: string) {

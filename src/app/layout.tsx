@@ -21,11 +21,11 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "Potomac — Property Rentals & Stays",
+    default: "Potomac Vista Cottage — A Riverside Retreat",
     template: "%s | Potomac",
   },
   description:
-    "Find your next stay or long-term lease on Potomac. Browse short-term rentals and monthly leases from verified hosts.",
+    "Book Potomac Vista Cottage, a private riverside retreat, and explore our guide to the best nearby restaurants, parks, and waterfronts.",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

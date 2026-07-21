@@ -23,8 +23,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${siteUrl}/`, changeFrequency: "daily", priority: 1 },
-    { url: `${siteUrl}/listing-stay`, changeFrequency: "hourly", priority: 0.9 },
-    { url: `${siteUrl}/listing-stay-map`, changeFrequency: "hourly", priority: 0.7 },
+    { url: `${siteUrl}/explore-the-area`, changeFrequency: "weekly", priority: 0.8 },
+    // Multi-listing search/map pages — no longer linked from nav now that
+    // there's one property, but left crawlable at a low priority rather
+    // than deindexed, consistent with keeping the routes live for a future
+    // marketplace re-enablement.
+    { url: `${siteUrl}/listing-stay`, changeFrequency: "weekly", priority: 0.3 },
+    { url: `${siteUrl}/listing-stay-map`, changeFrequency: "weekly", priority: 0.2 },
     { url: `${siteUrl}/about`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${siteUrl}/contact`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${siteUrl}/faq`, changeFrequency: "monthly", priority: 0.4 },

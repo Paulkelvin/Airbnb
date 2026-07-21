@@ -5,12 +5,14 @@ import { sanityClient, urlFor } from "@/lib/sanity/client";
 import { aboutPageQuery } from "@/lib/sanity/queries";
 import PortableTextBody from "@/components/sanity/PortableTextBody";
 import { getCurrentUser } from "@/lib/auth";
+import { getPrimaryListing } from "@/modules/listings/queries";
+import type { Route } from "@/routers/types";
 
 export const revalidate = 3600;
 
 export const metadata = {
   title: "About Us",
-  description: "Learn about Potomac — our mission to connect travelers with unique stays and long-term rentals across the United States.",
+  description: "The story behind Potomac Vista Cottage, and why we built a private riverside retreat with the area's best attractions right outside the door.",
 };
 
 interface SanityAboutPage {
@@ -38,36 +40,43 @@ async function getAboutPage(): Promise<SanityAboutPage | null> {
 }
 
 const FALLBACK_STATS = [
-  { label: "Properties listed", value: "15+" },
-  { label: "U.S. cities", value: "15" },
-  { label: "Verified hosts", value: "100%" },
+  { label: "Private cottage", value: "1" },
+  { label: "Riverside location", value: "Potomac" },
+  { label: "Locally hosted", value: "100%" },
   { label: "Guest support", value: "24/7" },
 ];
 
 const FALLBACK_VALUES = [
-  { title: "Trust & Safety", description: "Every host is verified, every property is reviewed. We maintain rigorous standards so you can book with confidence." },
-  { title: "Local Experience", description: "We believe the best travel means living like a local. Our hosts share insider tips and genuine hospitality." },
-  { title: "Fair Pricing", description: "Transparent pricing with no hidden fees. What you see is what you pay — for both short stays and long-term leases." },
-  { title: "Community First", description: "We're building a community of travelers and hosts who share a passion for meaningful connections and memorable stays." },
+  { title: "Trust & Safety", description: "The cottage is maintained and hosted directly by our team, so you always know exactly what you're booking." },
+  { title: "Local Experience", description: "We believe the best trips mean living like a local. That's why we built a guide to the area's parks, restaurants, and waterfronts right into the site." },
+  { title: "Fair Pricing", description: "Transparent pricing with no hidden fees — what you see is what you pay." },
+  { title: "Guest First", description: "Every detail, from check-in to checkout, is designed around making your stay effortless and memorable." },
 ];
 
 export default async function PageAbout() {
-  const [data, user] = await Promise.all([getAboutPage(), getCurrentUser()]);
+  const [data, user, primaryListing] = await Promise.all([
+    getAboutPage(),
+    getCurrentUser(),
+    getPrimaryListing(),
+  ]);
   const isAdmin = user?.roles.includes("ADMIN") ?? false;
+  const listingHref = primaryListing
+    ? (`/listing-stay-detail/${primaryListing.slug}` as Route)
+    : ("/listing-stay" as Route);
 
   const heroTitle = data?.heroTitle ?? "Our Story";
-  const heroSubtitle = data?.heroSubtitle ?? "Connecting travelers with unforgettable places to stay.";
+  const heroSubtitle = data?.heroSubtitle ?? "A private riverside retreat, hosted directly by our team.";
   const stats = data?.stats && data.stats.length > 0 ? data.stats : FALLBACK_STATS;
   const missionTitle = data?.missionTitle ?? "Our Mission";
   const values = data?.values && data.values.length > 0 ? data.values : FALLBACK_VALUES;
   const valuesTitle = data?.valuesTitle ?? "What We Stand For";
   const valuesSubtitle =
     data?.valuesSubtitle ??
-    "Our values guide every decision we make, from the features we build to the hosts we partner with.";
-  const ctaTitle = data?.ctaTitle ?? "Ready to find your perfect stay?";
+    "Our values guide every detail of the cottage and every recommendation in our area guide.";
+  const ctaTitle = data?.ctaTitle ?? "Ready to plan your stay?";
   const ctaSubtitle =
     data?.ctaSubtitle ??
-    "Browse thousands of verified properties or list your own space and start earning. Join the Potomac community today.";
+    "Check availability for Potomac Vista Cottage, or explore the restaurants, parks, and waterfronts nearby.";
   const missionImageUrl = data?.missionImage
     ? urlFor(data.missionImage).width(1260).height(750).url()
     : "https://images.pexels.com/photos/1268871/pexels-photo-1268871.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750";
@@ -90,17 +99,18 @@ export default async function PageAbout() {
           ) : (
             <>
               <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                Potomac was born from a simple idea: everyone deserves access to
-                beautiful, comfortable places to stay — whether for a weekend
-                getaway or a year-long lease. We connect discerning travelers with
-                verified hosts who offer everything from cozy city apartments to
-                sprawling countryside villas.
+                Potomac Vista Cottage was built around a simple idea: a getaway
+                should feel like a genuine escape, not just a place to sleep.
+                Floor-to-ceiling views, thoughtful touches throughout, and a
+                setting close to the river make it a home base for exploring
+                everything the area has to offer.
               </p>
               <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed mt-4">
-                Our platform supports both short-term rentals and long-term leases,
-                making it easy to find your next home away from home — or your
-                actual next home. With transparent pricing, verified listings, and
-                a community of passionate hosts, Potomac is where great stays begin.
+                We host the cottage directly, so there's no guesswork about who
+                you're booking with or what to expect at check-in. And since
+                the cottage itself doesn't have private waterfront access, we've
+                put together a guide to the best nearby parks, restaurants, and
+                waterfronts — so a day on the water is never far away.
               </p>
             </>
           )}
@@ -135,17 +145,15 @@ export default async function PageAbout() {
             ) : (
               <>
                 <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                  We're on a mission to make finding and booking quality
-                  accommodations effortless. Whether you're a digital nomad looking
-                  for a month-long stay, a family planning a vacation, or someone
-                  relocating to a new city, Potomac has the right property waiting
-                  for you.
+                  We're on a mission to make booking a stay at the cottage — and
+                  planning everything around it — effortless. Secure payments,
+                  clear pricing, and a real team behind the scenes mean you can
+                  focus on the trip, not the logistics.
                 </p>
                 <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed mt-4">
-                  For hosts, we provide the tools and visibility to reach the right
-                  guests, manage bookings seamlessly, and grow a thriving rental
-                  business — all backed by our secure payment processing and
-                  dedicated support team.
+                  That's also why we built Explore the Area: a curated guide to
+                  the restaurants, parks, and waterfronts nearby, so you land with
+                  a plan instead of a blank map.
                 </p>
               </>
             )}
@@ -188,10 +196,10 @@ export default async function PageAbout() {
           <p className="mt-3 text-neutral-300 max-w-xl mx-auto">{ctaSubtitle}</p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="/listing-stay"
+              href={listingHref}
               className="px-8 py-3 rounded-full bg-white text-neutral-900 font-medium hover:bg-neutral-100 transition-colors"
             >
-              Browse listings
+              Check availability
             </a>
             {isAdmin && (
               <a

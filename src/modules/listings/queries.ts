@@ -134,6 +134,21 @@ export async function getPublishedListings(
   };
 }
 
+/**
+ * The featured/primary listing for the homepage Hero — Potomac Vista Cottage
+ * is currently the only property, so this is just the most recently
+ * published one. If marketplace mode is re-enabled and multiple listings
+ * exist again, the Hero degrades gracefully (see SectionHero) rather than
+ * needing this function to change.
+ */
+export async function getPrimaryListing(): Promise<{ slug: string; title: string } | null> {
+  return prisma.listing.findFirst({
+    where: { status: "PUBLISHED" },
+    orderBy: { publishedAt: "desc" },
+    select: { slug: true, title: true },
+  });
+}
+
 /** Slug + last-modified for every published listing — feeds `src/app/sitemap.ts`. */
 export async function getPublishedListingSlugsForSitemap(): Promise<
   { slug: string; updatedAt: Date }[]

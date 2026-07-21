@@ -17,7 +17,7 @@ const SectionFaqHighlights: React.FC = () => {
   return (
     <div className="nc-SectionFaqHighlights">
       <div className="flex items-center justify-between">
-        <Heading desc="Quick answers about booking, payments, and hosting">
+        <Heading desc="Quick answers about booking, payments, and your stay">
           Common questions
         </Heading>
         <Link

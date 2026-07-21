@@ -9,8 +9,8 @@ import {
 const REASONS = [
   {
     icon: ShieldCheckIcon,
-    title: "Verified hosts & listings",
-    desc: "Every property is reviewed and every host is identity-checked before they can list, so you always know what you're booking.",
+    title: "Professionally managed",
+    desc: "Potomac Vista Cottage is maintained and hosted directly by our team, so what you see is exactly what you get at check-in.",
   },
   {
     icon: LockClosedIcon,

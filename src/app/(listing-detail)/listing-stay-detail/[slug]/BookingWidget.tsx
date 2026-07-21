@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import DatePicker from "react-datepicker";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
@@ -80,9 +80,25 @@ function ShortTermBookingForm({
   serviceFeePercent: number;
 }) {
   const router = useRouter();
-  const [checkInDate, setCheckInDate] = useState<Date | null>(null);
-  const [checkOutDate, setCheckOutDate] = useState<Date | null>(null);
-  const [guestCount, setGuestCount] = useState(1);
+  const searchParams = useSearchParams();
+  // Pre-fill from the Hero's "Check availability" widget (?checkIn=&checkOut=&guests=)
+  // so picking dates on the homepage doesn't get thrown away on arrival here.
+  const initialDates = useMemo(() => {
+    const parse = (value: string | null) => {
+      if (!value) return null;
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    };
+    return {
+      checkIn: parse(searchParams.get("checkIn")),
+      checkOut: parse(searchParams.get("checkOut")),
+      guests: Number(searchParams.get("guests")) || 1,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [checkInDate, setCheckInDate] = useState<Date | null>(initialDates.checkIn);
+  const [checkOutDate, setCheckOutDate] = useState<Date | null>(initialDates.checkOut);
+  const [guestCount, setGuestCount] = useState(Math.min(initialDates.guests, maxOccupants));
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
