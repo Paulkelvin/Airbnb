@@ -90,6 +90,32 @@ export function computeCancellationRefundPercent(
   return 0;
 }
 
+/**
+ * Human-readable refund tiers for a cancellation policy, derived from the
+ * same {@link CANCELLATION_TIERS} table the refund math uses — so guest-
+ * facing copy can never drift from what a cancellation would actually pay
+ * out. Ordered highest-notice-first, matching the tiers themselves.
+ */
+export function describeCancellationPolicy(policy: CancellationPolicy): string[] {
+  return CANCELLATION_TIERS[policy].map((tier) => {
+    const refundLabel =
+      tier.refundPercent === 1
+        ? "Full refund"
+        : tier.refundPercent === 0
+          ? "No refund"
+          : `${Math.round(tier.refundPercent * 100)}% refund`;
+
+    if (tier.minHoursBeforeCheckIn === 0) {
+      return `${refundLabel} if you cancel less than 24 hours before check-in`;
+    }
+    const days = tier.minHoursBeforeCheckIn / 24;
+    const windowLabel = Number.isInteger(days)
+      ? `${days} day${days !== 1 ? "s" : ""}`
+      : `${tier.minHoursBeforeCheckIn} hours`;
+    return `${refundLabel} if you cancel at least ${windowLabel} before check-in`;
+  });
+}
+
 export function computeCancellationRefundCents(
   policy: CancellationPolicy,
   checkInDate: Date,

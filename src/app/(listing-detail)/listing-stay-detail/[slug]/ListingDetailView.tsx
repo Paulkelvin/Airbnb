@@ -15,6 +15,8 @@ import Badge from "@/components/ui/Badge";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import ListingImageGallery from "@/components/listing-image-gallery/ListingImageGallery";
+import MobileHeaderGallery from "./MobileHeaderGallery";
+import CancellationPolicyInfo from "./CancellationPolicyInfo";
 import BookingWidget from "./BookingWidget";
 import MobileBookingBar from "./MobileBookingBar";
 import InquiryForm from "./InquiryForm";
@@ -25,6 +27,7 @@ import Link from "next/link";
 import type { ListingDetailViewModel } from "@/modules/listings/types";
 import type { LocalExperience } from "@/data/local-experiences";
 import type { Route } from "@/routers/types";
+import type { CancellationPolicy } from "@prisma/client";
 import { cloudinaryLoader } from "@/lib/cloudinary-image-loader";
 
 const AMENITY_CATEGORY_LABELS: Record<string, string> = {
@@ -112,63 +115,73 @@ export default function ListingDetailView({
       />
 
       {/* HEADER */}
-      <header className="rounded-md sm:rounded-xl">
-        <div className="relative grid grid-cols-3 sm:grid-cols-4 gap-1 sm:gap-2">
-          <div
-            className="col-span-2 row-span-3 sm:row-span-2 relative rounded-md sm:rounded-xl overflow-hidden cursor-pointer bg-neutral-100 aspect-[4/3]"
-            onClick={() => setIsGalleryOpen(true)}
-          >
-            {images[0]?.url && (
-              <Image
-                fill
-                loader={cloudinaryLoader}
-                className="object-cover rounded-md sm:rounded-xl"
-                src={images[0].url}
-                alt={listing.title}
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 50vw"
-              />
-            )}
-            <div className="absolute inset-0 bg-neutral-900 bg-opacity-20 opacity-0 hover:opacity-100 transition-opacity" />
-          </div>
-          {images.slice(1, 5).map((img, index) => (
+      <header>
+        {/* Mobile: one full-bleed swipeable photo (Airbnb's own mobile pattern) */}
+        <div className="sm:hidden -mx-4">
+          <MobileHeaderGallery
+            images={images}
+            title={listing.title}
+            onOpenGallery={() => setIsGalleryOpen(true)}
+          />
+        </div>
+
+        {/* sm+: multi-tile grid */}
+        <div className="hidden sm:block relative rounded-xl">
+          <div className="relative grid grid-cols-4 gap-2">
             <div
-              key={img.id}
-              className={`relative rounded-md sm:rounded-xl overflow-hidden bg-neutral-100 ${
-                index >= 3 ? "hidden sm:block" : ""
-              }`}
-            >
-              <div className="aspect-w-4 aspect-h-3 sm:aspect-w-6 sm:aspect-h-5">
-                {img.url && (
-                  <Image
-                    fill
-                    loader={cloudinaryLoader}
-                    className="object-cover rounded-md sm:rounded-xl"
-                    src={img.url}
-                    alt=""
-                    sizes="400px"
-                  />
-                )}
-              </div>
-              <div
-                className="absolute inset-0 bg-neutral-900 bg-opacity-20 opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                onClick={() => setIsGalleryOpen(true)}
-              />
-            </div>
-          ))}
-          {listing.images.length > 0 && (
-            <button
-              className="absolute hidden md:flex md:items-center md:justify-center left-3 bottom-3 px-4 py-2 rounded-xl bg-neutral-100 text-neutral-500 hover:bg-neutral-200 z-10"
+              className="col-span-2 row-span-2 relative rounded-xl overflow-hidden cursor-pointer bg-neutral-100 aspect-[4/3]"
               onClick={() => setIsGalleryOpen(true)}
             >
-              <Squares2X2Icon className="w-5 h-5" />
-              <span className="ml-2 text-neutral-800 text-sm font-medium">Show all photos</span>
-            </button>
-          )}
+              {images[0]?.url && (
+                <Image
+                  fill
+                  loader={cloudinaryLoader}
+                  className="object-cover rounded-xl"
+                  src={images[0].url}
+                  alt={listing.title}
+                  sizes="(max-width: 1200px) 50vw, 50vw"
+                />
+              )}
+              <div className="absolute inset-0 bg-neutral-900 bg-opacity-20 opacity-0 hover:opacity-100 transition-opacity" />
+            </div>
+            {images.slice(1, 5).map((img) => (
+              <div
+                key={img.id}
+                className="relative rounded-xl overflow-hidden bg-neutral-100"
+              >
+                <div className="aspect-w-6 aspect-h-5">
+                  {img.url && (
+                    <Image
+                      fill
+                      loader={cloudinaryLoader}
+                      className="object-cover rounded-xl"
+                      src={img.url}
+                      alt=""
+                      sizes="400px"
+                    />
+                  )}
+                </div>
+                <div
+                  className="absolute inset-0 bg-neutral-900 bg-opacity-20 opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                  onClick={() => setIsGalleryOpen(true)}
+                />
+              </div>
+            ))}
+            {listing.images.length > 0 && (
+              <button
+                className="absolute hidden md:flex md:items-center md:justify-center left-3 bottom-3 px-4 py-2 rounded-xl bg-neutral-100 text-neutral-500 hover:bg-neutral-200 z-10"
+                onClick={() => setIsGalleryOpen(true)}
+              >
+                <Squares2X2Icon className="w-5 h-5" />
+                <span className="ml-2 text-neutral-800 text-sm font-medium">Show all photos</span>
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
       {/* MAIN */}
-      <main className="relative z-10 mt-11 flex flex-col lg:flex-row">
+      <main className="relative z-10 -mx-4 px-4 -mt-6 pt-6 rounded-t-3xl bg-white dark:bg-neutral-900 sm:mx-0 sm:px-0 sm:mt-11 sm:pt-0 sm:rounded-none sm:bg-transparent flex flex-col lg:flex-row">
         <div className="w-full lg:w-3/5 xl:w-2/3 space-y-7 lg:space-y-8 lg:pr-10">
           {/* SECTION 1 */}
           <div className="listingSection__wrap !space-y-6">
@@ -309,17 +322,23 @@ export default function ListingDetailView({
                     {listing.pricing.cleaningFee !== null && (
                       <Row label="Cleaning fee" value={`$${listing.pricing.cleaningFee}`} />
                     )}
-                    <Row
-                      label="Minimum nights"
-                      value={`${listing.pricing.minNights}`}
-                      shaded
-                    />
+                    {listing.pricing.minNights > 1 && (
+                      <Row
+                        label="Minimum nights"
+                        value={`${listing.pricing.minNights}`}
+                        shaded
+                      />
+                    )}
                     {listing.pricing.maxNights && (
                       <Row label="Maximum nights" value={`${listing.pricing.maxNights}`} />
                     )}
                     <Row
                       label="Cancellation policy"
-                      value={titleCase(listing.pricing.cancellationPolicy)}
+                      value={
+                        <CancellationPolicyInfo
+                          policy={listing.pricing.cancellationPolicy as CancellationPolicy}
+                        />
+                      }
                       shaded
                     />
                     <Row
@@ -515,7 +534,15 @@ export default function ListingDetailView({
   );
 }
 
-function Row({ label, value, shaded }: { label: string; value: string; shaded?: boolean }) {
+function Row({
+  label,
+  value,
+  shaded,
+}: {
+  label: string;
+  value: React.ReactNode;
+  shaded?: boolean;
+}) {
   return (
     <div
       className={`px-4 py-3 flex justify-between items-center space-x-4 rounded-lg text-sm ${
