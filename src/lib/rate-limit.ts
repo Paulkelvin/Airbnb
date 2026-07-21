@@ -36,6 +36,14 @@ export const RATE_LIMITS = {
   LOGIN_EMAIL: { limit: 5, windowSeconds: 15 * 60 } satisfies RateLimitConfig,
   FORGOT_PASSWORD: { limit: 5, windowSeconds: 60 * 60 } satisfies RateLimitConfig,
   CONTACT_FORM: { limit: 5, windowSeconds: 60 * 60 } satisfies RateLimitConfig,
+  /** Requesting a booking login code — keyed by IP (catches mass-requesting across many emails). */
+  BOOKING_OTP_REQUEST_IP: { limit: 8, windowSeconds: 15 * 60 } satisfies RateLimitConfig,
+  /** Same, keyed by email (catches hammering one target's inbox). */
+  BOOKING_OTP_REQUEST_EMAIL: { limit: 4, windowSeconds: 15 * 60 } satisfies RateLimitConfig,
+  /** Verifying a booking login code — keyed by IP. */
+  BOOKING_OTP_VERIFY_IP: { limit: 20, windowSeconds: 15 * 60 } satisfies RateLimitConfig,
+  /** Same, keyed by email (bounds brute-forcing one email's 6-digit code). */
+  BOOKING_OTP_VERIFY_EMAIL: { limit: 8, windowSeconds: 15 * 60 } satisfies RateLimitConfig,
 };
 
 /**

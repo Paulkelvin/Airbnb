@@ -105,6 +105,23 @@ export function renderPasswordResetEmail(resetUrl: string, firstName: string): R
   return { subject: "Reset your Potomac password", html, text };
 }
 
+/**
+ * Booking login code email — like the password-reset link above, this is a
+ * one-time security code rather than a NotificationType with in-app history,
+ * so it's rendered directly by requestBookingOtp() rather than through
+ * notify()/renderEmailTemplate().
+ */
+export function renderBookingOtpEmail(code: string, fullName: string): RenderedEmail {
+  const firstName = fullName.trim().split(/\s+/)[0] || "there";
+  const text = `Your booking confirmation code is ${code}. It expires in 10 minutes. If you didn't request this, you can safely ignore this email.`;
+  const html = wrap(
+    firstName,
+    `<p>Your booking confirmation code is:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px;">${code}</p><p style="color:#888;font-size:12px;">This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.</p>`,
+    text,
+  );
+  return { subject: `${code} is your Potomac booking code`, html, text };
+}
+
 export function renderEmailTemplate<T extends NotificationType>(
   type: T,
   payload: NotificationPayloads[T],

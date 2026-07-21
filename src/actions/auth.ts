@@ -11,15 +11,17 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,
+  requestBookingOtpSchema,
   type ActionResult,
 } from "@/lib/validations/auth";
 import { notify } from "@/modules/notifications/notify";
 import { getEmailProvider } from "@/lib/notifications";
-import { renderPasswordResetEmail } from "@/lib/notifications/templates";
+import { renderPasswordResetEmail, renderBookingOtpEmail } from "@/lib/notifications/templates";
 import { getSiteUrl } from "@/lib/site-url";
 
 const SALT_ROUNDS = 12;
 const RESET_TOKEN_EXPIRY_HOURS = 1;
+const BOOKING_OTP_EXPIRY_MINUTES = 10;
 
 /** No session exists yet at signup, so the limiter key is IP-based, not user-based. */
 function clientIp(): string {
@@ -270,4 +272,78 @@ export async function changePassword(
   await notify(user.id, "PASSWORD_CHANGED", { changedAt: new Date().toISOString() });
 
   return { success: true, data: { message: "Password changed successfully" } };
+}
+
+/**
+ * Sends a 6-digit login code for the passwordless booking flow — works
+ * whether or not the email already has an account; the "otp" CredentialsProvider
+ * (auth-options.ts) creates the User at verification time if none exists.
+ * Requesting a new code invalidates any prior unconsumed one for that email,
+ * so at most one is ever valid at a time (no ambiguity about which code a
+ * "resend" click should have made stale).
+ */
+export async function requestBookingOtp(
+  formData: FormData,
+): Promise<ActionResult<{ message: string }>> {
+  const ip = clientIp();
+
+  const raw = {
+    fullName: formData.get("fullName"),
+    email: formData.get("email"),
+  };
+
+  const parsed = requestBookingOtpSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Invalid input",
+        fieldErrors: parsed.error.flatten().fieldErrors,
+      },
+    };
+  }
+
+  const { fullName, email } = parsed.data;
+
+  const [ipLimit, emailLimit] = await Promise.all([
+    checkRateLimit(`booking-otp-request-ip:${ip}`, RATE_LIMITS.BOOKING_OTP_REQUEST_IP),
+    checkRateLimit(`booking-otp-request-email:${email}`, RATE_LIMITS.BOOKING_OTP_REQUEST_EMAIL),
+  ]);
+  if (!ipLimit.allowed || !emailLimit.allowed) {
+    return {
+      success: false,
+      error: { code: "RATE_LIMITED", message: "Too many requests. Please try again shortly." },
+    };
+  }
+
+  const code = crypto.randomInt(100000, 1000000).toString();
+  const codeHash = crypto.createHash("sha256").update(code).digest("hex");
+  const expiresAt = new Date(Date.now() + BOOKING_OTP_EXPIRY_MINUTES * 60 * 1000);
+
+  await prisma.bookingOtp.updateMany({
+    where: { email, consumedAt: null },
+    data: { consumedAt: new Date() },
+  });
+  await prisma.bookingOtp.create({
+    data: { email, codeHash, fullName, expiresAt },
+  });
+
+  const rendered = renderBookingOtpEmail(code, fullName);
+  try {
+    await getEmailProvider().send({
+      to: email,
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+    });
+  } catch (err) {
+    console.error("Failed to send booking OTP email", err);
+    return {
+      success: false,
+      error: { code: "EMAIL_FAILED", message: "Couldn't send the code. Please try again." },
+    };
+  }
+
+  return { success: true, data: { message: "Code sent" } };
 }

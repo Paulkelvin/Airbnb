@@ -47,7 +47,10 @@ export default function MobileHeaderGallery({
 
   return (
     <div
-      className="relative w-full aspect-[4/3] overflow-hidden bg-neutral-100 dark:bg-neutral-800"
+      // touch-pan-y: without this, the browser doesn't know a horizontal
+      // swipe here is meant for this carousel and tries to scroll the page
+      // vertically at the same time — same fix as HeroImageCarousel.
+      className="relative w-full aspect-[4/3] overflow-hidden bg-neutral-100 dark:bg-neutral-800 touch-pan-y select-none"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useTransition } from "react";
+import React, { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DatePicker from "react-datepicker";
 import { loadStripe } from "@stripe/stripe-js";
@@ -8,6 +8,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import NcInputNumber from "@/components/NcInputNumber";
 import GuestSelector, { type GuestBreakdown } from "./GuestSelector";
+import InlineBookingAuth from "./InlineBookingAuth";
 import {
   createShortTermBooking,
   createBookingPaymentIntent,
@@ -40,28 +41,27 @@ export default function BookingWidget({
   blockedDates,
   serviceFeePercent,
 }: BookingWidgetProps) {
-  if (!isAuthenticated) {
-    return (
-      <div className="text-center space-y-3">
-        <p className="text-neutral-600 dark:text-neutral-300">
-          Log in to book this {pricing.rentalType === "SHORT_TERM" ? "stay" : "lease"}.
-        </p>
-        <ButtonPrimary href={`/login?callbackUrl=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}` as Route}>Log in</ButtonPrimary>
-      </div>
-    );
-  }
-
+  // Dates/guests are always pickable, logged in or not — identity is only
+  // asked for at the point the guest actually tries to reserve (see
+  // requireAuthThen in both forms below), via an inline passwordless step
+  // instead of a hard wall in front of the whole widget.
   return pricing.rentalType === "SHORT_TERM" ? (
     <ShortTermBookingForm
       listingId={listingId}
       currency={currency}
       maxOccupants={maxOccupants}
+      isAuthenticated={isAuthenticated}
       pricing={pricing}
       blockedDates={blockedDates}
       serviceFeePercent={serviceFeePercent}
     />
   ) : (
-    <LongTermBookingForm listingId={listingId} currency={currency} pricing={pricing} />
+    <LongTermBookingForm
+      listingId={listingId}
+      currency={currency}
+      isAuthenticated={isAuthenticated}
+      pricing={pricing}
+    />
   );
 }
 
@@ -69,6 +69,7 @@ function ShortTermBookingForm({
   listingId,
   currency,
   maxOccupants,
+  isAuthenticated: initialIsAuthenticated,
   pricing,
   blockedDates,
   serviceFeePercent,
@@ -76,11 +77,19 @@ function ShortTermBookingForm({
   listingId: string;
   currency: string;
   maxOccupants: number;
+  isAuthenticated: boolean;
   pricing: Extract<ListingDetailViewModel["pricing"], { rentalType: "SHORT_TERM" }>;
   blockedDates: string[];
   serviceFeePercent: number;
 }) {
   const router = useRouter();
+  // Local, optimistic copy of auth state: flips true the instant the inline
+  // OTP step succeeds, without waiting on a server round-trip, so the
+  // pending action (below) can continue immediately in the same render
+  // rather than making the guest click Reserve twice.
+  const [isAuthenticated, setIsAuthenticated] = useState(initialIsAuthenticated);
+  const [showAuth, setShowAuth] = useState(false);
+  const pendingActionRef = useRef<(() => void) | null>(null);
   const searchParams = useSearchParams();
   // Pre-fill from the Hero's "Check availability" widget (?checkIn=&checkOut=&guests=)
   // so picking dates on the homepage doesn't get thrown away on arrival here.
@@ -144,18 +153,25 @@ function ShortTermBookingForm({
     if (!checkInDate || !checkOutDate || !canSubmit) return;
     setError(null);
     startTransition(async () => {
-      const result = await createShortTermBooking({
-        listingId,
-        checkInDate,
-        checkOutDate,
-        guestCount,
-        idempotencyKey,
-      });
-      if (!result.success) {
-        setError(result.error.message);
-        return;
+      try {
+        const result = await createShortTermBooking({
+          listingId,
+          checkInDate,
+          checkOutDate,
+          guestCount,
+          idempotencyKey,
+        });
+        if (!result.success) {
+          setError(result.error.message);
+          return;
+        }
+        router.push(`/account-bookings/${result.data.id}` as Route);
+      } catch {
+        // requireAuth() throws rather than returning an ActionResult if the
+        // session expired between the OTP step and this call — surface that
+        // as a normal inline error instead of an unhandled rejection.
+        setError("Your session expired. Please confirm your booking again.");
       }
-      router.push(`/account-bookings/${result.data.id}` as Route);
     });
   }
 
@@ -164,18 +180,23 @@ function ShortTermBookingForm({
     setError(null);
     setIsFetchingIntent(true);
     startTransition(async () => {
-      const result = await createBookingPaymentIntent({
-        listingId,
-        checkInDate,
-        checkOutDate,
-        guestCount,
-      });
-      setIsFetchingIntent(false);
-      if (!result.success) {
-        setError(result.error.message);
-        return;
+      try {
+        const result = await createBookingPaymentIntent({
+          listingId,
+          checkInDate,
+          checkOutDate,
+          guestCount,
+        });
+        if (!result.success) {
+          setError(result.error.message);
+          return;
+        }
+        setClientSecret(result.data.clientSecret);
+      } catch {
+        setError("Your session expired. Please confirm your booking again.");
+      } finally {
+        setIsFetchingIntent(false);
       }
-      setClientSecret(result.data.clientSecret);
     });
   }
 
@@ -183,20 +204,44 @@ function ShortTermBookingForm({
     if (!checkInDate || !checkOutDate) return;
     setError(null);
     startTransition(async () => {
-      const result = await createShortTermBooking({
-        listingId,
-        checkInDate,
-        checkOutDate,
-        guestCount,
-        idempotencyKey,
-        paymentIntentId,
-      });
-      if (!result.success) {
-        setError(result.error.message);
-        return;
+      try {
+        const result = await createShortTermBooking({
+          listingId,
+          checkInDate,
+          checkOutDate,
+          guestCount,
+          idempotencyKey,
+          paymentIntentId,
+        });
+        if (!result.success) {
+          setError(result.error.message);
+          return;
+        }
+        router.push(`/account-bookings/${result.data.id}` as Route);
+      } catch {
+        setError("Your session expired. Please confirm your booking again.");
       }
-      router.push(`/account-bookings/${result.data.id}` as Route);
     });
+  }
+
+  // Dates/guests picked as a guest aren't lost here — this only intercepts
+  // the actual reserve/pay click, not the date picker above it.
+  function requireAuthThen(action: () => void) {
+    if (isAuthenticated) {
+      action();
+      return;
+    }
+    pendingActionRef.current = action;
+    setShowAuth(true);
+  }
+
+  function handleAuthenticated() {
+    setIsAuthenticated(true);
+    setShowAuth(false);
+    router.refresh();
+    const action = pendingActionRef.current;
+    pendingActionRef.current = null;
+    action?.();
   }
 
   return (
@@ -280,7 +325,9 @@ function ShortTermBookingForm({
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      {needsCardCollection ? (
+      {showAuth ? (
+        <InlineBookingAuth onAuthenticated={handleAuthenticated} />
+      ) : needsCardCollection ? (
         clientSecret && stripePromise ? (
           <Elements
             stripe={stripePromise}
@@ -299,14 +346,18 @@ function ShortTermBookingForm({
           <ButtonPrimary
             disabled={!canSubmit || isFetchingIntent}
             loading={isFetchingIntent}
-            onClick={handleContinueToPayment}
+            onClick={() => requireAuthThen(handleContinueToPayment)}
           >
             Continue to payment
           </ButtonPrimary>
         )
       ) : (
         <>
-          <ButtonPrimary disabled={!canSubmit || isPending} loading={isPending} onClick={handleSubmit}>
+          <ButtonPrimary
+            disabled={!canSubmit || isPending}
+            loading={isPending}
+            onClick={() => requireAuthThen(handleSubmit)}
+          >
             {pricing.instantBook ? "Reserve" : "Request to book"}
           </ButtonPrimary>
           {!pricing.instantBook && (
@@ -323,10 +374,12 @@ function ShortTermBookingForm({
 function LongTermBookingForm({
   listingId,
   currency,
+  isAuthenticated: initialIsAuthenticated,
   pricing,
 }: {
   listingId: string;
   currency: string;
+  isAuthenticated: boolean;
   pricing: Extract<ListingDetailViewModel["pricing"], { rentalType: "LONG_TERM" }>;
 }) {
   const router = useRouter();
@@ -340,6 +393,8 @@ function LongTermBookingForm({
   const [leaseTermMonths, setLeaseTermMonths] = useState(pricing.minLeaseTermMonths);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isAuthenticated, setIsAuthenticated] = useState(initialIsAuthenticated);
+  const [showAuth, setShowAuth] = useState(false);
 
   const idempotencyKey = useMemo(
     () => crypto.randomUUID(),
@@ -350,18 +405,37 @@ function LongTermBookingForm({
     if (!leaseStartDate) return;
     setError(null);
     startTransition(async () => {
-      const result = await createLongTermBooking({
-        listingId,
-        leaseStartDate,
-        leaseTermMonths,
-        idempotencyKey,
-      });
-      if (!result.success) {
-        setError(result.error.message);
-        return;
+      try {
+        const result = await createLongTermBooking({
+          listingId,
+          leaseStartDate,
+          leaseTermMonths,
+          idempotencyKey,
+        });
+        if (!result.success) {
+          setError(result.error.message);
+          return;
+        }
+        router.push(`/account-bookings/${result.data.id}` as Route);
+      } catch {
+        setError("Your session expired. Please confirm your application again.");
       }
-      router.push(`/account-bookings/${result.data.id}` as Route);
     });
+  }
+
+  function handlePrimaryClick() {
+    if (isAuthenticated) {
+      handleSubmit();
+      return;
+    }
+    setShowAuth(true);
+  }
+
+  function handleAuthenticated() {
+    setIsAuthenticated(true);
+    setShowAuth(false);
+    router.refresh();
+    handleSubmit();
   }
 
   return (
@@ -411,12 +485,18 @@ function LongTermBookingForm({
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <ButtonPrimary disabled={!leaseStartDate || isPending} loading={isPending} onClick={handleSubmit}>
-        Apply to lease
-      </ButtonPrimary>
-      <p className="text-xs text-center text-neutral-500">
-        The host will review your application before confirming.
-      </p>
+      {showAuth ? (
+        <InlineBookingAuth onAuthenticated={handleAuthenticated} />
+      ) : (
+        <>
+          <ButtonPrimary disabled={!leaseStartDate || isPending} loading={isPending} onClick={handlePrimaryClick}>
+            Apply to lease
+          </ButtonPrimary>
+          <p className="text-xs text-center text-neutral-500">
+            The host will review your application before confirming.
+          </p>
+        </>
+      )}
     </div>
   );
 }

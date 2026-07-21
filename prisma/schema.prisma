@@ -676,3 +676,23 @@ model RateLimitHit {
 
   @@index([key, createdAt])
 }
+
+// One-time email codes for the passwordless "book without a separate login
+// step" flow (src/actions/auth.ts's requestBookingOtp, verified by the
+// "otp" CredentialsProvider in auth-options.ts). Keyed by email rather than
+// userId since the email may not have an account yet — the CredentialsProvider
+// creates the User at verification time if none exists. Requesting a new
+// code invalidates any prior unconsumed one for that email, so at most one
+// row per email is ever valid at a time.
+model BookingOtp {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email      String
+  codeHash   String
+  fullName   String
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([email])
+}

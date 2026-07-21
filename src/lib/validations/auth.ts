@@ -44,6 +44,15 @@ export const forgotPasswordSchema = z.object({
   email: emailSchema,
 });
 
+export const requestBookingOtpSchema = z.object({
+  fullName: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be at most 100 characters")
+    .transform((v) => v.trim()),
+  email: emailSchema,
+});
+
 export const resetPasswordSchema = z
   .object({
     token: z.string().min(1, "Reset token is required"),
@@ -69,6 +78,7 @@ export const changePasswordSchema = z
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type RequestBookingOtpInput = z.infer<typeof requestBookingOtpSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 

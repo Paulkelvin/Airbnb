@@ -182,7 +182,11 @@ export default function ListingDetailView({
         <div className="w-full lg:w-3/5 xl:w-2/3 space-y-7 lg:space-y-8 lg:pr-10">
           {/* SECTION 1 */}
           <div className="listingSection__wrap !space-y-6">
-            <Badge name={listing.propertyType.name} />
+            {/* self-start: .listingSection__wrap is flex-col (align-items:
+                stretch by default) — without this the badge's pill
+                background stretches to the full section width instead of
+                hugging its own text. */}
+            <Badge className="relative self-start" name={listing.propertyType.name} />
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold">{listing.title}</h2>
             <div className="flex items-center space-x-4">
               <StartRating point={listing.avgRating} reviewCount={listing.reviewCount} />
