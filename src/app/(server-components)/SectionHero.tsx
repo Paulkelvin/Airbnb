@@ -1,5 +1,4 @@
 import React, { FC } from "react";
-import imagePng from "@/images/hero-right-new.png";
 import CottageAvailabilityForm from "../(client-components)/(HeroSearchForm)/CottageAvailabilityForm";
 import HeroImageCarousel from "@/components/HeroImageCarousel";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
@@ -11,13 +10,14 @@ export interface SectionHeroProps {
   listingHref: Route | null;
 }
 
-// Placeholder photos until real photos of the actual cottage are supplied —
-// swap this array for real ones and the carousel needs no other changes.
+// Real photos of Potomac Vista Cottage (from the listing gallery) — a
+// sunset hammock/fire-pit shot up front, then an aerial dusk view, the
+// cottage itself from across the water, and a standalone sunset.
 const HERO_IMAGES = [
-  imagePng,
-  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633020/hero/hero-1.jpg",
-  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633021/hero/hero-2.jpg",
-  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633022/hero/hero-3.jpg",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784640961/listings/potomac-vista-cottage/hammock-firepit-sunset.jpg",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784640964/listings/potomac-vista-cottage/aerial-waterfront-dusk.jpg",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784642246/listings/potomac-vista-cottage/exterior-cottage-waterside.jpg",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784642254/listings/potomac-vista-cottage/sunset-over-water.jpg",
 ];
 
 const SectionHero: FC<SectionHeroProps> = ({ className = "", listingHref }) => {

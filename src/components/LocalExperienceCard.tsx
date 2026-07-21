@@ -21,14 +21,16 @@ const LocalExperienceCard: FC<LocalExperienceCardProps> = ({ className = "", dat
       className={`nc-LocalExperienceCard group relative flex flex-col bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl overflow-hidden hover:shadow-xl transition-shadow ${className}`}
       data-nc-id="LocalExperienceCard"
     >
-      <div className="relative w-full aspect-w-4 aspect-h-3">
-        <Image
-          src={imageUrl}
-          alt={title}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+      <div className="relative w-full">
+        <div className="relative w-full aspect-w-4 aspect-h-3">
+          <Image
+            src={imageUrl}
+            alt={title}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        </div>
         <Badge
           name={`${CATEGORY_EMOJI[category] ?? ""} ${category}`.trim()}
           color="gray"
