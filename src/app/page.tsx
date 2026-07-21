@@ -1,16 +1,11 @@
 import React from "react";
 import SectionHero from "@/app/(server-components)/SectionHero";
 import BgGlassmorphism from "@/components/BgGlassmorphism";
-import SectionSliderNewCategories from "@/components/SectionSliderNewCategories";
 import SectionExploreArea from "@/components/SectionExploreArea";
 import SectionWhyBookWithUs from "@/components/SectionWhyBookWithUs";
 import SectionBlogHighlights from "@/components/SectionBlogHighlights";
 import SectionFaqHighlights from "@/components/SectionFaqHighlights";
-import {
-  getFeaturedExperiences,
-  getAllExperiences,
-  getExperienceCategoryTaxonomies,
-} from "@/lib/local-experiences";
+import { getFeaturedExperiences, getAllExperiences } from "@/lib/local-experiences";
 import { getPrimaryListing } from "@/modules/listings/queries";
 import type { Route } from "@/routers/types";
 
@@ -22,7 +17,6 @@ async function PageHome() {
     getAllExperiences(),
     getPrimaryListing(),
   ]);
-  const categoryTaxonomies = getExperienceCategoryTaxonomies(allExperiences);
   const listingHref = primaryListing
     ? (`/listing-stay-detail/${primaryListing.slug}` as Route)
     : null;
@@ -33,13 +27,6 @@ async function PageHome() {
 
       <div className="container relative space-y-24 mb-24 lg:space-y-28 lg:mb-28">
         <SectionHero className="pt-10 lg:pt-16 lg:pb-16" listingHref={listingHref} />
-
-        <SectionSliderNewCategories
-          heading="Discover the Neighborhood"
-          subHeading="The best of what's around Potomac Vista Cottage, sorted by what you're in the mood for"
-          categories={categoryTaxonomies}
-          countLabel="places"
-        />
 
         <SectionWhyBookWithUs />
 

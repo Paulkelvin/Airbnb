@@ -6,11 +6,8 @@ import {
 } from "@/lib/sanity/queries";
 import {
   localExperiences as staticExperiences,
-  CATEGORY_EMOJI,
   type LocalExperience,
 } from "@/data/local-experiences";
-import type { TaxonomyType } from "@/data/types";
-import type { Route } from "@/routers/types";
 
 interface SanityLocalExperience {
   _id: string;
@@ -87,30 +84,4 @@ export async function getExperienceBySlug(slug: string): Promise<LocalExperience
   } catch {
     return staticExperiences.find((a) => a.slug === slug) ?? null;
   }
-}
-
-/**
- * Groups experiences into one TaxonomyType per category so the homepage can
- * reuse SectionSliderNewCategories' carousel as-is (it already accepts
- * generic TaxonomyType[] — no need for a bespoke category-carousel
- * component) instead of the old per-city taxonomy. Category names get their
- * emoji prefixed here so the carousel card itself doesn't need to know
- * anything about the category taxonomy.
- */
-export function getExperienceCategoryTaxonomies(experiences: LocalExperience[]): TaxonomyType[] {
-  const byCategory = new Map<string, LocalExperience[]>();
-  for (const a of experiences) {
-    const list = byCategory.get(a.category) ?? [];
-    list.push(a);
-    byCategory.set(a.category, list);
-  }
-
-  return Array.from(byCategory.entries()).map(([category, items]) => ({
-    id: category,
-    name: `${CATEGORY_EMOJI[category] ?? ""} ${category}`.trim(),
-    href: `/explore-the-area?category=${encodeURIComponent(category)}` as Route,
-    count: items.length,
-    thumbnail: items[0]?.imageUrl,
-    taxonomy: "category" as const,
-  }));
 }
