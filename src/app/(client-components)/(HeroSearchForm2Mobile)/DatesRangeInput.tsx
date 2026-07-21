@@ -1,7 +1,7 @@
 "use client";
 
 import DatePicker from "react-datepicker";
-import React, { FC } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { useWindowSize } from "react-use";
 import DatePickerCustomHeaderTwoMonth from "@/components/DatePickerCustomHeaderTwoMonth";
 import DatePickerCustomDay from "@/components/DatePickerCustomDay";
@@ -26,16 +26,29 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
   const { width } = useWindowSize();
   const monthsShown = width < 640 ? 1 : 2;
 
+  // Same brief, finite highlight as the desktop popover — a continuous blink
+  // would be an accessibility hazard, so this caps out after ~2 pulse cycles.
+  const [justChanged, setJustChanged] = useState(false);
+  const hintMessage =
+    startDate && !endDate ? "Now pick your check-out date" : "Pick a check-in date, then a check-out date";
+  useEffect(() => {
+    setJustChanged(true);
+    const timer = setTimeout(() => setJustChanged(false), 4000);
+    return () => clearTimeout(timer);
+  }, [hintMessage]);
+
   return (
     <div>
       <div className="p-5">
         <span className="block font-semibold text-xl sm:text-2xl">
           {` When's your trip?`}
         </span>
-        <span className="block mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          {startDate && !endDate
-            ? "Now pick your check-out date"
-            : "Pick a check-in date, then a check-out date"}
+        <span
+          className={`block mt-1 text-sm font-medium text-primary-6000 dark:text-primary-400 ${
+            justChanged ? "animate-pulse" : ""
+          }`}
+        >
+          {hintMessage}
         </span>
       </div>
       <div

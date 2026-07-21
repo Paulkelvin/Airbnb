@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Fragment, useState, FC } from "react";
+import React, { Fragment, useState, useEffect, FC } from "react";
 import { Popover, Transition } from "@headlessui/react";
 import { CalendarIcon } from "@heroicons/react/24/outline";
 import DatePickerCustomHeaderTwoMonth from "@/components/DatePickerCustomHeaderTwoMonth";
@@ -22,6 +22,19 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   //
+
+  // A brief, finite highlight (not a continuous blink — that's an
+  // accessibility hazard and just annoying) so switching from "pick check-in"
+  // to "now pick check-out" actually gets noticed instead of blending into a
+  // silent text swap.
+  const [justChanged, setJustChanged] = useState(false);
+  const hintMessage =
+    startDate && !endDate ? "Now pick your check-out date" : "Pick a check-in date, then a check-out date";
+  useEffect(() => {
+    setJustChanged(true);
+    const timer = setTimeout(() => setJustChanged(false), 4000);
+    return () => clearTimeout(timer);
+  }, [hintMessage]);
 
   const onChangeDate = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
@@ -88,10 +101,12 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
           >
             <Popover.Panel className="absolute left-1/2 z-10 mt-3 top-full w-screen max-w-sm -translate-x-1/2 transform px-4 sm:px-0 lg:max-w-3xl">
               <div className="overflow-hidden rounded-3xl shadow-lg ring-1 ring-black ring-opacity-5 bg-white dark:bg-neutral-800 p-8">
-                <span className="block mb-3 text-sm text-neutral-500 dark:text-neutral-400">
-                  {startDate && !endDate
-                    ? "Now pick your check-out date"
-                    : "Pick a check-in date, then a check-out date"}
+                <span
+                  className={`block mb-3 text-sm font-medium text-primary-6000 dark:text-primary-400 ${
+                    justChanged ? "animate-pulse" : ""
+                  }`}
+                >
+                  {hintMessage}
                 </span>
                 <DatePicker
                   selected={startDate}

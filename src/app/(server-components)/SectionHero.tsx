@@ -1,7 +1,7 @@
 import React, { FC } from "react";
 import imagePng from "@/images/hero-right-new.png";
 import CottageAvailabilityForm from "../(client-components)/(HeroSearchForm)/CottageAvailabilityForm";
-import Image from "next/image";
+import HeroImageCarousel from "@/components/HeroImageCarousel";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import type { Route } from "@/routers/types";
 
@@ -11,13 +11,22 @@ export interface SectionHeroProps {
   listingHref: Route | null;
 }
 
+// Placeholder photos until real photos of the actual cottage are supplied —
+// swap this array for real ones and the carousel needs no other changes.
+const HERO_IMAGES = [
+  imagePng,
+  "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1200",
+  "https://images.pexels.com/photos/1082355/pexels-photo-1082355.jpeg?auto=compress&cs=tinysrgb&w=1200",
+  "https://images.pexels.com/photos/2724748/pexels-photo-2724748.jpeg?auto=compress&cs=tinysrgb&w=1200",
+];
+
 const SectionHero: FC<SectionHeroProps> = ({ className = "", listingHref }) => {
   return (
     <div
       className={`nc-SectionHero flex flex-col-reverse lg:flex-col relative ${className}`}
     >
       <div className="flex flex-col lg:flex-row lg:items-center">
-        <div className="flex-shrink-0 lg:w-1/2 flex flex-col items-start space-y-8 sm:space-y-10 pb-14 lg:pb-64 xl:pr-14 lg:mr-10 xl:mr-0">
+        <div className="flex-shrink-0 lg:w-1/2 flex flex-col items-start space-y-8 sm:space-y-10 pb-14 lg:pb-20 xl:pb-28 xl:pr-14 lg:mr-10 xl:mr-0">
           <h1 className="font-medium text-4xl md:text-5xl xl:text-7xl !leading-[114%] ">
             Potomac Vista Cottage
           </h1>
@@ -27,22 +36,17 @@ const SectionHero: FC<SectionHeroProps> = ({ className = "", listingHref }) => {
           </span>
           {listingHref && (
             <ButtonPrimary href={listingHref} sizeClass="px-5 py-4 sm:px-7">
-              Check availability
+              Book Your Stay
             </ButtonPrimary>
           )}
         </div>
         <div className="flex-grow lg:pb-20 xl:pb-28">
-          <Image
-            className="w-full rounded-2xl"
-            src={imagePng}
-            alt="Potomac Vista Cottage interior"
-            priority
-          />
+          <HeroImageCarousel images={HERO_IMAGES} />
         </div>
       </div>
 
       {listingHref && (
-        <div className="hidden lg:block z-10 mb-12 lg:mb-0 lg:-mt-40 w-full">
+        <div className="hidden lg:block z-10 mb-12 lg:mb-0 lg:-mt-24 w-full">
           <CottageAvailabilityForm listingHref={listingHref} />
         </div>
       )}

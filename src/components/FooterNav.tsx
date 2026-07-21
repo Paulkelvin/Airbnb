@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  HeartIcon,
-  MagnifyingGlassIcon,
+  HomeIcon,
+  MapPinIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import React from "react";
@@ -18,16 +18,19 @@ interface NavItem {
   icon: any;
 }
 
+// One property, so "Explore"/magnifying-glass (search listings) and
+// "Wishlists" (save several properties to compare) no longer fit — this is
+// just Home plus a direct link to the actual new discovery feature.
 const NAV_LOGGED_OUT: NavItem[] = [
   {
-    name: "Explore",
+    name: "Home",
     link: "/",
-    icon: MagnifyingGlassIcon,
+    icon: HomeIcon,
   },
   {
-    name: "Wishlists",
-    link: "/account-savelists",
-    icon: HeartIcon,
+    name: "Explore Area",
+    link: "/explore-the-area",
+    icon: MapPinIcon,
   },
   {
     name: "Log in",
@@ -42,14 +45,14 @@ const NAV_LOGGED_OUT: NavItem[] = [
 
 const NAV_LOGGED_IN: NavItem[] = [
   {
-    name: "Explore",
+    name: "Home",
     link: "/",
-    icon: MagnifyingGlassIcon,
+    icon: HomeIcon,
   },
   {
-    name: "Wishlists",
-    link: "/account-savelists",
-    icon: HeartIcon,
+    name: "Explore Area",
+    link: "/explore-the-area",
+    icon: MapPinIcon,
   },
   {
     name: "Account",

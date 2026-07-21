@@ -36,7 +36,7 @@ async function PageHome() {
 
         <SectionSliderNewCategories
           heading="Discover the Neighborhood"
-          subHeading="Everything nearby, sorted the way you're already thinking about it"
+          subHeading="The best of what's around Potomac Vista Cottage, sorted by what you're in the mood for"
           categories={categoryTaxonomies}
           countLabel="places"
         />

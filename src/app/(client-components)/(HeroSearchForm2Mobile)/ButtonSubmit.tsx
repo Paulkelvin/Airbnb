@@ -31,10 +31,10 @@ const ButtonSubmit: FC<Props> = ({
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth={1.5}
-          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          d="M4.5 12.75l6 6 9-13.5"
         />
       </svg>
-      <span className="ml-2">Search</span>
+      <span className="ml-2">Continue</span>
     </button>
   );
 };
