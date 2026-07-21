@@ -4,6 +4,7 @@ import LocalExperienceCard from "@/components/LocalExperienceCard";
 import ExploreAreaMap from "@/components/ExploreAreaMap/ExploreAreaMap";
 import { getAllExperiences } from "@/lib/local-experiences";
 import { getPrimaryListing } from "@/modules/listings/queries";
+import { fuzzCoordinates } from "@/lib/geo-fuzz";
 import { CATEGORY_EMOJI } from "@/data/local-experiences";
 import type { Route } from "@/routers/types";
 
@@ -39,7 +40,10 @@ export default async function ExploreTheAreaPage({
 
   const cottage =
     primaryListing?.latitude != null && primaryListing?.longitude != null
-      ? { lat: primaryListing.latitude, lng: primaryListing.longitude, label: primaryListing.title }
+      ? {
+          ...fuzzCoordinates(primaryListing.latitude, primaryListing.longitude, primaryListing.slug),
+          label: primaryListing.title,
+        }
       : null;
 
   return (

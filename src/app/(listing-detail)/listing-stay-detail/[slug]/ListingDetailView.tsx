@@ -28,6 +28,7 @@ import type { LocalExperience } from "@/data/local-experiences";
 import type { Route } from "@/routers/types";
 import type { CancellationPolicy } from "@prisma/client";
 import { cloudinaryLoader } from "@/lib/cloudinary-image-loader";
+import { fuzzCoordinates } from "@/lib/geo-fuzz";
 
 const AMENITY_CATEGORY_LABELS: Record<string, string> = {
   BASIC: "Basic",
@@ -84,6 +85,13 @@ export default function ListingDetailView({
   );
 
   const images = listing.images.length > 0 ? listing.images : [{ id: 0, url: "" }];
+  // Pre-booking map pin is fuzzed (~0.15-0.35mi off) rather than showing the
+  // exact house — matches address.line1 already being withheld ("Exact
+  // address provided after booking") and how Airbnb itself handles this.
+  const fuzzedLocation =
+    listing.address?.latitude && listing.address?.longitude
+      ? fuzzCoordinates(listing.address.latitude, listing.address.longitude, listing.id)
+      : null;
   const priceLabel =
     listing.pricing.rentalType === "SHORT_TERM"
       ? `$${listing.pricing.nightlyPrice}`
@@ -420,33 +428,38 @@ export default function ListingDetailView({
               <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
                 {listing.address.city}, {listing.address.region}, {listing.address.country}
               </span>
-              {listing.address.latitude && listing.address.longitude && (
-                <div className="aspect-w-5 aspect-h-5 sm:aspect-h-3 ring-1 ring-black/10 rounded-xl z-0">
-                  <div className="rounded-xl overflow-hidden z-0">
-                    {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
-                      <iframe
-                        width="100%"
-                        height="100%"
-                        loading="lazy"
-                        allowFullScreen
-                        referrerPolicy="no-referrer-when-downgrade"
-                        src={`https://www.google.com/maps/embed/v1/place?key=${
-                          process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-                        }&q=${listing.address.latitude},${listing.address.longitude}`}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400">
-                        <div className="text-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mx-auto mb-2 text-neutral-400 dark:text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span className="text-sm">Map not available</span>
+              {fuzzedLocation && (
+                <>
+                  <div className="aspect-w-5 aspect-h-5 sm:aspect-h-3 ring-1 ring-black/10 rounded-xl z-0">
+                    <div className="rounded-xl overflow-hidden z-0">
+                      {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          loading="lazy"
+                          allowFullScreen
+                          referrerPolicy="no-referrer-when-downgrade"
+                          src={`https://www.google.com/maps/embed/v1/place?key=${
+                            process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+                          }&q=${fuzzedLocation.lat},${fuzzedLocation.lng}&zoom=13`}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400">
+                          <div className="text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mx-auto mb-2 text-neutral-400 dark:text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="text-sm">Map not available</span>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
+                  <p className="mt-2 text-xs text-neutral-400">
+                    Exact location provided after booking.
+                  </p>
+                </>
               )}
             </div>
           )}

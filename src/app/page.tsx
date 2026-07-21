@@ -7,6 +7,7 @@ import SectionBlogHighlights from "@/components/SectionBlogHighlights";
 import SectionFaqHighlights from "@/components/SectionFaqHighlights";
 import { getFeaturedExperiences, getAllExperiences } from "@/lib/local-experiences";
 import { getPrimaryListing } from "@/modules/listings/queries";
+import { fuzzCoordinates } from "@/lib/geo-fuzz";
 import type { Route } from "@/routers/types";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +35,10 @@ async function PageHome() {
           experiences={featuredExperiences}
           cottage={
             primaryListing?.latitude != null && primaryListing?.longitude != null
-              ? { lat: primaryListing.latitude, lng: primaryListing.longitude, label: primaryListing.title }
+              ? {
+                  ...fuzzCoordinates(primaryListing.latitude, primaryListing.longitude, primaryListing.slug),
+                  label: primaryListing.title,
+                }
               : null
           }
           allExperiences={allExperiences}

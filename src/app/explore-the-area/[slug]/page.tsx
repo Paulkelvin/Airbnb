@@ -7,6 +7,7 @@ import LocalExperienceCard from "@/components/LocalExperienceCard";
 import ExploreAreaMap from "@/components/ExploreAreaMap/ExploreAreaMap";
 import { getExperienceBySlug, getAllExperiences } from "@/lib/local-experiences";
 import { getPrimaryListing } from "@/modules/listings/queries";
+import { fuzzCoordinates } from "@/lib/geo-fuzz";
 import { CATEGORY_EMOJI } from "@/data/local-experiences";
 import type { Route } from "@/routers/types";
 
@@ -121,7 +122,13 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
                 className="aspect-square"
                 cottage={
                   hasCottageCoords
-                    ? { lat: primaryListing!.latitude!, lng: primaryListing!.longitude!, label: "Potomac Vista Cottage" }
+                    ? {
+                        // Fuzzed for this map marker only — directionsHref
+                        // below still uses the precise coordinates, since
+                        // real turn-by-turn directions must stay accurate.
+                        ...fuzzCoordinates(primaryListing!.latitude!, primaryListing!.longitude!, primaryListing!.slug),
+                        label: "Potomac Vista Cottage",
+                      }
                     : { lat: experience.latitude, lng: experience.longitude, label: "Potomac Vista Cottage" }
                 }
                 experiences={[experience]}
