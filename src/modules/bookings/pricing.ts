@@ -77,6 +77,27 @@ export function nightsBetween(checkInDate: Date, checkOutDate: Date): number {
   return Math.round((checkOutDate.getTime() - checkInDate.getTime()) / msPerDay);
 }
 
+/**
+ * Snaps a Date to UTC midnight of whatever UTC calendar day it falls on.
+ *
+ * checkInDate/checkOutDate reach the server as plain Date instants with no
+ * timezone metadata, but they're constructed two different ways on the
+ * client: react-datepicker builds them at *local* midnight, while dates
+ * round-tripped through a "?checkIn=2026-07-25" URL param get parsed as
+ * *UTC* midnight (date-only ISO strings parse as UTC per spec). For any
+ * guest in a negative UTC offset (all of the US), both of those land on the
+ * same UTC calendar day — but only once normalized here. Without this, the
+ * Availability table's @@unique([listingId, date]) constraint — the only
+ * thing actually preventing a double-booking — can silently fail to catch
+ * two bookings for "the same night" that differ by a few hours in their
+ * raw timestamp, because they were entered through different pages.
+ * Call this on every checkInDate/checkOutDate the instant it's received,
+ * before it's used for nights, quotes, or Availability rows.
+ */
+export function toCalendarDateUTC(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
 export function datesInRange(checkInDate: Date, checkOutDate: Date): Date[] {
   const dates: Date[] = [];
   const cursor = new Date(checkInDate);

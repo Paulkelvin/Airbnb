@@ -94,8 +94,20 @@ function ShortTermBookingForm({
   // Pre-fill from the Hero's "Check availability" widget (?checkIn=&checkOut=&guests=)
   // so picking dates on the homepage doesn't get thrown away on arrival here.
   const initialDates = useMemo(() => {
+    // ?checkIn=2026-07-25 is a date-only string, which parses as *UTC*
+    // midnight per spec — but the date picker below highlights by *local*
+    // calendar day, so for any negative-UTC-offset guest (all of the US)
+    // that would prefill one day earlier than what they actually picked on
+    // the homepage. Building the Date from the Y-M-D components directly
+    // keeps it anchored to the intended calendar day (same fix as
+    // excludeDates below).
     const parse = (value: string | null) => {
       if (!value) return null;
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+      if (match) {
+        const [, year, month, day] = match;
+        return new Date(Number(year), Number(month) - 1, Number(day));
+      }
       const date = new Date(value);
       return Number.isNaN(date.getTime()) ? null : date;
     };
@@ -128,7 +140,21 @@ function ShortTermBookingForm({
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isFetchingIntent, setIsFetchingIntent] = useState(false);
 
-  const excludeDates = useMemo(() => blockedDates.map((d) => new Date(d)), [blockedDates]);
+  // blockedDates are full UTC ISO strings (e.g. "2026-07-25T00:00:00.000Z").
+  // Parsing those with `new Date(d)` and letting react-datepicker compare
+  // them against its *local* calendar grid shows the wrong day as blocked
+  // for any negative-UTC-offset guest (i.e. everyone in the US) — the UTC
+  // midnight instant falls on the previous local evening. Building the Date
+  // from the Y-M-D components directly keeps it anchored to the intended
+  // calendar day regardless of the guest's timezone.
+  const excludeDates = useMemo(
+    () =>
+      blockedDates.map((d) => {
+        const [year, month, day] = d.slice(0, 10).split("-").map(Number);
+        return new Date(year, month - 1, day);
+      }),
+    [blockedDates],
+  );
 
   const nights = checkInDate && checkOutDate ? nightsBetween(checkInDate, checkOutDate) : 0;
   const quote = nights > 0 ? computeShortTermQuote({ ...pricing, nights, serviceFeePercent }) : null;

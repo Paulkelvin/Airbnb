@@ -26,8 +26,15 @@ import {
   type TerminateLeaseInput,
 } from "@/lib/validations/booking";
 import type { ActionResult } from "@/lib/validations/auth";
-import { computeShortTermQuote, computeLongTermQuote, nightsBetween, datesInRange, addMonthsUTC } from "./pricing";
-import { getListingForBooking } from "./queries";
+import {
+  computeShortTermQuote,
+  computeLongTermQuote,
+  nightsBetween,
+  datesInRange,
+  addMonthsUTC,
+  toCalendarDateUTC,
+} from "./pricing";
+import { getListingForBooking, isRangeAvailable } from "./queries";
 import { assertTransition, canTransition, InvalidTransitionError } from "./status-machine";
 import { notify } from "@/modules/notifications/notify";
 
@@ -78,6 +85,11 @@ export async function createShortTermBooking(
     };
   }
   const data = parsed.data;
+  // See toCalendarDateUTC's doc comment: this is what makes the Availability
+  // unique constraint below actually catch double-bookings regardless of
+  // which page/flow the dates were entered through.
+  data.checkInDate = toCalendarDateUTC(data.checkInDate);
+  data.checkOutDate = toCalendarDateUTC(data.checkOutDate);
 
   const existing = await prisma.booking.findUnique({
     where: { idempotencyKey: data.idempotencyKey },
@@ -236,6 +248,12 @@ export async function createBookingPaymentIntent(
     };
   }
   const data = parsed.data;
+  // Same normalization as createShortTermBooking — this quote must be for
+  // the exact same canonical nights that booking creation will later check
+  // availability against, or the two could disagree about which dates are
+  // being priced.
+  data.checkInDate = toCalendarDateUTC(data.checkInDate);
+  data.checkOutDate = toCalendarDateUTC(data.checkOutDate);
 
   const listing = await getListingForBooking(data.listingId);
   if (!listing || listing.status !== "PUBLISHED" || listing.rentalType !== "SHORT_TERM") {
@@ -270,6 +288,16 @@ export async function createBookingPaymentIntent(
         message: `This listing sleeps at most ${listing.maxOccupants} guests`,
       },
     };
+  }
+
+  // A PaymentIntent shouldn't be created for dates someone else already has —
+  // this doesn't eliminate the race (a conflicting booking can still land
+  // between this check and the eventual createShortTermBooking call, which
+  // is why that call re-checks via the Availability unique constraint), but
+  // it stops the common case of a guest paying for dates that were already
+  // gone before they ever opened the payment form.
+  if (!(await isRangeAvailable(listing.id, data.checkInDate, data.checkOutDate))) {
+    return { success: false, error: DOUBLE_BOOKED_ERROR };
   }
 
   const serviceFeePercent = (await getServiceFeePercent()) / 100;
@@ -445,6 +473,22 @@ async function chargeBookingTx(
 ) {
   const amountCents = dollarsToCents(args.amountDollars);
   const provider = getPaymentProvider();
+
+  // verifyPaymentAmount only proves the intent is real, succeeded, and for
+  // the right amount — a Stripe PaymentIntent can be retrieved and would
+  // pass that check as many times as it's presented. Without this lookup,
+  // the same succeeded paymentIntentId could be replayed across multiple
+  // createShortTermBooking calls (different dates, same total price) to
+  // get more than one booking out of a single real charge.
+  if (args.paymentIntentId) {
+    const alreadyUsed = await tx.payment.findFirst({
+      where: { providerTransactionRef: args.paymentIntentId },
+      select: { id: true },
+    });
+    if (alreadyUsed) {
+      throw new Error("This payment has already been used for another booking");
+    }
+  }
 
   const result = args.paymentIntentId
     ? await verifyPaymentAmount(provider, args.paymentIntentId, amountCents)

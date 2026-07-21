@@ -5,8 +5,15 @@ import StayDatesRangeInput from "./(stay-search-form)/StayDatesRangeInput";
 import GuestsInput from "./GuestsInput";
 import type { Route } from "@/routers/types";
 
+// date-picker values are constructed at *local* midnight — converting with
+// toISOString() first shifts to UTC and can roll the date back a day for
+// any negative-UTC-offset guest, so build the string from local getters.
 function toISODate(date: Date | null): string | null {
-  return date ? date.toISOString().slice(0, 10) : null;
+  if (!date) return null;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 /**
