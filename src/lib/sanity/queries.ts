@@ -91,20 +91,28 @@ export const aboutPageQuery = groq`
   }
 `;
 
-export const featuredAttractionsQuery = groq`
-  *[_type == "attraction" && defined(publishedAt) && publishedAt <= now() && featured == true] | order(order asc) {
-    _id, title, category, description, imageUrl, distanceLabel, externalUrl, featured
+const localExperienceFields = `
+  _id, title, "slug": slug.current, category, tagline, description, imageUrl,
+  galleryImageUrls, distanceLabel, latitude, longitude, openingHours,
+  websiteUrl, featured
+`;
+
+export const featuredLocalExperiencesQuery = groq`
+  *[_type == "localExperience" && defined(publishedAt) && publishedAt <= now() && featured == true] | order(order asc) {
+    ${localExperienceFields}
   }
 `;
 
-export const allAttractionsQuery = groq`
-  *[_type == "attraction" && defined(publishedAt) && publishedAt <= now()] | order(category asc, order asc) {
-    _id, title, category, description, imageUrl, distanceLabel, externalUrl, featured
+export const allLocalExperiencesQuery = groq`
+  *[_type == "localExperience" && defined(publishedAt) && publishedAt <= now()] | order(category asc, order asc) {
+    ${localExperienceFields}
   }
 `;
 
-export const attractionCategoriesQuery = groq`
-  *[_type == "attraction" && defined(publishedAt) && publishedAt <= now()].category
+export const localExperienceBySlugQuery = groq`
+  *[_type == "localExperience" && slug.current == $slug && defined(publishedAt) && publishedAt <= now()][0] {
+    ${localExperienceFields}
+  }
 `;
 
 export const sitemapPostsQuery = groq`

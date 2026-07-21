@@ -141,33 +141,45 @@ export async function getAdminFaq(id: string): Promise<CmsFaqItem | null> {
   );
 }
 
-// ---------- Attractions ----------
+// ---------- Local Experiences ----------
 
-export interface CmsAttractionItem {
+const adminLocalExperienceFields = `
+  _id, title, "slug": slug.current, category, tagline, description, imageUrl,
+  galleryImageUrls, distanceLabel, latitude, longitude, openingHours,
+  websiteUrl, featured, order, publishedAt
+`;
+
+export interface CmsLocalExperienceItem {
   _id: string;
   title: string;
+  slug: string;
   category: string;
+  tagline: string;
   description: string;
   imageUrl: string;
+  galleryImageUrls: string[];
   distanceLabel: string;
-  externalUrl: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  openingHours: string | null;
+  websiteUrl: string | null;
   featured: boolean;
   order: number;
   publishedAt: string | null;
 }
 
-export async function getAdminAttractions(): Promise<CmsAttractionItem[]> {
+export async function getAdminLocalExperiences(): Promise<CmsLocalExperienceItem[]> {
   return sanityClient.fetch(groq`
-    *[_type == "attraction"] | order(category asc, order asc) {
-      _id, title, category, description, imageUrl, distanceLabel, externalUrl, featured, order, publishedAt
+    *[_type == "localExperience"] | order(category asc, order asc) {
+      ${adminLocalExperienceFields}
     }
   `);
 }
 
-export async function getAdminAttraction(id: string): Promise<CmsAttractionItem | null> {
+export async function getAdminLocalExperience(id: string): Promise<CmsLocalExperienceItem | null> {
   return sanityClient.fetch(
-    groq`*[_type == "attraction" && _id == $id][0] {
-      _id, title, category, description, imageUrl, distanceLabel, externalUrl, featured, order, publishedAt
+    groq`*[_type == "localExperience" && _id == $id][0] {
+      ${adminLocalExperienceFields}
     }`,
     { id },
   );

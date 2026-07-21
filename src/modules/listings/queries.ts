@@ -141,12 +141,24 @@ export async function getPublishedListings(
  * exist again, the Hero degrades gracefully (see SectionHero) rather than
  * needing this function to change.
  */
-export async function getPrimaryListing(): Promise<{ slug: string; title: string } | null> {
-  return prisma.listing.findFirst({
+export async function getPrimaryListing(): Promise<{
+  slug: string;
+  title: string;
+  latitude: number | null;
+  longitude: number | null;
+} | null> {
+  const listing = await prisma.listing.findFirst({
     where: { status: "PUBLISHED" },
     orderBy: { publishedAt: "desc" },
-    select: { slug: true, title: true },
+    select: { slug: true, title: true, address: { select: { latitude: true, longitude: true } } },
   });
+  if (!listing) return null;
+  return {
+    slug: listing.slug,
+    title: listing.title,
+    latitude: listing.address?.latitude ?? null,
+    longitude: listing.address?.longitude ?? null,
+  };
 }
 
 /** Slug + last-modified for every published listing — feeds `src/app/sitemap.ts`. */

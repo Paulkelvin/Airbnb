@@ -7,22 +7,22 @@ import SectionWhyBookWithUs from "@/components/SectionWhyBookWithUs";
 import SectionBlogHighlights from "@/components/SectionBlogHighlights";
 import SectionFaqHighlights from "@/components/SectionFaqHighlights";
 import {
-  getFeaturedAttractions,
-  getAllAttractions,
-  getAttractionCategoryTaxonomies,
-} from "@/lib/attractions";
+  getFeaturedExperiences,
+  getAllExperiences,
+  getExperienceCategoryTaxonomies,
+} from "@/lib/local-experiences";
 import { getPrimaryListing } from "@/modules/listings/queries";
 import type { Route } from "@/routers/types";
 
 export const dynamic = "force-dynamic";
 
 async function PageHome() {
-  const [featuredAttractions, allAttractions, primaryListing] = await Promise.all([
-    getFeaturedAttractions(),
-    getAllAttractions(),
+  const [featuredExperiences, allExperiences, primaryListing] = await Promise.all([
+    getFeaturedExperiences(),
+    getAllExperiences(),
     getPrimaryListing(),
   ]);
-  const categoryTaxonomies = getAttractionCategoryTaxonomies(allAttractions);
+  const categoryTaxonomies = getExperienceCategoryTaxonomies(allExperiences);
   const listingHref = primaryListing
     ? (`/listing-stay-detail/${primaryListing.slug}` as Route)
     : null;
@@ -35,7 +35,7 @@ async function PageHome() {
         <SectionHero className="pt-10 lg:pt-16 lg:pb-16" listingHref={listingHref} />
 
         <SectionSliderNewCategories
-          heading="Explore by category"
+          heading="Discover the Neighborhood"
           subHeading="Everything nearby, sorted the way you're already thinking about it"
           categories={categoryTaxonomies}
           countLabel="places"
@@ -43,7 +43,15 @@ async function PageHome() {
 
         <SectionWhyBookWithUs />
 
-        <SectionExploreArea attractions={featuredAttractions} />
+        <SectionExploreArea
+          experiences={featuredExperiences}
+          cottage={
+            primaryListing?.latitude != null && primaryListing?.longitude != null
+              ? { lat: primaryListing.latitude, lng: primaryListing.longitude, label: primaryListing.title }
+              : null
+          }
+          allExperiences={allExperiences}
+        />
 
         <SectionBlogHighlights />
 

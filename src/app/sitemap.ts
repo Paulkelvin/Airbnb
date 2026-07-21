@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getSiteUrl } from "@/lib/site-url";
 import { getPublishedListingSlugsForSitemap } from "@/modules/listings/queries";
+import { getAllExperiences } from "@/lib/local-experiences";
 
 /**
  * Dynamic sitemap (Next.js 13 `app/sitemap.ts` convention) — lists every
@@ -40,13 +41,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/blog`, changeFrequency: "weekly", priority: 0.5 },
   ];
 
-  const listings = await getPublishedListingSlugsForSitemap();
+  const [listings, experiences] = await Promise.all([
+    getPublishedListingSlugsForSitemap(),
+    getAllExperiences(),
+  ]);
   const listingRoutes: MetadataRoute.Sitemap = listings.map((listing) => ({
     url: `${siteUrl}/listing-stay-detail/${listing.slug}`,
     lastModified: listing.updatedAt,
     changeFrequency: "daily",
     priority: 0.8,
   }));
+  const experienceRoutes: MetadataRoute.Sitemap = experiences.map((experience) => ({
+    url: `${siteUrl}/explore-the-area/${experience.slug}`,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
 
-  return [...staticRoutes, ...listingRoutes];
+  return [...staticRoutes, ...listingRoutes, ...experienceRoutes];
 }

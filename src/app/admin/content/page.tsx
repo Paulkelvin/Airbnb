@@ -14,26 +14,26 @@ import {
   getAdminCategories,
   getAdminAuthors,
   getAdminFaqs,
-  getAdminAttractions,
+  getAdminLocalExperiences,
 } from "@/modules/cms/queries";
 
 export const metadata = { title: "Content" };
 
 export default async function AdminContentOverviewPage() {
-  const [posts, pages, categories, authors, faqs, attractions] = await Promise.all([
+  const [posts, pages, categories, authors, faqs, experiences] = await Promise.all([
     getAdminPosts(),
     getAdminPages(),
     getAdminCategories(),
     getAdminAuthors(),
     getAdminFaqs(),
-    getAdminAttractions(),
+    getAdminLocalExperiences(),
   ]);
 
   const sections = [
     {
-      href: "/admin/content/attractions",
+      href: "/admin/content/local-experiences",
       label: "Explore the Area",
-      count: attractions.length,
+      count: experiences.length,
       icon: MapPinIcon,
       description: "Nearby restaurants, parks, waterfronts, and activities shown to guests.",
     },

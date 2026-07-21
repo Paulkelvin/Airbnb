@@ -4,55 +4,80 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import {
-  createAttraction,
-  updateAttraction,
-  deleteAttraction,
-  type AttractionFormInput,
+  createLocalExperience,
+  updateLocalExperience,
+  deleteLocalExperience,
+  type LocalExperienceFormInput,
 } from "@/modules/cms/actions";
-import type { CmsAttractionItem } from "@/modules/cms/queries";
-import { ATTRACTION_CATEGORIES } from "@/data/attractions";
+import type { CmsLocalExperienceItem } from "@/modules/cms/queries";
+import { EXPERIENCE_CATEGORIES, CATEGORY_EMOJI } from "@/data/local-experiences";
 
-const emptyForm: AttractionFormInput = {
+// The form manages the gallery as a textarea (one URL per line) rather than
+// an array field directly — same idea as PageForm's plain-text body editor,
+// simplest thing that works without building a repeatable-field widget.
+interface FormState extends Omit<LocalExperienceFormInput, "galleryImageUrls" | "latitude" | "longitude"> {
+  galleryImageUrlsText: string;
+  latitude: string;
+  longitude: string;
+}
+
+const emptyForm: FormState = {
   title: "",
-  category: ATTRACTION_CATEGORIES[0],
+  slug: "",
+  category: EXPERIENCE_CATEGORIES[0],
+  tagline: "",
   description: "",
   imageUrl: "",
+  galleryImageUrlsText: "",
   distanceLabel: "",
-  externalUrl: "",
+  latitude: "",
+  longitude: "",
+  openingHours: "",
+  websiteUrl: "",
   featured: false,
   order: 0,
   publishedAt: new Date().toISOString(),
 };
 
-function toFormInput(a: CmsAttractionItem): AttractionFormInput {
+function toFormState(a: CmsLocalExperienceItem): FormState {
   return {
     title: a.title,
+    slug: a.slug,
     category: a.category,
+    tagline: a.tagline,
     description: a.description,
     imageUrl: a.imageUrl,
+    galleryImageUrlsText: a.galleryImageUrls.join("\n"),
     distanceLabel: a.distanceLabel,
-    externalUrl: a.externalUrl ?? "",
+    latitude: a.latitude?.toString() ?? "",
+    longitude: a.longitude?.toString() ?? "",
+    openingHours: a.openingHours ?? "",
+    websiteUrl: a.websiteUrl ?? "",
     featured: a.featured,
     order: a.order,
     publishedAt: a.publishedAt,
   };
 }
 
-export default function AttractionsManager({ attractions }: { attractions: CmsAttractionItem[] }) {
+export default function LocalExperiencesManager({
+  experiences,
+}: {
+  experiences: CmsLocalExperienceItem[];
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<AttractionFormInput>(emptyForm);
+  const [form, setForm] = useState<FormState>(emptyForm);
   const [showNewForm, setShowNewForm] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [visible, setVisible] = useState(true);
 
-  function startEdit(a: CmsAttractionItem) {
+  function startEdit(a: CmsLocalExperienceItem) {
     setError(null);
     setShowNewForm(false);
     setEditingId(a._id);
-    setForm(toFormInput(a));
+    setForm(toFormState(a));
     setVisible(Boolean(a.publishedAt));
   }
 
@@ -70,12 +95,27 @@ export default function AttractionsManager({ attractions }: { attractions: CmsAt
   }
 
   function save() {
-    const input: AttractionFormInput = {
-      ...form,
+    const input: LocalExperienceFormInput = {
+      title: form.title,
+      slug: form.slug,
+      category: form.category,
+      tagline: form.tagline,
+      description: form.description,
+      imageUrl: form.imageUrl,
+      galleryImageUrls: form.galleryImageUrlsText.split("\n").map((u) => u.trim()).filter(Boolean),
+      distanceLabel: form.distanceLabel,
+      latitude: form.latitude.trim() ? Number(form.latitude) : null,
+      longitude: form.longitude.trim() ? Number(form.longitude) : null,
+      openingHours: form.openingHours,
+      websiteUrl: form.websiteUrl,
+      featured: form.featured,
+      order: form.order,
       publishedAt: visible ? new Date().toISOString() : null,
     };
     startTransition(async () => {
-      const result = editingId ? await updateAttraction(editingId, input) : await createAttraction(input);
+      const result = editingId
+        ? await updateLocalExperience(editingId, input)
+        : await createLocalExperience(input);
       if (!result.success) {
         setError(result.error.message);
         return;
@@ -88,7 +128,7 @@ export default function AttractionsManager({ attractions }: { attractions: CmsAt
 
   function handleDelete(id: string) {
     startTransition(async () => {
-      const result = await deleteAttraction(id);
+      const result = await deleteLocalExperience(id);
       if (!result.success) setError(result.error.message);
       router.refresh();
     });
@@ -117,9 +157,9 @@ export default function AttractionsManager({ attractions }: { attractions: CmsAt
             value={form.category}
             onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
           >
-            {ATTRACTION_CATEGORIES.map((c) => (
+            {EXPERIENCE_CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {CATEGORY_EMOJI[c]} {c}
               </option>
             ))}
           </select>
@@ -127,11 +167,31 @@ export default function AttractionsManager({ attractions }: { attractions: CmsAt
       </div>
 
       <div>
-        <label className={labelClass}>Description</label>
+        <label className={labelClass}>URL slug (optional — auto-generated from title if left blank)</label>
+        <input
+          className={inputClass}
+          placeholder="riverbend-park"
+          value={form.slug}
+          onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+        />
+      </div>
+
+      <div>
+        <label className={labelClass}>Tagline — the one-line hook shown on cards</label>
+        <input
+          className={inputClass}
+          placeholder="e.g. Ideal for morning walks and sunset views"
+          value={form.tagline}
+          onChange={(e) => setForm((f) => ({ ...f, tagline: e.target.value }))}
+        />
+      </div>
+
+      <div>
+        <label className={labelClass}>Description — longer narrative for its own page</label>
         <textarea
           className={inputClass}
-          rows={2}
-          placeholder="A sentence or two guests will actually read"
+          rows={3}
+          placeholder="A paragraph guests will actually read"
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
         />
@@ -139,7 +199,7 @@ export default function AttractionsManager({ attractions }: { attractions: CmsAt
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className={labelClass}>Image URL</label>
+          <label className={labelClass}>Main image URL</label>
           <input
             className={inputClass}
             placeholder="https://..."
@@ -158,25 +218,67 @@ export default function AttractionsManager({ attractions }: { attractions: CmsAt
         </div>
       </div>
 
+      <div>
+        <label className={labelClass}>Gallery image URLs (optional — one per line)</label>
+        <textarea
+          className={`${inputClass} font-mono text-xs`}
+          rows={3}
+          placeholder={"https://...\nhttps://..."}
+          value={form.galleryImageUrlsText}
+          onChange={(e) => setForm((f) => ({ ...f, galleryImageUrlsText: e.target.value }))}
+        />
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className={labelClass}>Latitude (optional — powers the map)</label>
+          <input
+            className={inputClass}
+            placeholder="38.9977"
+            value={form.latitude}
+            onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value }))}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Longitude (optional — powers the map)</label>
+          <input
+            className={inputClass}
+            placeholder="-77.2472"
+            value={form.longitude}
+            onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value }))}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className={labelClass}>Opening hours (optional)</label>
+          <input
+            className={inputClass}
+            placeholder="e.g. Daily, 9am–6pm"
+            value={form.openingHours}
+            onChange={(e) => setForm((f) => ({ ...f, openingHours: e.target.value }))}
+          />
+        </div>
         <div>
           <label className={labelClass}>Website / map link (optional)</label>
           <input
             className={inputClass}
             placeholder="https://..."
-            value={form.externalUrl}
-            onChange={(e) => setForm((f) => ({ ...f, externalUrl: e.target.value }))}
+            value={form.websiteUrl}
+            onChange={(e) => setForm((f) => ({ ...f, websiteUrl: e.target.value }))}
           />
         </div>
-        <div>
-          <label className={labelClass}>Order (lower shows first within its category)</label>
-          <input
-            type="number"
-            className={inputClass}
-            value={form.order}
-            onChange={(e) => setForm((f) => ({ ...f, order: Number(e.target.value) }))}
-          />
-        </div>
+      </div>
+
+      <div>
+        <label className={labelClass}>Order (lower shows first within its category)</label>
+        <input
+          type="number"
+          className={`${inputClass} sm:w-48`}
+          value={form.order}
+          onChange={(e) => setForm((f) => ({ ...f, order: Number(e.target.value) }))}
+        />
       </div>
 
       <div className="flex items-center gap-6">
@@ -225,7 +327,7 @@ export default function AttractionsManager({ attractions }: { attractions: CmsAt
           onClick={startNew}
           className="px-4 py-2 text-sm rounded-lg bg-primary-6000 text-white hover:bg-primary-700"
         >
-          New attraction
+          New local experience
         </button>
       )}
       {showNewForm && (
@@ -235,7 +337,7 @@ export default function AttractionsManager({ attractions }: { attractions: CmsAt
       )}
 
       <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 divide-y divide-neutral-100 dark:divide-neutral-700">
-        {attractions.map((a) =>
+        {experiences.map((a) =>
           editingId === a._id ? (
             <div key={a._id} className="p-4">
               {formFields}
@@ -252,7 +354,7 @@ export default function AttractionsManager({ attractions }: { attractions: CmsAt
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400">
-                      {a.category}
+                      {CATEGORY_EMOJI[a.category]} {a.category}
                     </span>
                     {a.featured && (
                       <span className="text-xs px-1.5 py-0.5 rounded bg-primary-50 dark:bg-primary-900/30 text-primary-6000">
@@ -264,7 +366,7 @@ export default function AttractionsManager({ attractions }: { attractions: CmsAt
                     {a.title}
                   </p>
                   <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400 line-clamp-1">
-                    {a.description}
+                    {a.tagline || a.description}
                   </p>
                 </div>
               </div>
@@ -286,8 +388,8 @@ export default function AttractionsManager({ attractions }: { attractions: CmsAt
             </div>
           ),
         )}
-        {attractions.length === 0 && (
-          <p className="px-4 py-10 text-center text-sm text-neutral-400">No attractions yet.</p>
+        {experiences.length === 0 && (
+          <p className="px-4 py-10 text-center text-sm text-neutral-400">No local experiences yet.</p>
         )}
       </div>
 
@@ -295,7 +397,7 @@ export default function AttractionsManager({ attractions }: { attractions: CmsAt
         open={deleteId !== null}
         onClose={() => setDeleteId(null)}
         onConfirm={() => deleteId && handleDelete(deleteId)}
-        title="Delete attraction"
+        title="Delete local experience"
         message="This removes it from the Explore the Area section. This cannot be undone."
         confirmLabel="Delete"
         variant="danger"

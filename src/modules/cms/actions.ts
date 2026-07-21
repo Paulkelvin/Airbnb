@@ -314,83 +314,108 @@ export async function deleteFaq(id: string): Promise<ActionResult<{ id: string }
   return { success: true, data: { id } };
 }
 
-// ---------- Attractions ----------
+// ---------- Local Experiences ----------
 
-export interface AttractionFormInput {
+export interface LocalExperienceFormInput {
   title: string;
+  slug?: string;
   category: string;
+  tagline: string;
   description: string;
   imageUrl: string;
+  galleryImageUrls: string[];
   distanceLabel: string;
-  externalUrl?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  openingHours?: string;
+  websiteUrl?: string;
   featured: boolean;
   order: number;
   publishedAt: string | null;
 }
 
-export async function createAttraction(
-  input: AttractionFormInput,
+function revalidateExperiencePaths(slug: string) {
+  revalidatePath("/");
+  revalidatePath("/explore-the-area");
+  revalidatePath(`/explore-the-area/${slug}`);
+  revalidatePath("/admin/content/local-experiences");
+}
+
+export async function createLocalExperience(
+  input: LocalExperienceFormInput,
 ): Promise<ActionResult<{ id: string }>> {
   await requireAdmin();
   if (!input.title.trim() || !input.category.trim() || !input.imageUrl.trim()) {
     return fail("Title, category, and image URL are all required");
   }
+
+  const slug = slugify(input.slug || input.title);
   const doc = await sanityAdminClient.create({
-    _type: "attraction",
+    _type: "localExperience",
     title: input.title.trim(),
+    slug: { _type: "slug", current: slug },
     category: input.category.trim(),
+    tagline: input.tagline.trim(),
     description: input.description.trim(),
     imageUrl: input.imageUrl.trim(),
+    galleryImageUrls: input.galleryImageUrls.map((u) => u.trim()).filter(Boolean),
     distanceLabel: input.distanceLabel.trim(),
-    externalUrl: input.externalUrl?.trim() || undefined,
+    latitude: input.latitude ?? undefined,
+    longitude: input.longitude ?? undefined,
+    openingHours: input.openingHours?.trim() || undefined,
+    websiteUrl: input.websiteUrl?.trim() || undefined,
     featured: input.featured,
     order: input.order,
     publishedAt: input.publishedAt,
   });
 
-  revalidatePath("/");
-  revalidatePath("/explore-the-area");
-  revalidatePath("/admin/content/attractions");
+  revalidateExperiencePaths(slug);
 
   return { success: true, data: { id: doc._id } };
 }
 
-export async function updateAttraction(
+export async function updateLocalExperience(
   id: string,
-  input: AttractionFormInput,
+  input: LocalExperienceFormInput,
 ): Promise<ActionResult<{ id: string }>> {
   await requireAdmin();
   if (!input.title.trim() || !input.category.trim() || !input.imageUrl.trim()) {
     return fail("Title, category, and image URL are all required");
   }
+
+  const slug = slugify(input.slug || input.title);
   await sanityAdminClient
     .patch(id)
     .set({
       title: input.title.trim(),
+      slug: { _type: "slug", current: slug },
       category: input.category.trim(),
+      tagline: input.tagline.trim(),
       description: input.description.trim(),
       imageUrl: input.imageUrl.trim(),
+      galleryImageUrls: input.galleryImageUrls.map((u) => u.trim()).filter(Boolean),
       distanceLabel: input.distanceLabel.trim(),
-      externalUrl: input.externalUrl?.trim() || undefined,
+      latitude: input.latitude ?? undefined,
+      longitude: input.longitude ?? undefined,
+      openingHours: input.openingHours?.trim() || undefined,
+      websiteUrl: input.websiteUrl?.trim() || undefined,
       featured: input.featured,
       order: input.order,
       publishedAt: input.publishedAt,
     })
     .commit();
 
-  revalidatePath("/");
-  revalidatePath("/explore-the-area");
-  revalidatePath("/admin/content/attractions");
+  revalidateExperiencePaths(slug);
 
   return { success: true, data: { id } };
 }
 
-export async function deleteAttraction(id: string): Promise<ActionResult<{ id: string }>> {
+export async function deleteLocalExperience(id: string): Promise<ActionResult<{ id: string }>> {
   await requireAdmin();
   await sanityAdminClient.delete(id);
   revalidatePath("/");
   revalidatePath("/explore-the-area");
-  revalidatePath("/admin/content/attractions");
+  revalidatePath("/admin/content/local-experiences");
   return { success: true, data: { id } };
 }
 

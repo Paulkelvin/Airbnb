@@ -1,0 +1,160 @@
+import { notFound } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { MapPinIcon, ClockIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
+import BgGlassmorphism from "@/components/BgGlassmorphism";
+import LocalExperienceCard from "@/components/LocalExperienceCard";
+import ExploreAreaMap from "@/components/ExploreAreaMap/ExploreAreaMap";
+import { getExperienceBySlug, getAllExperiences } from "@/lib/local-experiences";
+import { getPrimaryListing } from "@/modules/listings/queries";
+import { CATEGORY_EMOJI } from "@/data/local-experiences";
+import type { Route } from "@/routers/types";
+
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  const experience = await getExperienceBySlug(params.slug);
+  return { title: experience ? experience.title : "Not found" };
+}
+
+export default async function LocalExperiencePage({ params }: { params: { slug: string } }) {
+  const [experience, allExperiences, primaryListing] = await Promise.all([
+    getExperienceBySlug(params.slug),
+    getAllExperiences(),
+    getPrimaryListing(),
+  ]);
+
+  if (!experience) {
+    notFound();
+  }
+
+  const gallery = [experience.imageUrl, ...experience.galleryImageUrls].filter(Boolean);
+  const related = allExperiences.filter((e) => e.slug !== experience.slug).slice(0, 3);
+
+  const hasCottageCoords = primaryListing?.latitude != null && primaryListing?.longitude != null;
+  const directionsHref =
+    hasCottageCoords && experience.latitude != null && experience.longitude != null
+      ? `https://www.google.com/maps/dir/?api=1&origin=${primaryListing!.latitude},${primaryListing!.longitude}&destination=${experience.latitude},${experience.longitude}`
+      : experience.latitude != null && experience.longitude != null
+        ? `https://www.google.com/maps/search/?api=1&query=${experience.latitude},${experience.longitude}`
+        : null;
+
+  return (
+    <div className="nc-LocalExperiencePage overflow-hidden relative">
+      <BgGlassmorphism />
+      <div className="container relative py-16 lg:py-24">
+        <div className="max-w-3xl">
+          <Link
+            href={"/explore-the-area" as Route}
+            className="text-sm font-medium text-primary-6000 hover:text-primary-700"
+          >
+            ← Explore the Area
+          </Link>
+          <h1 className="mt-3 text-3xl md:text-4xl font-semibold">{experience.title}</h1>
+          <p className="mt-3 text-lg text-neutral-600 dark:text-neutral-300">{experience.tagline}</p>
+          <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800">
+              {CATEGORY_EMOJI[experience.category] ?? ""} {experience.category}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <MapPinIcon className="w-4 h-4" />
+              {experience.distanceLabel} from Potomac Vista Cottage
+            </span>
+            {experience.openingHours && (
+              <span className="inline-flex items-center gap-1">
+                <ClockIcon className="w-4 h-4" />
+                {experience.openingHours}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* GALLERY */}
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="relative aspect-[4/3] sm:aspect-auto sm:row-span-2 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+            <Image
+              src={gallery[0]}
+              alt={experience.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
+              priority
+            />
+          </div>
+          {gallery.slice(1, 3).map((url, i) => (
+            <div key={i} className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+              <Image
+                src={url}
+                alt=""
+                fill
+                sizes="(max-width: 768px) 100vw, 25vw"
+                className="object-cover"
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 grid lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-2 space-y-8">
+            <div>
+              <h2 className="text-xl font-semibold mb-3">Why guests love it</h2>
+              <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                {experience.description}
+              </p>
+            </div>
+
+            {experience.websiteUrl && (
+              <a
+                href={experience.websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-6000 hover:text-primary-700"
+              >
+                <GlobeAltIcon className="w-4 h-4" />
+                Visit website
+              </a>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">Getting there</h2>
+            {experience.latitude != null && experience.longitude != null ? (
+              <ExploreAreaMap
+                className="aspect-square"
+                cottage={
+                  hasCottageCoords
+                    ? { lat: primaryListing!.latitude!, lng: primaryListing!.longitude!, label: "Potomac Vista Cottage" }
+                    : { lat: experience.latitude, lng: experience.longitude, label: "Potomac Vista Cottage" }
+                }
+                experiences={[experience]}
+              />
+            ) : (
+              <div className="aspect-square rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 dark:text-neutral-400 text-sm">
+                Map not available
+              </div>
+            )}
+            {directionsHref && (
+              <a
+                href={directionsHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-center px-5 py-2.5 rounded-full border border-neutral-200 dark:border-neutral-700 text-sm font-medium hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors"
+              >
+                Get directions from the cottage
+              </a>
+            )}
+          </div>
+        </div>
+
+        {related.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-xl font-semibold mb-6">You might also like</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {related.map((r) => (
+                <LocalExperienceCard key={r.id} data={r} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
