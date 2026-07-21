@@ -60,7 +60,7 @@ export class StubPaymentProvider implements PaymentProvider {
     if (!match) {
       return { providerTransactionRef: paymentIntentId, status: "FAILED", amountCents: 0, failureReason: "Unknown stub PaymentIntent" };
     }
-    return { providerTransactionRef: paymentIntentId, status: "SUCCEEDED", amountCents: Number(match[1]) };
+    return { providerTransactionRef: paymentIntentId, status: "SUCCEEDED", amountCents: Number(match[1]), payerUserId: undefined };
   }
 
   async refund(providerTransactionRef: string, _amountCents?: number): Promise<RefundResult> {

@@ -39,6 +39,10 @@ export interface PaymentIntentResult {
  * we expect. */
 export interface VerifiedChargeResult extends ChargeResult {
   amountCents: number;
+  /** The user ID from the PaymentIntent's metadata — lets the caller reject
+   *  an intent that was created for a different user than the one now trying
+   *  to use it. */
+  payerUserId?: string;
 }
 
 export interface RefundResult {

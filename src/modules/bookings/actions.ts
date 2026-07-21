@@ -200,6 +200,31 @@ export async function createShortTermBooking(
     });
   } catch (err) {
     if (isUniqueConstraintOn(err, ["listingId", "date"], "Availability_listingId_date_key")) {
+      // The guest already confirmed payment client-side but the dates were
+      // grabbed by someone else between the availability pre-check in
+      // createBookingPaymentIntent and this booking-creation attempt. Issue
+      // a full refund so the guest isn't charged for a booking that never
+      // materialized — fire-and-forget since the DATES_UNAVAILABLE error
+      // is the important signal; a refund failure here would surface in
+      // Stripe's dashboard or via webhook and is recoverable manually.
+      if (data.paymentIntentId) {
+        getPaymentProvider()
+          .refund(data.paymentIntentId)
+          .catch((refundErr) =>
+            console.error(
+              `Auto-refund failed for PaymentIntent ${data.paymentIntentId}:`,
+              refundErr,
+            ),
+          );
+        return {
+          success: false,
+          error: {
+            code: "DATES_UNAVAILABLE",
+            message:
+              "These dates were just booked by someone else. Your payment will be refunded automatically — please choose different dates.",
+          },
+        };
+      }
       return { success: false, error: DOUBLE_BOOKED_ERROR };
     }
     throw err;
@@ -441,6 +466,7 @@ async function verifyPaymentAmount(
   provider: ReturnType<typeof getPaymentProvider>,
   paymentIntentId: string,
   expectedAmountCents: number,
+  expectedPayerUserId: string,
 ): Promise<{ providerTransactionRef: string; status: "SUCCEEDED" | "PENDING" | "FAILED"; failureReason?: string }> {
   const verified = await provider.verifyPaymentIntent(paymentIntentId);
   if (verified.amountCents !== expectedAmountCents) {
@@ -448,6 +474,13 @@ async function verifyPaymentAmount(
       providerTransactionRef: verified.providerTransactionRef,
       status: "FAILED",
       failureReason: "Payment amount does not match the booking total",
+    };
+  }
+  if (verified.payerUserId && verified.payerUserId !== expectedPayerUserId) {
+    return {
+      providerTransactionRef: verified.providerTransactionRef,
+      status: "FAILED",
+      failureReason: "Payment was created for a different user",
     };
   }
   return verified;
@@ -491,7 +524,7 @@ async function chargeBookingTx(
   }
 
   const result = args.paymentIntentId
-    ? await verifyPaymentAmount(provider, args.paymentIntentId, amountCents)
+    ? await verifyPaymentAmount(provider, args.paymentIntentId, amountCents, args.payerUserId)
     : await provider.createCharge(amountCents, args.currency, args.payerUserId, {
         bookingId: args.bookingId,
         payerUserId: args.payerUserId,

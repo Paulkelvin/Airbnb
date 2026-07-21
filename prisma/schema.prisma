@@ -625,6 +625,7 @@ model Payment {
   relatedPayment Payment? @relation("RelatedPayments", fields: [relatedPaymentId], references: [id])
   relatedPayments Payment[] @relation("RelatedPayments")
 
+  @@unique([providerTransactionRef])
   @@index([bookingId])
   @@index([status])
   @@index([provider])

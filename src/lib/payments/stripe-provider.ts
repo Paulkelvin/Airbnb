@@ -101,6 +101,7 @@ export class StripeConnectProvider implements PaymentProvider {
       providerTransactionRef: intent.id,
       status: mapIntentStatus(intent.status),
       amountCents: intent.amount,
+      payerUserId: (intent.metadata?.payerUserId as string) || undefined,
     };
   }
 
