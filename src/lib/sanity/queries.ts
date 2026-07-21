@@ -82,7 +82,7 @@ export const aboutPageQuery = groq`
     stats,
     missionTitle,
     missionBody,
-    missionImage,
+    missionImageUrl,
     valuesTitle,
     valuesSubtitle,
     values,

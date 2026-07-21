@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import Logo from "@/components/ui/Logo";
 import {
   Squares2X2Icon,
   UsersIcon,
@@ -89,12 +90,10 @@ export default function AdminNav({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const brand = (
-    <div className="flex items-center gap-3 px-4 py-5">
-      <div className="w-9 h-9 rounded-lg bg-primary-6000 text-white flex items-center justify-center font-semibold text-sm flex-shrink-0">
-        P
-      </div>
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 leading-tight">
+    <div className="px-4 py-5">
+      <Logo className="w-24" />
+      <div className="mt-2 min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
           Admin
         </p>
         <p className="text-xs text-neutral-400 truncate">{userName}</p>
@@ -139,10 +138,8 @@ export default function AdminNav({
       {/* Mobile top bar */}
       <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary-6000 text-white flex items-center justify-center font-semibold text-xs">
-            P
-          </div>
-          <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+          <Logo className="w-20" />
+          <span className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
             Admin
           </span>
         </div>

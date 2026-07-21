@@ -428,6 +428,7 @@ export interface AboutPageFormInput {
   stats: { label: string; value: string }[];
   missionTitle: string;
   missionBodyText: string;
+  missionImageUrl: string;
   valuesTitle: string;
   valuesSubtitle: string;
   values: { title: string; description: string }[];
@@ -450,6 +451,7 @@ export async function saveAboutPage(input: AboutPageFormInput): Promise<ActionRe
       .map((s) => ({ _type: "stat", _key: cryptoKey(), label: s.label.trim(), value: s.value.trim() })),
     missionTitle: input.missionTitle.trim() || undefined,
     missionBody: plainTextToBlocks(input.missionBodyText),
+    missionImageUrl: input.missionImageUrl.trim() || undefined,
     valuesTitle: input.valuesTitle.trim() || undefined,
     valuesSubtitle: input.valuesSubtitle.trim() || undefined,
     values: input.values

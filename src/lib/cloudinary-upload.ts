@@ -117,6 +117,10 @@ export async function uploadLocalExperienceImage(file: File): Promise<Cloudinary
   return uploadImage(file, "local-experiences");
 }
 
+export async function uploadAboutPageImage(file: File): Promise<CloudinaryUploadResult> {
+  return uploadImage(file, "about");
+}
+
 export function isImageUploadConfigured() {
   return Boolean(
     process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&

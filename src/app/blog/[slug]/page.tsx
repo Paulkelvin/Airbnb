@@ -34,37 +34,37 @@ const fallbackPosts: Record<string, { title: string; category: string; date: str
   "top-10-tips-for-first-time-hosts": {
     title: "Top 10 Tips for First-Time Hosts",
     category: "Hosting", date: "July 12, 2026", readTime: "6 min read",
-    image: "https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=1260",
+    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633867/blog/top-10-tips-for-first-time-hosts.jpg",
     content: "Starting as a host can feel overwhelming, but these ten tips will set you up for success from your very first guest.\n\n**1. Invest in Great Photos**\nYour listing photos are the first thing potential guests see. Use natural light, declutter every room, and shoot from corner angles to make spaces look larger.\n\n**2. Write an Honest Description**\nDon't oversell — set accurate expectations. Guests appreciate honesty and reward it with better reviews.\n\n**3. Price Competitively at First**\nStart slightly below similar listings to attract your first bookings and reviews.\n\n**4. Create a House Manual**\nA comprehensive guide saves you from answering the same questions repeatedly.\n\n**5. Stock the Essentials**\nFresh towels, quality linens, toiletries, and coffee go a long way.\n\n**6. Communicate Proactively**\nSend a welcome message before check-in with directions and details.\n\n**7. Set Clear House Rules**\nBe upfront about policies to prevent misunderstandings.\n\n**8. Automate Where Possible**\nSmart locks and automated messaging reduce manual work.\n\n**9. Respond Quickly**\nFast response times directly impact your search ranking.\n\n**10. Ask for Reviews**\nA polite nudge after checkout makes all the difference.",
   },
   "best-neighborhoods-for-long-term-rentals": {
     title: "Best Neighborhoods for Long-Term Rentals in 2026",
     category: "Guides", date: "July 8, 2026", readTime: "8 min read",
-    image: "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1260",
+    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633898/blog/best-neighborhoods-for-long-term-rentals.jpg",
     content: "With remote work now the norm, the concept of 'home' has become wonderfully flexible. Here are the neighborhoods attracting the most long-term renters in 2026.\n\n**Austin, TX — East Austin**\nVibrant creative neighborhood with walkable food scene and co-working spaces. Average one-bedroom: ~$1,800/month.\n\n**Denver, CO — RiNo**\nCity energy with mountain access. Converted warehouses house breweries, galleries, and startups.\n\n**Mexico City — Roma Norte**\nTree-lined streets, art deco architecture, and incredible food. Furnished apartments: $800-1,200/month.",
   },
   "how-to-photograph-your-property": {
     title: "How to Photograph Your Property Like a Pro",
     category: "Hosting", date: "July 3, 2026", readTime: "5 min read",
-    image: "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1260",
+    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633898/blog/how-to-photograph-your-property.jpg",
     content: "Your listing photos are the single most important factor in whether a guest clicks 'Book' or keeps scrolling.\n\n**Timing Is Everything**\nShoot during golden hours for warm, soft light.\n\n**Declutter Ruthlessly**\nRemove personal items and excess furniture.\n\n**Shoot From Corners**\nCapture maximum room in a single frame.\n\n**Edit Lightly**\nSlightly increase brightness and straighten horizons. Don't over-filter.",
   },
   "summer-travel-trends": {
     title: "Summer 2026 Travel Trends: Where Everyone Is Going",
     category: "Travel", date: "June 28, 2026", readTime: "7 min read",
-    image: "https://images.pexels.com/photos/1450363/pexels-photo-1450363.jpeg?auto=compress&cs=tinysrgb&w=1260",
+    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633899/blog/summer-travel-trends.jpg",
     content: "Every summer has its destinations. Here's where travelers are heading this summer.\n\n**Coastal Croatia**\nBeyond Dubrovnik, travelers are discovering the quieter Dalmatian islands.\n\n**Japanese Countryside**\nTraditional ryokans in rural regions offer a Japan most visitors never see.\n\n**Montana & Wyoming**\nCabin rentals near Yellowstone and Glacier see record demand.",
   },
   "remote-work-friendly-stays": {
     title: "The Rise of Remote-Work-Friendly Stays",
     category: "Trends", date: "June 22, 2026", readTime: "6 min read",
-    image: "https://images.pexels.com/photos/4050315/pexels-photo-4050315.jpeg?auto=compress&cs=tinysrgb&w=1260",
+    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633871/blog/remote-work-friendly-stays.jpg",
     content: "A growing segment of travelers aren't choosing between work and travel — they're doing both.\n\n**What Remote Workers Need**\nReliable internet (50+ Mbps), dedicated workspace, good lighting for calls, and quiet during business hours.\n\n**The Business Case**\nRemote-work-friendly properties command 15-25% higher rates with longer average stays.",
   },
   "ultimate-guest-welcome-guide": {
     title: "The Ultimate Guest Welcome Guide",
     category: "Hosting", date: "June 15, 2026", readTime: "5 min read",
-    image: "https://images.pexels.com/photos/3935350/pexels-photo-3935350.jpeg?auto=compress&cs=tinysrgb&w=1260",
+    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633872/blog/ultimate-guest-welcome-guide.jpg",
     content: "The first five minutes after a guest walks through your door determine the tone of their entire stay.\n\n**The Welcome Basket**\nLocal treats, wine from a nearby vineyard, fresh fruit, and a handwritten note. Cost: under $30. Impact: priceless.\n\n**The House Manual**\nWi-Fi password on page one. Appliance instructions. Your top 5 restaurant picks.",
   },
 };

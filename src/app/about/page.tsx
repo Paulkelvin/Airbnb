@@ -1,7 +1,7 @@
 import React from "react";
 import BgGlassmorphism from "@/components/BgGlassmorphism";
 import Image from "next/image";
-import { sanityClient, urlFor } from "@/lib/sanity/client";
+import { sanityClient } from "@/lib/sanity/client";
 import { aboutPageQuery } from "@/lib/sanity/queries";
 import PortableTextBody from "@/components/sanity/PortableTextBody";
 import { getCurrentUser } from "@/lib/auth";
@@ -22,7 +22,7 @@ interface SanityAboutPage {
   stats?: { label: string; value: string }[];
   missionTitle?: string;
   missionBody?: unknown;
-  missionImage?: unknown;
+  missionImageUrl?: string;
   valuesTitle?: string;
   valuesSubtitle?: string;
   values?: { title: string; description: string }[];
@@ -45,6 +45,9 @@ const FALLBACK_STATS = [
   { label: "Locally hosted", value: "100%" },
   { label: "Guest support", value: "24/7" },
 ];
+
+const FALLBACK_MISSION_IMAGE_URL =
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633721/about/mission.jpg";
 
 const FALLBACK_VALUES = [
   { title: "Trust & Safety", description: "The cottage is maintained and hosted directly by our team, so you always know exactly what you're booking." },
@@ -77,9 +80,7 @@ export default async function PageAbout() {
   const ctaSubtitle =
     data?.ctaSubtitle ??
     "Check availability for Potomac Vista Cottage, or explore the restaurants, parks, and waterfronts nearby.";
-  const missionImageUrl = data?.missionImage
-    ? urlFor(data.missionImage).width(1260).height(750).url()
-    : "https://images.pexels.com/photos/1268871/pexels-photo-1268871.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750";
+  const missionImageUrl = data?.missionImageUrl || FALLBACK_MISSION_IMAGE_URL;
 
   return (
     <div className="nc-PageAbout overflow-hidden relative">

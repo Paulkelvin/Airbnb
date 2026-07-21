@@ -16,7 +16,7 @@ export const blogPosts: BlogPostSummary[] = [
     category: "Hosting",
     date: "July 12, 2026",
     readTime: "6 min read",
-    image: "https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800",
+    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633867/blog/top-10-tips-for-first-time-hosts.jpg",
   },
   {
     slug: "best-neighborhoods-for-long-term-rentals",
@@ -25,7 +25,7 @@ export const blogPosts: BlogPostSummary[] = [
     category: "Guides",
     date: "July 8, 2026",
     readTime: "8 min read",
-    image: "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=800",
+    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633898/blog/best-neighborhoods-for-long-term-rentals.jpg",
   },
   {
     slug: "how-to-photograph-your-property",
@@ -34,7 +34,7 @@ export const blogPosts: BlogPostSummary[] = [
     category: "Hosting",
     date: "July 3, 2026",
     readTime: "5 min read",
-    image: "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=800",
+    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633898/blog/how-to-photograph-your-property.jpg",
   },
   {
     slug: "summer-travel-trends",
@@ -43,7 +43,7 @@ export const blogPosts: BlogPostSummary[] = [
     category: "Travel",
     date: "June 28, 2026",
     readTime: "7 min read",
-    image: "https://images.pexels.com/photos/1450363/pexels-photo-1450363.jpeg?auto=compress&cs=tinysrgb&w=800",
+    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633899/blog/summer-travel-trends.jpg",
   },
   {
     slug: "remote-work-friendly-stays",
@@ -52,7 +52,7 @@ export const blogPosts: BlogPostSummary[] = [
     category: "Trends",
     date: "June 22, 2026",
     readTime: "6 min read",
-    image: "https://images.pexels.com/photos/4050315/pexels-photo-4050315.jpeg?auto=compress&cs=tinysrgb&w=800",
+    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633871/blog/remote-work-friendly-stays.jpg",
   },
   {
     slug: "ultimate-guest-welcome-guide",
@@ -61,6 +61,6 @@ export const blogPosts: BlogPostSummary[] = [
     category: "Hosting",
     date: "June 15, 2026",
     readTime: "5 min read",
-    image: "https://images.pexels.com/photos/3935350/pexels-photo-3935350.jpeg?auto=compress&cs=tinysrgb&w=800",
+    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633872/blog/ultimate-guest-welcome-guide.jpg",
   },
 ];

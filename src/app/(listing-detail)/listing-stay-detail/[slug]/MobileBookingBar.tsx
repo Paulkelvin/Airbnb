@@ -47,10 +47,10 @@ export default function MobileBookingBar({
   const priceUnit = pricing.rentalType === "SHORT_TERM" ? "/night" : "/month";
 
   return (
-    // bottom-14 (not bottom-0): the site's global FooterNav (Explore/
-    // Wishlists/Log in/Menu, src/app/layout.tsx) is also fixed at the
-    // mobile viewport bottom, at a measured 56px tall — stacking directly
-    // on bottom-0 here would overlap it instead of sitting above it.
+    // bottom-14 (not bottom-0): the site's global FooterNav (Home/Explore
+    // Area/Log in/Menu, src/app/layout.tsx) is also fixed at the mobile
+    // viewport bottom, at a measured 56px tall — stacking directly on
+    // bottom-0 here would overlap it instead of sitting above it.
     <div className="lg:hidden fixed bottom-0 inset-x-0 py-3 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 z-40">
       <div className="container flex items-center justify-between">
         <span className="text-lg font-semibold">

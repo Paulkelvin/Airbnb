@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { saveAboutPage, type AboutPageFormInput } from "@/modules/cms/actions";
 import { blocksToPlainText } from "@/modules/cms/portable-text";
 import type { CmsAboutPage } from "@/modules/cms/queries";
+import { uploadAboutPageImage, isImageUploadConfigured } from "@/lib/cloudinary-upload";
 
 export default function AboutPageForm({ aboutPage }: { aboutPage: CmsAboutPage | null }) {
   const router = useRouter();
@@ -29,6 +30,28 @@ export default function AboutPageForm({ aboutPage }: { aboutPage: CmsAboutPage |
   );
   const [missionTitle, setMissionTitle] = useState(aboutPage?.missionTitle ?? "Our Mission");
   const [missionBodyText, setMissionBodyText] = useState(() => blocksToPlainText(aboutPage?.missionBody));
+  const [missionImageUrl, setMissionImageUrl] = useState(aboutPage?.missionImageUrl ?? "");
+  const [uploadingMissionImage, setUploadingMissionImage] = useState(false);
+
+  async function handleMissionImageFile(file: File | undefined) {
+    if (!file) return;
+    if (!isImageUploadConfigured()) {
+      setError(
+        "Image uploads aren't configured yet — set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.",
+      );
+      return;
+    }
+    setError(null);
+    setUploadingMissionImage(true);
+    try {
+      const result = await uploadAboutPageImage(file);
+      setMissionImageUrl(result.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploadingMissionImage(false);
+    }
+  }
   const [valuesTitle, setValuesTitle] = useState(aboutPage?.valuesTitle ?? "What We Stand For");
   const [valuesSubtitle, setValuesSubtitle] = useState(
     aboutPage?.valuesSubtitle ??
@@ -74,6 +97,7 @@ export default function AboutPageForm({ aboutPage }: { aboutPage: CmsAboutPage |
       stats,
       missionTitle,
       missionBodyText,
+      missionImageUrl,
       valuesTitle,
       valuesSubtitle,
       values,
@@ -177,6 +201,39 @@ export default function AboutPageForm({ aboutPage }: { aboutPage: CmsAboutPage |
             rows={5}
             value={missionBodyText}
             onChange={(e) => setMissionBodyText(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className={labelClass}>Mission image</label>
+          <div className="flex items-center gap-3">
+            {missionImageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={missionImageUrl}
+                alt=""
+                className="w-16 h-12 rounded-lg object-cover flex-shrink-0 bg-neutral-100 dark:bg-neutral-700"
+              />
+            )}
+            <label
+              className={`px-3 py-2 text-sm rounded-lg border border-neutral-300 dark:border-neutral-600 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 ${
+                uploadingMissionImage ? "opacity-50 pointer-events-none" : ""
+              }`}
+            >
+              {uploadingMissionImage ? "Uploading..." : missionImageUrl ? "Replace photo" : "Upload photo"}
+              <input
+                type="file"
+                accept="image/*"
+                disabled={uploadingMissionImage}
+                className="sr-only"
+                onChange={(e) => handleMissionImageFile(e.target.files?.[0])}
+              />
+            </label>
+          </div>
+          <input
+            className={`${inputClass} mt-2`}
+            placeholder="or paste an image URL directly"
+            value={missionImageUrl}
+            onChange={(e) => setMissionImageUrl(e.target.value)}
           />
         </div>
       </div>

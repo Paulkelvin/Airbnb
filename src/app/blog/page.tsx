@@ -108,7 +108,7 @@ export default async function BlogPage() {
     const rest = sanityPosts.slice(1);
     const featuredImage = featured.mainImage
       ? urlFor(featured.mainImage).width(1200).quality(85).url()
-      : "https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=1260";
+      : "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633867/blog/top-10-tips-for-first-time-hosts.jpg";
 
     return (
       <div className="nc-BlogPage overflow-hidden relative">
@@ -176,7 +176,7 @@ export default async function BlogPage() {
                   imageUrl={
                     post.mainImage
                       ? urlFor(post.mainImage).width(800).quality(80).url()
-                      : "https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800"
+                      : "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633867/blog/top-10-tips-for-first-time-hosts.jpg"
                   }
                 />
               ))}

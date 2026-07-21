@@ -197,7 +197,7 @@ export interface CmsAboutPage {
   stats: { label: string; value: string }[];
   missionTitle: string | null;
   missionBody: unknown;
-  missionImage: unknown;
+  missionImageUrl: string | null;
   valuesTitle: string | null;
   valuesSubtitle: string | null;
   values: { title: string; description: string }[];
