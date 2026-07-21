@@ -311,48 +311,63 @@ function ShortTermBookingForm({
         />
       </div>
 
-      {nightsTooFew && (
-        <p className="text-sm text-red-600">Minimum stay is {pricing.minNights} nights</p>
-      )}
-      {nightsTooMany && (
-        <p className="text-sm text-red-600">Maximum stay is {pricing.maxNights} nights</p>
-      )}
-
-      {quote && (
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>
-              ${pricing.nightlyPrice} x {nights} night{nights !== 1 ? "s" : ""}
-            </span>
-            <span>${quote.nightlyTotal.toFixed(2)}</span>
-          </div>
-          {quote.discountAmount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span>Length-of-stay discount</span>
-              <span>-${quote.discountAmount.toFixed(2)}</span>
-            </div>
-          )}
-          {quote.cleaningFee > 0 && (
-            <div className="flex justify-between">
-              <span>Cleaning fee</span>
-              <span>${quote.cleaningFee.toFixed(2)}</span>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <span>Service fee</span>
-            <span>${quote.serviceFee.toFixed(2)}</span>
-          </div>
-          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-2 flex justify-between font-semibold">
-            <span>Total ({currency})</span>
-            <span>${quote.totalPrice.toFixed(2)}</span>
-          </div>
+      <div className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${nightsTooFew ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          <p className="text-sm text-red-600">Minimum stay is {pricing.minNights} nights</p>
         </div>
-      )}
+      </div>
+      <div className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${nightsTooMany ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          <p className="text-sm text-red-600">Maximum stay is {pricing.maxNights} nights</p>
+        </div>
+      </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${quote ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          {quote && (
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>
+                  ${pricing.nightlyPrice} x {nights} night{nights !== 1 ? "s" : ""}
+                </span>
+                <span>${quote.nightlyTotal.toFixed(2)}</span>
+              </div>
+              {quote.discountAmount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>Length-of-stay discount</span>
+                  <span>-${quote.discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              {quote.cleaningFee > 0 && (
+                <div className="flex justify-between">
+                  <span>Cleaning fee</span>
+                  <span>${quote.cleaningFee.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>Service fee</span>
+                <span>${quote.serviceFee.toFixed(2)}</span>
+              </div>
+              <div className="border-t border-neutral-200 dark:border-neutral-700 pt-2 flex justify-between font-semibold">
+                <span>Total ({currency})</span>
+                <span>${quote.totalPrice.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
+      <div className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${error ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      </div>
+
+      <div className="transition-opacity duration-200 ease-in-out">
       {showAuth ? (
-        <InlineBookingAuth onAuthenticated={handleAuthenticated} />
+        <div className="animate-fadeIn">
+          <InlineBookingAuth onAuthenticated={handleAuthenticated} />
+        </div>
       ) : needsCardCollection ? (
         clientSecret && stripePromise ? (
           <Elements
@@ -393,6 +408,7 @@ function ShortTermBookingForm({
           )}
         </>
       )}
+      </div>
     </div>
   );
 }
@@ -509,20 +525,28 @@ function LongTermBookingForm({
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <div className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${error ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      </div>
 
-      {showAuth ? (
-        <InlineBookingAuth onAuthenticated={handleAuthenticated} />
-      ) : (
-        <>
-          <ButtonPrimary disabled={!leaseStartDate || isPending} loading={isPending} onClick={handlePrimaryClick}>
-            Apply to lease
-          </ButtonPrimary>
-          <p className="text-xs text-center text-neutral-500">
-            The host will review your application before confirming.
-          </p>
-        </>
-      )}
+      <div className="transition-opacity duration-200 ease-in-out">
+        {showAuth ? (
+          <div className="animate-fadeIn">
+            <InlineBookingAuth onAuthenticated={handleAuthenticated} />
+          </div>
+        ) : (
+          <>
+            <ButtonPrimary disabled={!leaseStartDate || isPending} loading={isPending} onClick={handlePrimaryClick}>
+              Apply to lease
+            </ButtonPrimary>
+            <p className="text-xs text-center text-neutral-500">
+              The host will review your application before confirming.
+            </p>
+          </>
+        )}
+      </div>
     </div>
   );
 }

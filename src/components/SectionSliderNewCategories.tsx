@@ -157,18 +157,14 @@ const SectionSliderNewCategories: FC<SectionSliderNewCategoriesProps> = ({
           ))}
         </div>
 
-        {canPrev && (
-          <PrevBtn
-            onClick={() => scrollByAmount(-1)}
-            className="hidden md:inline-flex w-10 h-10 xl:w-12 xl:h-12 text-lg absolute -left-3 xl:-left-6 top-1/3 -translate-y-1/2 z-[1]"
-          />
-        )}
-        {canNext && (
-          <NextBtn
-            onClick={() => scrollByAmount(1)}
-            className="hidden md:inline-flex w-10 h-10 xl:w-12 xl:h-12 text-lg absolute -right-3 xl:-right-6 top-1/3 -translate-y-1/2 z-[1]"
-          />
-        )}
+        <PrevBtn
+          onClick={() => scrollByAmount(-1)}
+          className={`hidden md:inline-flex w-10 h-10 xl:w-12 xl:h-12 text-lg absolute -left-3 xl:-left-6 top-1/3 -translate-y-1/2 z-[1] transition-opacity duration-200 ${canPrev ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        />
+        <NextBtn
+          onClick={() => scrollByAmount(1)}
+          className={`hidden md:inline-flex w-10 h-10 xl:w-12 xl:h-12 text-lg absolute -right-3 xl:-right-6 top-1/3 -translate-y-1/2 z-[1] transition-opacity duration-200 ${canNext ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        />
       </div>
     </div>
   );

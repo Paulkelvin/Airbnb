@@ -95,13 +95,13 @@ const SectionExploreArea: FC<SectionExploreAreaProps> = ({
       </div>
 
       {visible.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div key={activeCategory ?? "__all"} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 animate-fadeIn">
           {visible.map((experience) => (
             <LocalExperienceCard key={experience.id} data={experience} />
           ))}
         </div>
       ) : (
-        <p className="text-center text-neutral-500 dark:text-neutral-400">
+        <p key="empty" className="text-center text-neutral-500 dark:text-neutral-400 animate-fadeIn">
           Nothing in this category yet — check back soon.
         </p>
       )}

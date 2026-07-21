@@ -39,10 +39,6 @@ export default function ReviewPrompt({
     return <p className="text-sm text-neutral-500">Thanks — your review has been submitted.</p>;
   }
 
-  if (!open) {
-    return <ButtonSecondary onClick={() => setOpen(true)}>Leave a review for {counterpartyName}</ButtonSecondary>;
-  }
-
   function handleSubmit() {
     const trimmed = comment.trim();
     if (!trimmed) return;
@@ -65,43 +61,54 @@ export default function ReviewPrompt({
   }
 
   return (
-    <div className="space-y-3 max-w-md">
-      <RatingSelect label="Overall rating" value={rating} onChange={setRating} />
-      {isGuest && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {SUB_RATING_FIELDS.map((key) => (
-            <RatingSelect
-              key={key}
-              label={key.charAt(0).toUpperCase() + key.slice(1)}
-              value={subRatings[key]}
-              onChange={(v) => setSubRatings((prev) => ({ ...prev, [key]: v }))}
-              compact
-            />
-          ))}
+    <div>
+      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${!open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          <ButtonSecondary onClick={() => setOpen(true)}>Leave a review for {counterpartyName}</ButtonSecondary>
         </div>
-      )}
-      <textarea
-        className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-transparent p-3 text-sm"
-        rows={4}
-        placeholder={`Share your experience with ${counterpartyName}...`}
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        autoFocus
-      />
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <div className="flex gap-2">
-        <ButtonPrimary
-          sizeClass="px-4 py-2"
-          fontSize="text-sm"
-          disabled={!comment.trim() || isPending}
-          loading={isPending}
-          onClick={handleSubmit}
-        >
-          Submit review
-        </ButtonPrimary>
-        <ButtonSecondary sizeClass="px-4 py-2" fontSize="text-sm" onClick={() => setOpen(false)}>
-          Cancel
-        </ButtonSecondary>
+      </div>
+      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          <div className="space-y-3 max-w-md">
+            <RatingSelect label="Overall rating" value={rating} onChange={setRating} />
+            {isGuest && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {SUB_RATING_FIELDS.map((key) => (
+                  <RatingSelect
+                    key={key}
+                    label={key.charAt(0).toUpperCase() + key.slice(1)}
+                    value={subRatings[key]}
+                    onChange={(v) => setSubRatings((prev) => ({ ...prev, [key]: v }))}
+                    compact
+                  />
+                ))}
+              </div>
+            )}
+            <textarea
+              className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-transparent p-3 text-sm"
+              rows={4}
+              placeholder={`Share your experience with ${counterpartyName}...`}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              autoFocus={open}
+            />
+            {error && <p className="text-sm text-red-600">{error}</p>}
+            <div className="flex gap-2">
+              <ButtonPrimary
+                sizeClass="px-4 py-2"
+                fontSize="text-sm"
+                disabled={!comment.trim() || isPending}
+                loading={isPending}
+                onClick={handleSubmit}
+              >
+                Submit review
+              </ButtonPrimary>
+              <ButtonSecondary sizeClass="px-4 py-2" fontSize="text-sm" onClick={() => setOpen(false)}>
+                Cancel
+              </ButtonSecondary>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

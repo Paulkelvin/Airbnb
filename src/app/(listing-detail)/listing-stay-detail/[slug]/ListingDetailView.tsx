@@ -72,10 +72,7 @@ export default function ListingDetailView({
   const [showFullDescription, setShowFullDescription] = useState(false);
 
   const AMENITIES_PREVIEW_COUNT = 8;
-  const visibleAmenities = showAllAmenities
-    ? listing.amenities
-    : listing.amenities.slice(0, AMENITIES_PREVIEW_COUNT);
-  const amenitiesByCategory = visibleAmenities.reduce<Record<string, typeof listing.amenities>>(
+  const amenitiesByCategory = listing.amenities.reduce<Record<string, typeof listing.amenities>>(
     (acc, a) => {
       const key = a.category ?? "OTHER";
       (acc[key] ??= []).push(a);
@@ -251,8 +248,8 @@ export default function ListingDetailView({
           <div className="listingSection__wrap">
             <h2 className="text-2xl font-semibold">About this place</h2>
             <div
-              className={`text-neutral-6000 dark:text-neutral-300 whitespace-pre-line ${
-                showFullDescription ? "" : "line-clamp-4"
+              className={`text-neutral-6000 dark:text-neutral-300 whitespace-pre-line transition-[max-height] duration-300 ease-in-out overflow-hidden ${
+                showFullDescription ? "max-h-[2000px]" : "max-h-24 line-clamp-4"
               }`}
             >
               {listing.description || "No description provided yet."}
@@ -279,7 +276,11 @@ export default function ListingDetailView({
               <p className="text-neutral-500">No amenities listed.</p>
             ) : (
               <>
-                <div className="space-y-5">
+                <div
+                  className={`space-y-5 transition-[max-height] duration-300 ease-in-out overflow-hidden ${
+                    showAllAmenities ? "max-h-[2000px]" : "max-h-64"
+                  }`}
+                >
                   {Object.entries(amenitiesByCategory).map(([category, items]) => (
                     <div key={category}>
                       <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-400 mb-2.5">

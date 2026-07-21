@@ -103,36 +103,34 @@ const GuestsInput: FC<GuestsInputProps> = ({
         <div className="h-8 absolute self-center top-1/2 -translate-y-1/2 z-0 -left-0.5 right-10 bg-white dark:bg-neutral-800"></div>
       )}
 
-      {isOpen && (
-        <div className="absolute right-0 z-30 w-full sm:min-w-[340px] max-w-sm bg-white dark:bg-neutral-800 top-full mt-3 py-5 sm:py-6 px-4 sm:px-8 rounded-3xl shadow-xl">
-          <NcInputNumber
-            className="w-full"
-            defaultValue={guestAdultsInputValue}
-            onChange={(value) => handleChangeData(value, "guestAdults")}
-            max={10}
-            min={1}
-            label="Adults"
-            desc="Ages 13 or above"
-          />
-          <NcInputNumber
-            className="w-full mt-6"
-            defaultValue={guestChildrenInputValue}
-            onChange={(value) => handleChangeData(value, "guestChildren")}
-            max={4}
-            label="Children"
-            desc="Ages 2–12"
-          />
+      <div className={`absolute right-0 z-30 w-full sm:min-w-[340px] max-w-sm bg-white dark:bg-neutral-800 top-full mt-3 py-5 sm:py-6 px-4 sm:px-8 rounded-3xl shadow-xl transition-all duration-200 ease-out origin-top ${isOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-95 pointer-events-none"}`}>
+        <NcInputNumber
+          className="w-full"
+          defaultValue={guestAdultsInputValue}
+          onChange={(value) => handleChangeData(value, "guestAdults")}
+          max={10}
+          min={1}
+          label="Adults"
+          desc="Ages 13 or above"
+        />
+        <NcInputNumber
+          className="w-full mt-6"
+          defaultValue={guestChildrenInputValue}
+          onChange={(value) => handleChangeData(value, "guestChildren")}
+          max={4}
+          label="Children"
+          desc="Ages 2–12"
+        />
 
-          <NcInputNumber
-            className="w-full mt-6"
-            defaultValue={guestInfantsInputValue}
-            onChange={(value) => handleChangeData(value, "guestInfants")}
-            max={4}
-            label="Infants"
-            desc="Ages 0–2"
-          />
-        </div>
-      )}
+        <NcInputNumber
+          className="w-full mt-6"
+          defaultValue={guestInfantsInputValue}
+          onChange={(value) => handleChangeData(value, "guestInfants")}
+          max={4}
+          label="Infants"
+          desc="Ages 0–2"
+        />
+      </div>
     </div>
   );
 };

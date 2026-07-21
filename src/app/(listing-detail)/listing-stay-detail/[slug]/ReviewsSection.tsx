@@ -119,37 +119,42 @@ function ReviewItem({ review, isOwner }: { review: ListingReview; isOwner: boole
 
       {isOwner && !hostResponse && (
         <div className="ml-6">
-          {!responding ? (
-            <ButtonSecondary sizeClass="px-3 py-1.5" fontSize="text-xs" onClick={() => setResponding(true)}>
-              Respond
-            </ButtonSecondary>
-          ) : (
-            <div className="space-y-2 max-w-md">
-              <textarea
-                className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-transparent p-2 text-sm"
-                rows={2}
-                placeholder="Write a public response..."
-                value={response}
-                onChange={(e) => setResponse(e.target.value)}
-                autoFocus
-              />
-              {error && <p className="text-xs text-red-600">{error}</p>}
-              <div className="flex gap-2">
-                <ButtonPrimary
-                  sizeClass="px-3 py-1.5"
-                  fontSize="text-xs"
-                  disabled={!response.trim() || isPending}
-                  loading={isPending}
-                  onClick={handleSubmitResponse}
-                >
-                  Post response
-                </ButtonPrimary>
-                <ButtonSecondary sizeClass="px-3 py-1.5" fontSize="text-xs" onClick={() => setResponding(false)}>
-                  Cancel
-                </ButtonSecondary>
+          <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${!responding ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+            <div className="overflow-hidden">
+              <ButtonSecondary sizeClass="px-3 py-1.5" fontSize="text-xs" onClick={() => setResponding(true)}>
+                Respond
+              </ButtonSecondary>
+            </div>
+          </div>
+          <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${responding ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+            <div className="overflow-hidden">
+              <div className="space-y-2 max-w-md">
+                <textarea
+                  className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-transparent p-2 text-sm"
+                  rows={2}
+                  placeholder="Write a public response..."
+                  value={response}
+                  onChange={(e) => setResponse(e.target.value)}
+                  autoFocus={responding}
+                />
+                {error && <p className="text-xs text-red-600">{error}</p>}
+                <div className="flex gap-2">
+                  <ButtonPrimary
+                    sizeClass="px-3 py-1.5"
+                    fontSize="text-xs"
+                    disabled={!response.trim() || isPending}
+                    loading={isPending}
+                    onClick={handleSubmitResponse}
+                  >
+                    Post response
+                  </ButtonPrimary>
+                  <ButtonSecondary sizeClass="px-3 py-1.5" fontSize="text-xs" onClick={() => setResponding(false)}>
+                    Cancel
+                  </ButtonSecondary>
+                </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

@@ -81,83 +81,84 @@ export default function InlineBookingAuth({
     });
   }
 
-  if (step === "code") {
-    return (
-      <form
-        onSubmit={handleCodeSubmit}
-        className="space-y-3 border border-neutral-200 dark:border-neutral-700 rounded-2xl p-4"
-      >
-        <p className="text-sm text-neutral-600 dark:text-neutral-300">
-          We sent a 6-digit code to <strong>{email}</strong>
-        </p>
-        <Input
-          value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          placeholder="Code"
-          required
-          sizeClass="h-11 px-4 py-3"
-        />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <ButtonPrimary type="submit" loading={isPending} disabled={isPending} className="w-full">
-          Confirm
-        </ButtonPrimary>
-        <div className="flex items-center justify-between text-xs">
-          <button
-            type="button"
-            onClick={() => {
-              setStep("details");
-              setCode("");
-              setError(null);
-            }}
-            className="underline text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
-          >
-            Change email
-          </button>
-          <button
-            type="button"
-            onClick={requestCode}
-            disabled={cooldown > 0 || isPending}
-            className="underline text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 disabled:opacity-50 disabled:no-underline"
-          >
-            {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
-          </button>
-        </div>
-      </form>
-    );
-  }
-
   return (
-    <form
-      onSubmit={handleDetailsSubmit}
-      className="space-y-3 border border-neutral-200 dark:border-neutral-700 rounded-2xl p-4"
-    >
-      <p className="text-sm font-medium">Confirm your booking</p>
-      <Input
-        value={fullName}
-        onChange={(e) => setFullName(e.target.value)}
-        placeholder="Full name"
-        autoComplete="name"
-        required
-        sizeClass="h-11 px-4 py-3"
-      />
-      <Input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-        autoComplete="email"
-        required
-        sizeClass="h-11 px-4 py-3"
-      />
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <ButtonPrimary type="submit" loading={isPending} disabled={isPending} className="w-full">
-        Continue
-      </ButtonPrimary>
-      <p className="text-xs text-neutral-400">
-        We&apos;ll email you a code — no password needed.
-      </p>
-    </form>
+    <div className="relative">
+      <div className={`transition-all duration-300 ease-in-out ${step === "details" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 absolute inset-0 pointer-events-none"}`}>
+        <form
+          onSubmit={handleDetailsSubmit}
+          className="space-y-3 border border-neutral-200 dark:border-neutral-700 rounded-2xl p-4"
+        >
+          <p className="text-sm font-medium">Confirm your booking</p>
+          <Input
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="Full name"
+            autoComplete="name"
+            required
+            sizeClass="h-11 px-4 py-3"
+          />
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            autoComplete="email"
+            required
+            sizeClass="h-11 px-4 py-3"
+          />
+          {error && step === "details" && <p className="text-sm text-red-600">{error}</p>}
+          <ButtonPrimary type="submit" loading={isPending} disabled={isPending} className="w-full">
+            Continue
+          </ButtonPrimary>
+          <p className="text-xs text-neutral-400">
+            We&apos;ll email you a code — no password needed.
+          </p>
+        </form>
+      </div>
+      <div className={`transition-all duration-300 ease-in-out ${step === "code" ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 absolute inset-0 pointer-events-none"}`}>
+        <form
+          onSubmit={handleCodeSubmit}
+          className="space-y-3 border border-neutral-200 dark:border-neutral-700 rounded-2xl p-4"
+        >
+          <p className="text-sm text-neutral-600 dark:text-neutral-300">
+            We sent a 6-digit code to <strong>{email}</strong>
+          </p>
+          <Input
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="Code"
+            required
+            sizeClass="h-11 px-4 py-3"
+          />
+          {error && step === "code" && <p className="text-sm text-red-600">{error}</p>}
+          <ButtonPrimary type="submit" loading={isPending} disabled={isPending} className="w-full">
+            Confirm
+          </ButtonPrimary>
+          <div className="flex items-center justify-between text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setStep("details");
+                setCode("");
+                setError(null);
+              }}
+              className="underline text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+            >
+              Change email
+            </button>
+            <button
+              type="button"
+              onClick={requestCode}
+              disabled={cooldown > 0 || isPending}
+              className="underline text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 disabled:opacity-50 disabled:no-underline"
+            >
+              {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }

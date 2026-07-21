@@ -32,10 +32,6 @@ export default function BookingMessageEntry({
     );
   }
 
-  if (!composing) {
-    return <ButtonSecondary onClick={() => setComposing(true)}>Message {counterpartyName}</ButtonSecondary>;
-  }
-
   function handleSend() {
     const trimmed = body.trim();
     if (!trimmed) return;
@@ -51,29 +47,40 @@ export default function BookingMessageEntry({
   }
 
   return (
-    <div className="space-y-2 max-w-md">
-      <textarea
-        className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-transparent p-3 text-sm"
-        rows={3}
-        placeholder={`Message ${counterpartyName}...`}
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        autoFocus
-      />
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <div className="flex gap-2">
-        <ButtonPrimary
-          sizeClass="px-4 py-2"
-          fontSize="text-sm"
-          disabled={!body.trim() || isPending}
-          loading={isPending}
-          onClick={handleSend}
-        >
-          Send
-        </ButtonPrimary>
-        <ButtonSecondary sizeClass="px-4 py-2" fontSize="text-sm" onClick={() => setComposing(false)}>
-          Cancel
-        </ButtonSecondary>
+    <div>
+      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${!composing ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          <ButtonSecondary onClick={() => setComposing(true)}>Message {counterpartyName}</ButtonSecondary>
+        </div>
+      </div>
+      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${composing ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          <div className="space-y-2 max-w-md">
+            <textarea
+              className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-transparent p-3 text-sm"
+              rows={3}
+              placeholder={`Message ${counterpartyName}...`}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              autoFocus={composing}
+            />
+            {error && <p className="text-sm text-red-600">{error}</p>}
+            <div className="flex gap-2">
+              <ButtonPrimary
+                sizeClass="px-4 py-2"
+                fontSize="text-sm"
+                disabled={!body.trim() || isPending}
+                loading={isPending}
+                onClick={handleSend}
+              >
+                Send
+              </ButtonPrimary>
+              <ButtonSecondary sizeClass="px-4 py-2" fontSize="text-sm" onClick={() => setComposing(false)}>
+                Cancel
+              </ButtonSecondary>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
