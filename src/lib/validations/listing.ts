@@ -35,6 +35,9 @@ const baseListing = {
   amenityIds: z.array(z.string().uuid()).default([]),
   images: z.array(listingImageSchema).max(20).default([]),
   address: addressSchema,
+  // Not long-term-specific — a short-term rental can just as easily allow
+  // (or charge for) pets, so this lives on both rental-type branches.
+  petPolicy: z.enum(["NOT_ALLOWED", "ALLOWED", "CASE_BY_CASE"]).default("NOT_ALLOWED"),
 };
 
 const shortTermFields = {
@@ -59,7 +62,6 @@ const longTermFields = {
   maxLeaseTermMonths: z.coerce.number().int().min(1).nullish(),
   availableFromDate: z.coerce.date().nullish(),
   utilitiesIncluded: z.boolean().default(false),
-  petPolicy: z.enum(["NOT_ALLOWED", "ALLOWED", "CASE_BY_CASE"]),
   earlyTerminationPolicy: z.enum(["STANDARD", "STRICT"]),
 };
 
@@ -117,6 +119,7 @@ export const draftUpdateSchema = z.object({
   amenityIds: z.array(z.string().uuid()).optional(),
   images: z.array(listingImageSchema).max(20).optional(),
   address: partialAddressSchema.optional(),
+  petPolicy: baseListing.petPolicy.optional(),
   rentalType: z.enum(["SHORT_TERM", "LONG_TERM"]).optional(),
   // Short-term fields
   nightlyPrice: shortTermFields.nightlyPrice.optional(),
@@ -136,7 +139,6 @@ export const draftUpdateSchema = z.object({
   maxLeaseTermMonths: longTermFields.maxLeaseTermMonths,
   availableFromDate: longTermFields.availableFromDate,
   utilitiesIncluded: longTermFields.utilitiesIncluded.optional(),
-  petPolicy: longTermFields.petPolicy.optional(),
   earlyTerminationPolicy: longTermFields.earlyTerminationPolicy.optional(),
 });
 

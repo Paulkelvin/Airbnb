@@ -297,6 +297,7 @@ function toStrictInput(listing: {
       position: img.position,
       isCover: img.isCover,
     })),
+    petPolicy: (listing.petPolicy ?? "NOT_ALLOWED") as "NOT_ALLOWED" | "ALLOWED" | "CASE_BY_CASE",
     address: {
       line1: listing.address.line1,
       line2: listing.address.line2 ?? undefined,
@@ -342,7 +343,6 @@ function toStrictInput(listing: {
     maxLeaseTermMonths: listing.maxLeaseTermMonths ?? undefined,
     availableFromDate: listing.availableFromDate ?? undefined,
     utilitiesIncluded: listing.utilitiesIncluded ?? false,
-    petPolicy: (listing.petPolicy ?? "") as "NOT_ALLOWED" | "ALLOWED" | "CASE_BY_CASE",
     earlyTerminationPolicy: (listing.earlyTerminationPolicy ?? "") as "STANDARD" | "STRICT",
   };
 }

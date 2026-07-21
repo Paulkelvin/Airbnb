@@ -326,6 +326,7 @@ export default function ListingDetailView({
                       }
                       shaded
                     />
+                    <Row label="Pet policy" value={titleCase(listing.pricing.petPolicy)} />
                   </>
                 ) : (
                   <>

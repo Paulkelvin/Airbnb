@@ -423,6 +423,16 @@ export default function AddListingWizard({
                   <option value="STRICT">Strict</option>
                 </Select>
               </FormItem>
+              <FormItem label="Pet policy">
+                <Select
+                  value={listing.petPolicy ?? "NOT_ALLOWED"}
+                  onChange={(e) => update("petPolicy", e.target.value)}
+                >
+                  <option value="NOT_ALLOWED">Not allowed</option>
+                  <option value="ALLOWED">Allowed</option>
+                  <option value="CASE_BY_CASE">Case by case</option>
+                </Select>
+              </FormItem>
               <Checkbox
                 name="instantBook"
                 label="Allow instant booking"
@@ -849,6 +859,7 @@ function stepPayload(
             checkOutTime: flexibleCheckInOut ? null : (listing.checkOutTime ?? "11:00"),
             cancellationPolicy: listing.cancellationPolicy ?? "MODERATE",
             instantBook: listing.instantBook ?? false,
+            petPolicy: listing.petPolicy ?? "NOT_ALLOWED",
           }
         : {
             petPolicy: listing.petPolicy ?? "NOT_ALLOWED",

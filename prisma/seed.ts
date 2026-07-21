@@ -90,6 +90,10 @@ const amenities: { name: string; slug: string; category: AmenityCategory; icon: 
   { name: "Fireplace", slug: "fireplace", category: "CLIMATE", icon: "fireplace" },
   { name: "Ceiling Fan", slug: "ceiling-fan", category: "CLIMATE", icon: "ceiling-fan" },
   { name: "Portable Fan", slug: "portable-fan", category: "CLIMATE", icon: "portable-fan" },
+  { name: "Hammock", slug: "hammock", category: "OUTDOOR", icon: "hammock" },
+  { name: "Fire Pit", slug: "fire-pit", category: "OUTDOOR", icon: "fire-pit" },
+  { name: "Self Check-in / Keyless Entry", slug: "self-check-in", category: "SAFETY", icon: "keyless-entry" },
+  { name: "Pets Allowed", slug: "pets-allowed", category: "BASIC", icon: "pets-allowed" },
 ];
 
 const CLD = "https://res.cloudinary.com/lbwzvp5s/image/upload";

@@ -60,6 +60,7 @@ export interface ListingDetailViewModel {
         checkOutTime: string | null;
         instantBook: boolean;
         cancellationPolicy: string;
+        petPolicy: string;
       }
     | {
         rentalType: "LONG_TERM";
@@ -100,6 +101,7 @@ export function toDetailViewModel(
           checkOutTime: listing.checkOutTime,
           instantBook: listing.instantBook ?? false,
           cancellationPolicy: listing.cancellationPolicy ?? "MODERATE",
+          petPolicy: listing.petPolicy ?? "NOT_ALLOWED",
         }
       : {
           rentalType: "LONG_TERM",
