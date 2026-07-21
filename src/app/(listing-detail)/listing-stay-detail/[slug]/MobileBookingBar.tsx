@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useCallback, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
@@ -8,15 +8,8 @@ import BookingWidget from "./BookingWidget";
 import type { ListingDetailViewModel } from "@/modules/listings/types";
 import type { Route } from "@/routers/types";
 
-/**
- * Mobile-only sticky booking bar (lg:hidden — BookingWidget's real sidebar
- * covers desktop, ListingDetailView.tsx). Replaces the old MobileFooterSticky/
- * ModalReserveMobile/checkout-PageMain chain, which showed a hardcoded fake
- * price and opened a demo checkout screen never wired to createShortTermBooking/
- * createLongTermBooking — mobile users could not actually book at all. This
- * renders the real BookingWidget (same component, same server actions) inside
- * a bottom-sheet instead of duplicating any booking logic.
- */
+const DISMISS_THRESHOLD = 120;
+
 export default function MobileBookingBar({
   listingId,
   listingTitle,
@@ -41,16 +34,45 @@ export default function MobileBookingBar({
   serviceFeePercent: number;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartY = useRef(0);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const panel = panelRef.current;
+    if (panel && panel.scrollTop > 0) return;
+    dragStartY.current = e.touches[0].clientY;
+    setIsDragging(true);
+  }, []);
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isDragging) return;
+      const delta = e.touches[0].clientY - dragStartY.current;
+      if (delta < 0) {
+        setDragY(0);
+        return;
+      }
+      setDragY(delta);
+    },
+    [isDragging],
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (dragY > DISMISS_THRESHOLD) {
+      setIsOpen(false);
+    }
+    setDragY(0);
+  }, [isDragging, dragY]);
 
   const priceLabel =
     pricing.rentalType === "SHORT_TERM" ? `$${pricing.nightlyPrice}` : `$${pricing.monthlyRent}`;
   const priceUnit = pricing.rentalType === "SHORT_TERM" ? "/night" : "/month";
 
   return (
-    // bottom-14 (not bottom-0): the site's global FooterNav (Home/Explore
-    // Area/Log in/Menu, src/app/layout.tsx) is also fixed at the mobile
-    // viewport bottom, at a measured 56px tall — stacking directly on
-    // bottom-0 here would overlap it instead of sitting above it.
     <div className="lg:hidden fixed bottom-0 inset-x-0 py-3 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 z-40">
       <div className="container flex items-center justify-between">
         <span className="text-lg font-semibold">
@@ -97,7 +119,19 @@ export default function MobileBookingBar({
               leaveFrom="translate-y-0"
               leaveTo="translate-y-full"
             >
-              <Dialog.Panel className="w-full max-h-[85vh] overflow-y-auto rounded-t-3xl bg-white dark:bg-neutral-900 p-6 pb-10">
+              <Dialog.Panel
+                ref={panelRef}
+                className="w-full max-h-[85vh] overflow-y-auto rounded-t-3xl bg-white dark:bg-neutral-900 p-6 pb-10"
+                style={{
+                  transform: dragY > 0 ? `translateY(${dragY}px)` : undefined,
+                  transition: isDragging ? "none" : "transform 300ms ease-out",
+                  opacity: dragY > 0 ? Math.max(0.4, 1 - dragY / 400) : undefined,
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <div className="w-10 h-1 rounded-full bg-neutral-300 dark:bg-neutral-600 mx-auto mb-4" />
                 <div className="flex items-center justify-between mb-4">
                   <Dialog.Title className="text-lg font-semibold">{listingTitle}</Dialog.Title>
                   <button
