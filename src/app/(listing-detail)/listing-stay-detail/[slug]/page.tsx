@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { getListingBySlug } from "@/modules/listings/queries";
 import { getBlockedDatesForListing } from "@/modules/bookings/queries";
 import { getReviewsForListing } from "@/modules/reviews/queries";
-import { isFavorited } from "@/modules/favorites/queries";
 import { getCurrentUser } from "@/lib/auth";
 import { getServiceFeePercent } from "@/modules/admin/settings";
 import { toDetailViewModel } from "@/modules/listings/types";
@@ -33,10 +32,9 @@ export default async function ListingStayDetailPage({
   const viewModel = toDetailViewModel(listing);
   const isOwner = user?.id === listing.hostId;
   const isAdmin = user?.roles.includes("ADMIN") ?? false;
-  const [blockedDates, reviewRows, favorited, serviceFeePercentWhole, experiences] = await Promise.all([
+  const [blockedDates, reviewRows, serviceFeePercentWhole, experiences] = await Promise.all([
     listing.rentalType === "SHORT_TERM" ? getBlockedDatesForListing(listing.id) : Promise.resolve([]),
     getReviewsForListing(listing.id),
-    user ? isFavorited(user.id, listing.id) : Promise.resolve(false),
     getServiceFeePercent(),
     getFeaturedExperiences(),
   ]);
@@ -60,7 +58,6 @@ export default async function ListingStayDetailPage({
       isAuthenticated={Boolean(user)}
       blockedDates={blockedDates}
       reviews={reviews}
-      isFavorited={favorited}
       serviceFeePercent={serviceFeePercent}
       experiences={experiences}
     />

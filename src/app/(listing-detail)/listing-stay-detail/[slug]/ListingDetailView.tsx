@@ -20,7 +20,6 @@ import CancellationPolicyInfo from "./CancellationPolicyInfo";
 import BookingWidget from "./BookingWidget";
 import MobileBookingBar from "./MobileBookingBar";
 import InquiryForm from "./InquiryForm";
-import FavoriteButton from "./FavoriteButton";
 import ReviewsSection, { type ListingReview } from "./ReviewsSection";
 import LocalExperienceCard from "@/components/LocalExperienceCard";
 import Link from "next/link";
@@ -48,7 +47,6 @@ export default function ListingDetailView({
   isAuthenticated,
   blockedDates,
   reviews,
-  isFavorited,
   serviceFeePercent,
   experiences,
 }: {
@@ -65,7 +63,6 @@ export default function ListingDetailView({
   isAuthenticated: boolean;
   blockedDates: string[];
   reviews: ListingReview[];
-  isFavorited: boolean;
   serviceFeePercent: number;
   experiences: LocalExperience[];
 }) {
@@ -94,7 +91,10 @@ export default function ListingDetailView({
   const priceUnit = listing.pricing.rentalType === "SHORT_TERM" ? "/night" : "/month";
 
   return (
-    <div className="nc-ListingStayDetailPage pb-36 lg:pb-0">
+    // pb-20 (not pb-36): just enough to clear MobileBookingBar's real ~69px
+    // height plus a small margin — pb-36 (144px) left ~75px of dead white
+    // space below the last section on mobile before hitting the fixed bar.
+    <div className="nc-ListingStayDetailPage pb-20 lg:pb-0">
       {listing.status !== "PUBLISHED" && isAdmin && (
         <div className="mb-6 rounded-xl bg-yellow-50 text-yellow-800 px-4 py-3 text-sm">
           This listing is <strong>{listing.status.replace("_", " ").toLowerCase()}</strong> and
@@ -109,9 +109,6 @@ export default function ListingDetailView({
         isShowModal={isGalleryOpen}
         onClose={() => setIsGalleryOpen(false)}
         images={images}
-        listingId={listing.id}
-        isAuthenticated={isAuthenticated}
-        isFavorited={isFavorited}
       />
 
       {/* HEADER */}
@@ -185,14 +182,7 @@ export default function ListingDetailView({
         <div className="w-full lg:w-3/5 xl:w-2/3 space-y-7 lg:space-y-8 lg:pr-10">
           {/* SECTION 1 */}
           <div className="listingSection__wrap !space-y-6">
-            <div className="flex justify-between items-center">
-              <Badge name={listing.propertyType.name} />
-              <FavoriteButton
-                listingId={listing.id}
-                isAuthenticated={isAuthenticated}
-                initiallyFavorited={isFavorited}
-              />
-            </div>
+            <Badge name={listing.propertyType.name} />
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold">{listing.title}</h2>
             <div className="flex items-center space-x-4">
               <StartRating point={listing.avgRating} reviewCount={listing.reviewCount} />
@@ -460,11 +450,11 @@ export default function ListingDetailView({
           {/* SECTION 8: THINGS TO DO NEARBY */}
           {experiences.length > 0 && (
             <div className="listingSection__wrap">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-semibold">Make the Most of Your Stay</h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl sm:text-2xl font-semibold">Make the Most of Your Stay</h2>
                 <Link
                   href={"/explore-the-area" as Route}
-                  className="text-sm font-medium text-primary-6000 hover:text-primary-700"
+                  className="flex-shrink-0 text-sm font-medium text-primary-6000 hover:text-primary-700"
                 >
                   See more
                 </Link>

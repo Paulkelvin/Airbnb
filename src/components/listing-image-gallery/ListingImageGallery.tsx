@@ -9,7 +9,6 @@ import type { ListingGalleryImage } from "./utils/types";
 import { useLastViewedPhoto } from "./utils/useLastViewedPhoto";
 import { ArrowSmallLeftIcon } from "@heroicons/react/24/outline";
 import { Dialog, Transition } from "@headlessui/react";
-import FavoriteButton from "@/app/(listing-detail)/listing-stay-detail/[slug]/FavoriteButton";
 import { Route } from "next";
 
 const PHOTOS: string[] = [
@@ -48,17 +47,11 @@ interface Props {
   images?: ListingGalleryImage[];
   onClose?: () => void;
   isShowModal: boolean;
-  listingId?: string;
-  isAuthenticated?: boolean;
-  isFavorited?: boolean;
 }
 
 const ListingImageGallery: FC<Props> = ({
   images = DEMO_IMAGE,
   onClose,
-  listingId,
-  isAuthenticated = false,
-  isFavorited = false,
   isShowModal,
 }) => {
   const searchParams = useSearchParams();
@@ -188,20 +181,13 @@ const ListingImageGallery: FC<Props> = ({
           </Transition.Child>
 
           <div className="fixed inset-0 overflow-y-auto">
-            <div className="sticky z-10 top-0 p-4 xl:px-10 flex items-center justify-between bg-white">
+            <div className="sticky z-10 top-0 p-4 xl:px-10 flex items-center bg-white">
               <button
                 className="focus:outline-none focus:ring-0 w-10 h-10 rounded-full flex items-center justify-center hover:bg-neutral-100"
                 onClick={handleClose}
               >
                 <ArrowSmallLeftIcon className="w-6 h-6" />
               </button>
-              {listingId && (
-                <FavoriteButton
-                  listingId={listingId}
-                  isAuthenticated={isAuthenticated}
-                  initiallyFavorited={isFavorited}
-                />
-              )}
             </div>
 
             <div className="flex min-h-full items-center justify-center sm:p-4 pt-0 text-center">

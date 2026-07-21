@@ -75,7 +75,11 @@ export default function MobileHeaderGallery({
       </div>
 
       {images.length > 1 && (
-        <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-full pointer-events-none">
+        // bottom-8 (not bottom-3): the rounded content panel below this
+        // gallery overlaps the image's bottom ~24px (see the -mt-6 on
+        // ListingDetailView's <main>) — anything closer to the edge than
+        // that gets clipped underneath it.
+        <div className="absolute bottom-8 right-3 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-full pointer-events-none">
           {index + 1} / {images.length}
         </div>
       )}
