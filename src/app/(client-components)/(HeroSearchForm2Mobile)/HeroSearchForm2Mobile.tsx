@@ -16,7 +16,14 @@ function toISODate(date: Date | null): string | null {
   return date ? date.toISOString().slice(0, 10) : null;
 }
 
-const HeroSearchForm2Mobile = () => {
+/**
+ * Potomac Vista Cottage is the only property, so this no longer submits to
+ * a multi-listing search results page — `listingHref` (the cottage's own
+ * page, resolved server-side in the root layout) is where dates/guests get
+ * appended as query params for BookingWidget to read. Renders nothing if
+ * there's no published listing yet (see SectionHero for the same fallback).
+ */
+const HeroSearchForm2Mobile = ({ listingHref }: { listingHref: Route | null }) => {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [values, setValues] = useState<StaySearchFormValues | null>(null);
@@ -25,8 +32,8 @@ const HeroSearchForm2Mobile = () => {
   let [, , resetIsShowingDialog] = useTimeoutFn(() => setShowDialog(true), 1);
 
   function handleSubmit() {
+    if (!listingHref) return;
     const params = new URLSearchParams();
-    if (values?.city) params.set("city", values.city);
     if (values?.startDate && values?.endDate) {
       params.set("checkIn", toISODate(values.startDate)!);
       params.set("checkOut", toISODate(values.endDate)!);
@@ -38,7 +45,7 @@ const HeroSearchForm2Mobile = () => {
     if (totalGuests > 0) params.set("guests", String(totalGuests));
 
     const qs = params.toString();
-    router.push((qs ? `/listing-stay?${qs}` : "/listing-stay") as Route);
+    router.push((qs ? `${listingHref}?${qs}` : listingHref) as Route);
     closeModal();
   }
 
@@ -59,11 +66,9 @@ const HeroSearchForm2Mobile = () => {
         <MagnifyingGlassIcon className="flex-shrink-0 w-5 h-5" />
 
         <div className="ml-3 flex-1 text-left overflow-hidden">
-          <span className="block font-medium text-sm">Where to?</span>
+          <span className="block font-medium text-sm">Check availability</span>
           <span className="block mt-0.5 text-xs font-light text-neutral-500 dark:text-neutral-400 ">
-            <span className="line-clamp-1">
-              Anywhere &bull; Any week &bull; Add guests
-            </span>
+            <span className="line-clamp-1">Add dates &bull; Add guests</span>
           </span>
         </div>
 
@@ -82,6 +87,8 @@ const HeroSearchForm2Mobile = () => {
       </button>
     );
   };
+
+  if (!listingHref) return null;
 
   return (
     <div className="HeroSearchForm2Mobile">
