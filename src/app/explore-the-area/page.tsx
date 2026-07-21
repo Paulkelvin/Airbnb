@@ -10,7 +10,7 @@ import type { Route } from "@/routers/types";
 export const metadata = {
   title: "Explore the Area",
   description:
-    "Although Potomac Vista Cottage doesn't have private waterfront access, some of the area's best waterfront parks, restaurants, and attractions are only minutes away.",
+    "Potomac Vista Cottage sits right on the water — and some of the area's best waterfront parks, restaurants, and attractions are just minutes away.",
 };
 
 // getPrimaryListing() is a raw Prisma call (no try/catch — unlike the Sanity
@@ -48,8 +48,8 @@ export default async function ExploreTheAreaPage({
       <div className="container relative py-16 lg:py-28">
         <h1 className="text-3xl md:text-4xl font-semibold">Discover the Neighborhood</h1>
         <span className="block mt-3 text-neutral-500 dark:text-neutral-400 text-lg max-w-2xl">
-          Although the cottage doesn't have private waterfront access, some of the area's best
-          waterfront parks, restaurants, and attractions are only minutes away.
+          The cottage sits right on the water, and some of the area's best waterfront parks,
+          restaurants, and attractions are just minutes away too.
         </span>
 
         <div className="flex gap-2 overflow-x-auto no-scrollbar mt-8 pb-1">

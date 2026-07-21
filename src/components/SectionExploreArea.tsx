@@ -31,7 +31,7 @@ const SectionExploreArea: FC<SectionExploreAreaProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
         <Heading
           className="mb-0"
-          desc="Although the cottage doesn't have private waterfront access, some of the area's best waterfront parks, restaurants, and attractions are only minutes away."
+          desc="Wake up steps from the water at the cottage, then venture out — some of the area's best waterfront parks, restaurants, and attractions are just minutes away."
         >
           Things to Do Near Potomac Vista Cottage
         </Heading>

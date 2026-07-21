@@ -47,7 +47,7 @@ const FALLBACK_STATS = [
 ];
 
 const FALLBACK_MISSION_IMAGE_URL =
-  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633721/about/mission.jpg";
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784642246/listings/potomac-vista-cottage/exterior-cottage-waterside.jpg";
 
 const FALLBACK_VALUES = [
   { title: "Trust & Safety", description: "The cottage is maintained and hosted directly by our team, so you always know exactly what you're booking." },
@@ -108,10 +108,10 @@ export default async function PageAbout() {
               </p>
               <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed mt-4">
                 We host the cottage directly, so there's no guesswork about who
-                you're booking with or what to expect at check-in. And since
-                the cottage itself doesn't have private waterfront access, we've
-                put together a guide to the best nearby parks, restaurants, and
-                waterfronts — so a day on the water is never far away.
+                you're booking with or what to expect at check-in. The water is
+                right outside your door, and we've also put together a guide to
+                the best nearby parks, restaurants, and waterfronts — so there's
+                always more to explore during your stay.
               </p>
             </>
           )}

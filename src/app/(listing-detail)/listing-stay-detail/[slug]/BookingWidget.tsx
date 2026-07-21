@@ -7,6 +7,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import NcInputNumber from "@/components/NcInputNumber";
+import GuestSelector, { type GuestBreakdown } from "./GuestSelector";
 import {
   createShortTermBooking,
   createBookingPaymentIntent,
@@ -98,7 +99,13 @@ function ShortTermBookingForm({
   }, []);
   const [checkInDate, setCheckInDate] = useState<Date | null>(initialDates.checkIn);
   const [checkOutDate, setCheckOutDate] = useState<Date | null>(initialDates.checkOut);
-  const [guestCount, setGuestCount] = useState(Math.min(initialDates.guests, maxOccupants));
+  const [guestBreakdown, setGuestBreakdown] = useState<GuestBreakdown>({
+    adults: Math.max(1, Math.min(initialDates.guests, maxOccupants)),
+    children: 0,
+    infants: 0,
+    pets: 0,
+  });
+  const guestCount = guestBreakdown.adults + guestBreakdown.children;
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -225,12 +232,11 @@ function ShortTermBookingForm({
             popperClassName="!z-[100]"
           />
         </div>
-        <NcInputNumber
-          label="Guests"
-          defaultValue={guestCount}
-          min={1}
-          max={maxOccupants}
-          onChange={setGuestCount}
+        <GuestSelector
+          maxOccupants={maxOccupants}
+          petsAllowed={pricing.petPolicy !== "NOT_ALLOWED"}
+          value={guestBreakdown}
+          onChange={setGuestBreakdown}
         />
       </div>
 

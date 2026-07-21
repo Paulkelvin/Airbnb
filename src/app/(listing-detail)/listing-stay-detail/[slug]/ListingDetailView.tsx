@@ -68,6 +68,7 @@ export default function ListingDetailView({
 }) {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   const AMENITIES_PREVIEW_COUNT = 8;
   const visibleAmenities = showAllAmenities
@@ -234,9 +235,21 @@ export default function ListingDetailView({
           {/* SECTION 2: DESCRIPTION */}
           <div className="listingSection__wrap">
             <h2 className="text-2xl font-semibold">About this place</h2>
-            <div className="text-neutral-6000 dark:text-neutral-300 whitespace-pre-line">
+            <div
+              className={`text-neutral-6000 dark:text-neutral-300 whitespace-pre-line ${
+                showFullDescription ? "" : "line-clamp-4"
+              }`}
+            >
               {listing.description || "No description provided yet."}
             </div>
+            {listing.description.length > 240 && (
+              <button
+                onClick={() => setShowFullDescription((v) => !v)}
+                className="self-start inline-flex items-center gap-1.5 text-sm font-semibold underline hover:text-neutral-900 dark:hover:text-white transition-colors"
+              >
+                {showFullDescription ? "Show less" : "Read more"}
+              </button>
+            )}
           </div>
 
           {/* SECTION 3: AMENITIES */}
@@ -271,7 +284,7 @@ export default function ListingDetailView({
                 {listing.amenities.length > AMENITIES_PREVIEW_COUNT && (
                   <button
                     onClick={() => setShowAllAmenities((v) => !v)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                    className="self-start inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                   >
                     {showAllAmenities ? "Show less" : `Show all ${listing.amenities.length} amenities`}
                     <ChevronDownIcon
@@ -436,8 +449,8 @@ export default function ListingDetailView({
                 </Link>
               </div>
               <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-                Although this listing doesn't have private waterfront access, some of the area's
-                best waterfront parks, restaurants, and attractions are only minutes away.
+                You're steps from the water at the cottage, and some of the area's best
+                waterfront parks, restaurants, and attractions are just minutes away.
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                 {experiences.slice(0, 3).map((experience) => (
