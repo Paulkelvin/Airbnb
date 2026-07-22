@@ -344,7 +344,6 @@ export default function ListingDetailView({
                       }
                       shaded
                     />
-                    {/* Hidden until a confirmed check-in/check-out time is provided — see Row below, re-enable then.
                     <Row
                       label="Check-in"
                       value={
@@ -362,7 +361,6 @@ export default function ListingDetailView({
                       }
                       shaded
                     />
-                    */}
                     <Row label="Pet policy" value={titleCase(listing.pricing.petPolicy)} />
                   </>
                 ) : (

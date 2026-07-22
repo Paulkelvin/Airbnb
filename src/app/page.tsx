@@ -6,6 +6,7 @@ import SectionWhyBookWithUs from "@/components/SectionWhyBookWithUs";
 import SectionBlogHighlights from "@/components/SectionBlogHighlights";
 import SectionFaqHighlights from "@/components/SectionFaqHighlights";
 import { getFeaturedExperiences, getAllExperiences } from "@/lib/local-experiences";
+import { getFaqs } from "@/lib/faqs";
 import { getPrimaryListing } from "@/modules/listings/queries";
 import { fuzzCoordinates } from "@/lib/geo-fuzz";
 import type { Route } from "@/routers/types";
@@ -13,10 +14,11 @@ import type { Route } from "@/routers/types";
 export const dynamic = "force-dynamic";
 
 async function PageHome() {
-  const [featuredExperiences, allExperiences, primaryListing] = await Promise.all([
+  const [featuredExperiences, allExperiences, primaryListing, faqs] = await Promise.all([
     getFeaturedExperiences(),
     getAllExperiences(),
     getPrimaryListing(),
+    getFaqs(),
   ]);
   const listingHref = primaryListing
     ? (`/listing-stay-detail/${primaryListing.slug}` as Route)
@@ -46,7 +48,7 @@ async function PageHome() {
 
         <SectionBlogHighlights />
 
-        <SectionFaqHighlights />
+        <SectionFaqHighlights faqs={faqs} />
       </div>
     </main>
   );

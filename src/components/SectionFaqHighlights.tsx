@@ -6,13 +6,20 @@ import { Disclosure, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import Heading from "@/components/ui/Heading";
-import { faqs } from "@/data/faqs";
+import type { FaqItem } from "@/app/faq/FaqAccordion";
 import type { Route } from "@/routers/types";
 
 const FAQ_HREF = "/faq" as Route;
 
-const SectionFaqHighlights: React.FC = () => {
-  const highlighted = faqs.slice(0, 5);
+/** Always surface the water-access disclosure on the homepage — trust-critical
+ * for a waterfront-branded listing with no actual private water access — even
+ * if it wouldn't otherwise make the cut on question order alone. */
+const PINNED_QUESTION = "Does the Cottage Have Water Access?";
+
+const SectionFaqHighlights: React.FC<{ faqs: FaqItem[] }> = ({ faqs }) => {
+  const pinned = faqs.find((f) => f.question === PINNED_QUESTION);
+  const rest = faqs.filter((f) => f.question !== PINNED_QUESTION);
+  const highlighted = pinned ? [...rest.slice(0, 4), pinned] : rest.slice(0, 5);
 
   return (
     <div className="nc-SectionFaqHighlights">

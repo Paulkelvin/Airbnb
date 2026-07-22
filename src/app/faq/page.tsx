@@ -1,8 +1,6 @@
 import BgGlassmorphism from "@/components/BgGlassmorphism";
-import { sanityClient } from "@/lib/sanity/client";
-import { allFaqsQuery } from "@/lib/sanity/queries";
-import { faqs as staticFaqs } from "@/data/faqs";
-import FaqAccordion, { type FaqItem } from "./FaqAccordion";
+import { getFaqs } from "@/lib/faqs";
+import FaqAccordion from "./FaqAccordion";
 
 export const revalidate = 3600;
 
@@ -10,18 +8,8 @@ export const metadata = {
   title: "Help Centre",
 };
 
-async function getFaqs(): Promise<FaqItem[] | null> {
-  if (!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID) return null;
-  try {
-    const result = await sanityClient.fetch<FaqItem[]>(allFaqsQuery);
-    return result.length > 0 ? result : null;
-  } catch {
-    return null;
-  }
-}
-
 export default async function FaqPage() {
-  const faqs = (await getFaqs()) ?? staticFaqs;
+  const faqs = await getFaqs();
 
   return (
     <div className="nc-FaqPage overflow-hidden relative">
