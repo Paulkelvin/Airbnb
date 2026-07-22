@@ -6,7 +6,7 @@ import { getEmailProvider } from "@/lib/notifications";
 import { contactSchema } from "@/lib/validations/contact";
 import type { ActionResult } from "@/lib/validations/auth";
 
-const SUPPORT_EMAIL = "support@potomac.com";
+const SUPPORT_EMAIL = "booking@potomacvistacottage.com";
 
 function clientIp(): string {
   return headers().get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
