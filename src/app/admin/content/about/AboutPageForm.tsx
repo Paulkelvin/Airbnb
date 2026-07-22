@@ -15,7 +15,7 @@ export default function AboutPageForm({ aboutPage }: { aboutPage: CmsAboutPage |
 
   const [heroTitle, setHeroTitle] = useState(aboutPage?.heroTitle ?? "Our Story");
   const [heroSubtitle, setHeroSubtitle] = useState(
-    aboutPage?.heroSubtitle ?? "A private riverside retreat, hosted directly by our team.",
+    aboutPage?.heroSubtitle ?? "A peaceful riverside retreat, hosted directly by our team.",
   );
   const [heroBodyText, setHeroBodyText] = useState(() => blocksToPlainText(aboutPage?.heroBody));
   const [stats, setStats] = useState(

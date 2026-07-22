@@ -12,7 +12,7 @@ export const revalidate = 3600;
 
 export const metadata = {
   title: "About Us",
-  description: "The story behind Potomac Vista Cottage, and why we built a private riverside retreat with the area's best attractions right outside the door.",
+  description: "The story behind Potomac Vista Cottage, and why we built a peaceful riverside retreat with the area's best attractions right outside the door.",
 };
 
 interface SanityAboutPage {
@@ -68,7 +68,7 @@ export default async function PageAbout() {
     : ("/listing-stay" as Route);
 
   const heroTitle = data?.heroTitle ?? "Our Story";
-  const heroSubtitle = data?.heroSubtitle ?? "A private riverside retreat, hosted directly by our team.";
+  const heroSubtitle = data?.heroSubtitle ?? "A peaceful riverside retreat, hosted directly by our team.";
   const stats = data?.stats && data.stats.length > 0 ? data.stats : FALLBACK_STATS;
   const missionTitle = data?.missionTitle ?? "Our Mission";
   const values = data?.values && data.values.length > 0 ? data.values : FALLBACK_VALUES;
@@ -108,10 +108,11 @@ export default async function PageAbout() {
               </p>
               <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed mt-4">
                 We host the cottage directly, so there's no guesswork about who
-                you're booking with or what to expect at check-in. The water is
-                right outside your door, and we've also put together a guide to
-                the best nearby parks, restaurants, and waterfronts — so there's
-                always more to explore during your stay.
+                you're booking with or what to expect at check-in. The cottage
+                doesn't have its own beach, dock, or pier, so we've put together
+                a guide to the best nearby parks, restaurants, and waterfronts —
+                including where to launch a kayak — so there's always more to
+                explore during your stay.
               </p>
             </>
           )}

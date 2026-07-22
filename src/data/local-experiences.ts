@@ -5,8 +5,8 @@
  * just a fixed list of tourist attractions.
  */
 export const EXPERIENCE_CATEGORIES = [
-  "Dining",
   "Waterfront",
+  "Dining",
   "Family",
   "Nature",
   "Coffee",
@@ -45,152 +45,120 @@ export interface LocalExperience {
 
 // Fallback content shown if Sanity isn't configured, matching the pattern
 // used by src/data/faqs.ts — the site should never show an empty "Explore
-// the Area" section. Coordinates are real DC-area landmarks so the map
-// renders sensibly; everything else is placeholder until real photos and
-// copy are supplied.
+// the Area" section. Real Leonardtown, MD-area waterfront spots near the
+// actual cottage address (18981 Little Pond Lane), with real photos, sourced
+// from a call with Margo — replaces the previous DC-area demo placeholders,
+// which were the wrong part of the state entirely. The cottage itself has no
+// private water access, so Waterfront is deliberately the lead category.
+//
+// Two known gaps carried over from that source material, left unresolved
+// rather than guessed at:
+// - Leonardtown Wharf Park's drive time (19 min) hasn't been reconciled
+//   against the separately-verified ~13-mile distance; only one of the two
+//   numbers was actually confirmed on the call.
+// - Piney Point Lighthouse's coordinates aren't set — the address given for
+//   it during the call was identical to Leonardtown Wharf Park's, which
+//   looks like a copy/paste error rather than a real second address, so
+//   nothing was pinned on the map for it.
 export const localExperiences: LocalExperience[] = [
   {
     id: "1",
-    slug: "riverbend-park",
-    title: "Riverbend Park",
+    slug: "great-mills-canoe-and-kayak-launch",
+    title: "Great Mills Canoe and Kayak Launch",
     category: "Waterfront",
-    tagline: "Ideal for morning walks and sunset views over the Potomac.",
+    tagline: "A public launch on Route 5 with direct access to the St. Mary's River.",
     description:
-      "A quiet stretch of public Potomac riverfront with walking trails, a kayak launch, and some of the best sunset views in the area.",
-    imageUrl:
-      "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784632957/local-experiences/riverbend-park.jpg",
-    galleryImageUrls: [],
-    distanceLabel: "10 min drive",
-    latitude: 39.0032,
-    longitude: -77.2296,
-    openingHours: "Daily, dawn to dusk",
-    websiteUrl: "https://www.fairfaxcounty.gov/parks/riverbend",
+      "The closest public kayak and canoe launch to the cottage, right on the St. Mary's River off Route 5. There's no launch on the property itself, so this is where guests go to get out on the water — bring your own kayak, paddleboard, or gear.",
+    imageUrl: "/images/local-experiences/great-mills-canoe-and-kayak-launch/1.jpg",
+    galleryImageUrls: [
+      "/images/local-experiences/great-mills-canoe-and-kayak-launch/2.jpg",
+      "/images/local-experiences/great-mills-canoe-and-kayak-launch/3.jpg",
+    ],
+    distanceLabel: "14 min drive",
+    latitude: 38.2374737,
+    longitude: -76.4990958,
+    openingHours: null,
+    websiteUrl: null,
     featured: true,
   },
   {
     id: "2",
-    slug: "great-falls-park",
-    title: "Great Falls Park",
-    category: "Nature",
-    tagline: "Dramatic waterfalls and cliffside trails — bring a camera.",
+    slug: "st-marys-river-state-park",
+    title: "St. Mary's River State Park",
+    category: "Waterfront",
+    tagline: "A quiet state park with river access, trails, and picnic spots.",
     description:
-      "Dramatic waterfalls and river gorge views along the Potomac, with miles of hiking trails for every skill level.",
-    imageUrl:
-      "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784632961/local-experiences/great-falls-park.jpg",
-    galleryImageUrls: [],
-    distanceLabel: "15 min drive",
-    latitude: 38.9977,
-    longitude: -77.2472,
-    openingHours: "Daily, 7am to dark",
-    websiteUrl: "https://www.nps.gov/grfa",
+      "A Maryland state park along the St. Mary's River with a launch, hiking trails, and picnic areas — a short drive from the cottage and an easy way to spend an afternoon on the water.",
+    imageUrl: "/images/local-experiences/st-marys-river-state-park/1.jpg",
+    galleryImageUrls: [
+      "/images/local-experiences/st-marys-river-state-park/2.jpg",
+      "/images/local-experiences/st-marys-river-state-park/3.jpg",
+    ],
+    distanceLabel: "12 min drive",
+    latitude: 38.249979,
+    longitude: -76.539816,
+    openingHours: null,
+    websiteUrl: null,
     featured: true,
   },
   {
     id: "3",
-    slug: "the-blue-heron-grill",
-    title: "The Blue Heron Grill",
-    category: "Dining",
-    tagline: "Locals' favorite for crab cakes and a riverside sunset.",
+    slug: "point-lookout-state-park",
+    title: "Point Lookout State Park",
+    category: "Waterfront",
+    tagline: "A scenic day trip where the Potomac meets the Chesapeake Bay.",
     description:
-      "Locally loved seafood spot with a riverside patio — the crab cakes are the reason regulars keep coming back.",
-    imageUrl:
-      "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784632968/local-experiences/the-blue-heron-grill.jpg",
-    galleryImageUrls: [],
-    distanceLabel: "5 min drive",
-    latitude: 38.8055,
-    longitude: -77.0405,
-    openingHours: "Daily, 11am–10pm",
+      "At the southern tip of the county, where the Potomac River meets the Chesapeake Bay. Swimming beach, fishing pier, camping, and Civil War history — worth the drive for a full day out.",
+    imageUrl: "/images/local-experiences/point-lookout-state-park/1.jpg",
+    galleryImageUrls: [
+      "/images/local-experiences/point-lookout-state-park/2.jpg",
+      "/images/local-experiences/point-lookout-state-park/3.jpg",
+    ],
+    distanceLabel: "34 min drive",
+    latitude: 38.0643089,
+    longitude: -76.3360016,
+    openingHours: null,
     websiteUrl: null,
     featured: true,
   },
   {
     id: "4",
-    slug: "national-harbor",
-    title: "National Harbor",
-    category: "Family",
-    tagline: "A lively waterfront boardwalk with shops, dining, and the Capital Wheel.",
+    slug: "leonardtown-wharf-park",
+    title: "Leonardtown Wharf Park",
+    category: "Waterfront",
+    tagline: "Kayak launch, fishing pier, and some of the best sunset views in town.",
     description:
-      "Cobblestone promenades, boutique shops, and a lively public marina right on the river — an easy half-day outing for the whole family.",
-    imageUrl:
-      "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784632959/local-experiences/national-harbor.jpg",
-    galleryImageUrls: [],
-    distanceLabel: "20 min drive",
-    latitude: 38.7804,
-    longitude: -77.0159,
-    openingHours: "Shops and restaurants vary, generally 10am–9pm",
-    websiteUrl: "https://www.nationalharbor.com",
+      "Leonardtown's own waterfront park, with a kayak launch, pier, and open lawn that's popular for sunset views. The cottage itself has no water access, so this is one of the closest ways to get on the water without your own boat.",
+    imageUrl: "/images/local-experiences/leonardtown-wharf-park/1.jpg",
+    galleryImageUrls: [
+      "/images/local-experiences/leonardtown-wharf-park/2.jpg",
+      "/images/local-experiences/leonardtown-wharf-park/3.jpg",
+    ],
+    distanceLabel: "19 min drive",
+    latitude: 38.29121,
+    longitude: -76.635977,
+    openingHours: null,
+    websiteUrl: null,
     featured: true,
   },
   {
     id: "5",
-    slug: "potomac-heritage-trail",
-    title: "Potomac Heritage Trail",
-    category: "Nature",
-    tagline: "A scenic riverside trail, popular with runners and cyclists.",
-    description:
-      "A scenic trail hugging the river, popular with runners and cyclists, with several access points near the cottage.",
-    imageUrl:
-      "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784632963/local-experiences/potomac-heritage-trail.jpg",
-    galleryImageUrls: [],
-    distanceLabel: "8 min drive",
-    latitude: 38.9515,
-    longitude: -77.1467,
-    openingHours: "Open year-round",
-    websiteUrl: null,
-    featured: false,
-  },
-  {
-    id: "6",
-    slug: "millhouse-antiques-market",
-    title: "Millhouse Antiques & Market",
-    category: "Family",
-    tagline: "A converted 19th-century mill with a weekend farmers market.",
-    description:
-      "A converted 19th-century mill now home to antique dealers, a farmers market on weekends, and a small cafe.",
-    imageUrl:
-      "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784632964/local-experiences/millhouse-antiques-market.jpg",
-    galleryImageUrls: [],
-    distanceLabel: "12 min drive",
-    latitude: 38.8067,
-    longitude: -77.0472,
-    openingHours: "Sat–Sun, 8am–2pm (market); shops daily",
-    websiteUrl: null,
-    featured: false,
-  },
-  {
-    id: "7",
-    slug: "fort-hunt-park",
-    title: "Fort Hunt Park",
-    category: "History",
-    tagline: "Civil War-era fortifications turned peaceful riverside picnic grounds.",
-    description:
-      "Civil War-era fortifications turned peaceful riverside park, with interpretive trails and picnic areas.",
-    imageUrl:
-      "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784632970/local-experiences/fort-hunt-park.jpg",
-    galleryImageUrls: [],
-    distanceLabel: "18 min drive",
-    latitude: 38.7095,
-    longitude: -77.0522,
-    openingHours: "Daily, 7am to dark",
-    websiteUrl: "https://www.nps.gov/gwmp",
-    featured: false,
-  },
-  {
-    id: "8",
-    slug: "riverside-kayak-paddleboard-rentals",
-    title: "Riverside Kayak & Paddleboard Rentals",
+    slug: "piney-point-lighthouse-museum-and-historic-park",
+    title: "Piney Point Lighthouse Museum & Historic Park",
     category: "Waterfront",
-    tagline: "No waterfront access needed at the cottage when this is minutes away.",
+    tagline: "A historic lighthouse and museum on the water, with a small beach.",
     description:
-      "Rent a kayak or paddleboard right on the water — a short trip from the cottage puts you right on the river.",
-    imageUrl:
-      "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784632966/local-experiences/riverside-kayak-paddleboard-rentals.jpg",
-    galleryImageUrls: [],
-    distanceLabel: "10 min drive",
-    latitude: 38.7856,
-    longitude: -77.0507,
-    openingHours: "Daily, 9am–6pm (seasonal)",
+      "One of the oldest lighthouses on the Potomac, now a museum and historic park with a small beach and picnic area. A nice half-day trip if you want history along with the water.",
+    imageUrl: "/images/local-experiences/piney-point-lighthouse-museum-and-historic-park/1.jpg",
+    galleryImageUrls: [
+      "/images/local-experiences/piney-point-lighthouse-museum-and-historic-park/2.jpg",
+      "/images/local-experiences/piney-point-lighthouse-museum-and-historic-park/3.jpg",
+    ],
+    distanceLabel: "19 min drive",
+    latitude: null,
+    longitude: null,
+    openingHours: null,
     websiteUrl: null,
-    featured: false,
+    featured: true,
   },
 ];

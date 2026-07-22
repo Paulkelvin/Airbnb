@@ -478,8 +478,9 @@ export default function ListingDetailView({
                 </Link>
               </div>
               <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-                You're steps from the water at the cottage, and some of the area's best
-                waterfront parks, restaurants, and attractions are just minutes away.
+                The cottage has sweeping Potomac River views but no private water
+                access — some of the area's best waterfront parks, restaurants, and
+                attractions are just a short drive away.
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                 {experiences.slice(0, 3).map((experience) => (

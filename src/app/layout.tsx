@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s | Potomac",
   },
   description:
-    "Book Potomac Vista Cottage, a private riverside retreat, and explore our guide to the best nearby restaurants, parks, and waterfronts.",
+    "Book Potomac Vista Cottage, a peaceful riverside retreat near Leonardtown, MD, and explore our guide to the best nearby restaurants, parks, and waterfronts.",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },

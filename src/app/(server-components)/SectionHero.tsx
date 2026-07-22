@@ -31,8 +31,8 @@ const SectionHero: FC<SectionHeroProps> = ({ className = "", listingHref }) => {
             Potomac Vista Cottage
           </h1>
           <span className="text-base md:text-lg text-neutral-500 dark:text-neutral-400">
-            A private riverside retreat, moments from parks, restaurants, and
-            waterfront within easy reach — your home base for exploring the area.
+            A peaceful, private retreat with sweeping Potomac River views, just
+            minutes from Leonardtown's restaurants, shops, and public water access.
           </span>
           {listingHref && (
             <ButtonPrimary href={listingHref} sizeClass="px-5 py-4 sm:px-7">

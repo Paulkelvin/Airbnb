@@ -53,4 +53,10 @@ export const faqs: Faq[] = [
     answer:
       "Our support team is available around the clock from your account's Help Center. For anything you need on-site, contact details for local support are included in your check-in instructions.",
   },
+  {
+    category: "Trust & Safety",
+    question: "Does the Cottage Have Water Access?",
+    answer:
+      "No. Potomac Vista Cottage does not have a private beach, dock, or pier. It's set back on a quiet street with river views. Guests who want to get on the water head to the Great Mills Canoe and Kayak Launch, St. Mary's River State Park, or Point Lookout State Park, all a short drive away — see Explore the Area for the full list.",
+  },
 ];
