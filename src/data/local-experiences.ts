@@ -6,15 +6,27 @@
  */
 export const EXPERIENCE_CATEGORIES = [
   "Waterfront",
+  "Coffee",
   "Dining",
   "Family",
-  "Nature",
-  "Coffee",
-  "Nightlife",
   "History",
+  "Nature",
+  "Nightlife",
 ] as const;
 
 export type ExperienceCategory = (typeof EXPERIENCE_CATEGORIES)[number];
+
+/** Sorts categories into the canonical display order above (Waterfront
+ * first, per the source brief) rather than whatever order they happened to
+ * come back from the data layer in. Anything not in the canonical list
+ * (shouldn't happen, but data is data) sorts after the known ones. */
+export function sortCategories(categories: string[]): string[] {
+  return [...categories].sort((a, b) => {
+    const ai = EXPERIENCE_CATEGORIES.indexOf(a as ExperienceCategory);
+    const bi = EXPERIENCE_CATEGORIES.indexOf(b as ExperienceCategory);
+    return (ai === -1 ? EXPERIENCE_CATEGORIES.length : ai) - (bi === -1 ? EXPERIENCE_CATEGORIES.length : bi);
+  });
+}
 
 export const CATEGORY_EMOJI: Record<string, string> = {
   Dining: "🍽️",
@@ -51,17 +63,20 @@ export interface LocalExperience {
 // which were the wrong part of the state entirely. The cottage itself has no
 // private water access, so Waterfront is deliberately the lead category.
 //
-// One known gap carried over from that source material, left unresolved
-// rather than guessed at:
-// - Piney Point Lighthouse's coordinates aren't set — the address given for
-//   it during the call was identical to Leonardtown Wharf Park's, which
-//   looks like a copy/paste error rather than a real second address, so
-//   nothing was pinned on the map for it.
+// Piney Point Lighthouse's coordinates (previously unresolved — the address
+// given during the original call was identical to Leonardtown Wharf Park's,
+// a copy/paste error rather than a real second address) are now pinned from
+// the lighthouse's actual OSM location, independent of that bad source data.
 //
-// Leonardtown Wharf Park's distance was previously listed as "19 min drive",
-// which conflicted with the separately-verified ~13-mile figure from the same
-// call — only one of the two numbers was actually confirmed. Resolved in
-// favor of the confirmed ~13 mi (matching the live CMS content).
+// Leonardtown Wharf Park and Piney Point's distances combine a confirmed
+// drive time with a separately-computed real routing distance (via OSM/OSRM,
+// not guessed) — matching the live CMS content.
+//
+// Two of a later batch of source coordinates (for Great Mills and Point
+// Lookout) were dropped rather than applied: each contradicted the street
+// address given for the same place in the same message (reverse-geocoding
+// put them miles away, in the wrong town/zip). The coordinates already here
+// were kept since they independently match Point Lookout's real address.
 //
 // All five locations' full photo sets (5 images each) were pulled in from
 // the source Drive folders — previously only 3 of 5 per location had made it
@@ -105,8 +120,8 @@ export const localExperiences: LocalExperience[] = [
       "/images/local-experiences/st-marys-river-state-park/kayaking-the-still-water.jpg",
     ],
     distanceLabel: "12 min drive",
-    latitude: 38.249979,
-    longitude: -76.539816,
+    latitude: 38.2197948,
+    longitude: -76.5740822,
     openingHours: null,
     websiteUrl: null,
     featured: true,
@@ -148,9 +163,9 @@ export const localExperiences: LocalExperience[] = [
       "/images/local-experiences/leonardtown-wharf-park/pier-over-the-water.jpg",
       "/images/local-experiences/leonardtown-wharf-park/pier-at-sunset.jpg",
     ],
-    distanceLabel: "~13 mi",
-    latitude: 38.29121,
-    longitude: -76.635977,
+    distanceLabel: "~19 min / ~13 mi",
+    latitude: 38.2433866,
+    longitude: -76.6556717,
     openingHours: null,
     websiteUrl: null,
     featured: true,
@@ -170,9 +185,9 @@ export const localExperiences: LocalExperience[] = [
       "/images/local-experiences/piney-point-lighthouse-museum-and-historic-park/lighthouse-and-historic-boat.jpg",
       "/images/local-experiences/piney-point-lighthouse-museum-and-historic-park/view-from-the-tower.jpg",
     ],
-    distanceLabel: "19 min drive",
-    latitude: null,
-    longitude: null,
+    distanceLabel: "~19 min / ~8.1 mi",
+    latitude: 38.1353379,
+    longitude: -76.5297116,
     openingHours: null,
     websiteUrl: null,
     featured: true,

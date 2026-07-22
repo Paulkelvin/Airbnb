@@ -5,13 +5,13 @@ import ExploreAreaMap from "@/components/ExploreAreaMap/ExploreAreaMap";
 import { getAllExperiences } from "@/lib/local-experiences";
 import { getPrimaryListing } from "@/modules/listings/queries";
 import { fuzzCoordinates } from "@/lib/geo-fuzz";
-import { CATEGORY_EMOJI } from "@/data/local-experiences";
+import { CATEGORY_EMOJI, sortCategories } from "@/data/local-experiences";
 import type { Route } from "@/routers/types";
 
 export const metadata = {
   title: "Explore the Area",
   description:
-    "Potomac Vista Cottage sits right on the water — and some of the area's best waterfront parks, restaurants, and attractions are just minutes away.",
+    "Potomac Vista Cottage has sweeping river views, and some of the area's best waterfront parks, restaurants, and attractions are just minutes away.",
 };
 
 // getPrimaryListing() is a raw Prisma call (no try/catch — unlike the Sanity
@@ -32,7 +32,7 @@ export default async function ExploreTheAreaPage({
     getAllExperiences(),
     getPrimaryListing(),
   ]);
-  const categories = Array.from(new Set(experiences.map((a) => a.category)));
+  const categories = sortCategories(Array.from(new Set(experiences.map((a) => a.category))));
   const activeCategory = searchParams.category;
   const visible = activeCategory
     ? experiences.filter((a) => a.category === activeCategory)

@@ -6,7 +6,7 @@ import Heading from "@/components/ui/Heading";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import LocalExperienceCard from "@/components/LocalExperienceCard";
 import ExploreAreaMap from "@/components/ExploreAreaMap/ExploreAreaMap";
-import { CATEGORY_EMOJI, type LocalExperience } from "@/data/local-experiences";
+import { CATEGORY_EMOJI, sortCategories, type LocalExperience } from "@/data/local-experiences";
 import type { Route } from "@/routers/types";
 
 export interface SectionExploreAreaProps {
@@ -32,7 +32,7 @@ const SectionExploreArea: FC<SectionExploreAreaProps> = ({
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const categories = useMemo(
-    () => Array.from(new Set(allExperiences.map((e) => e.category))),
+    () => sortCategories(Array.from(new Set(allExperiences.map((e) => e.category)))),
     [allExperiences],
   );
 
