@@ -51,15 +51,21 @@ export interface LocalExperience {
 // which were the wrong part of the state entirely. The cottage itself has no
 // private water access, so Waterfront is deliberately the lead category.
 //
-// Two known gaps carried over from that source material, left unresolved
+// One known gap carried over from that source material, left unresolved
 // rather than guessed at:
-// - Leonardtown Wharf Park's drive time (19 min) hasn't been reconciled
-//   against the separately-verified ~13-mile distance; only one of the two
-//   numbers was actually confirmed on the call.
 // - Piney Point Lighthouse's coordinates aren't set — the address given for
 //   it during the call was identical to Leonardtown Wharf Park's, which
 //   looks like a copy/paste error rather than a real second address, so
 //   nothing was pinned on the map for it.
+//
+// Leonardtown Wharf Park's distance was previously listed as "19 min drive",
+// which conflicted with the separately-verified ~13-mile figure from the same
+// call — only one of the two numbers was actually confirmed. Resolved in
+// favor of the confirmed ~13 mi (matching the live CMS content).
+//
+// All five locations' full photo sets (5 images each) were pulled in from
+// the source Drive folders — previously only 3 of 5 per location had made it
+// into the site.
 export const localExperiences: LocalExperience[] = [
   {
     id: "1",
@@ -73,6 +79,8 @@ export const localExperiences: LocalExperience[] = [
     galleryImageUrls: [
       "/images/local-experiences/great-mills-canoe-and-kayak-launch/2.jpg",
       "/images/local-experiences/great-mills-canoe-and-kayak-launch/3.jpg",
+      "/images/local-experiences/great-mills-canoe-and-kayak-launch/4.jpg",
+      "/images/local-experiences/great-mills-canoe-and-kayak-launch/5.jpg",
     ],
     distanceLabel: "14 min drive",
     latitude: 38.2374737,
@@ -93,6 +101,8 @@ export const localExperiences: LocalExperience[] = [
     galleryImageUrls: [
       "/images/local-experiences/st-marys-river-state-park/2.jpg",
       "/images/local-experiences/st-marys-river-state-park/3.jpg",
+      "/images/local-experiences/st-marys-river-state-park/4.jpg",
+      "/images/local-experiences/st-marys-river-state-park/5.jpg",
     ],
     distanceLabel: "12 min drive",
     latitude: 38.249979,
@@ -113,6 +123,8 @@ export const localExperiences: LocalExperience[] = [
     galleryImageUrls: [
       "/images/local-experiences/point-lookout-state-park/2.jpg",
       "/images/local-experiences/point-lookout-state-park/3.jpg",
+      "/images/local-experiences/point-lookout-state-park/4.jpg",
+      "/images/local-experiences/point-lookout-state-park/5.jpg",
     ],
     distanceLabel: "34 min drive",
     latitude: 38.0643089,
@@ -133,8 +145,10 @@ export const localExperiences: LocalExperience[] = [
     galleryImageUrls: [
       "/images/local-experiences/leonardtown-wharf-park/2.jpg",
       "/images/local-experiences/leonardtown-wharf-park/3.jpg",
+      "/images/local-experiences/leonardtown-wharf-park/4.jpg",
+      "/images/local-experiences/leonardtown-wharf-park/5.jpg",
     ],
-    distanceLabel: "19 min drive",
+    distanceLabel: "~13 mi",
     latitude: 38.29121,
     longitude: -76.635977,
     openingHours: null,
@@ -153,6 +167,8 @@ export const localExperiences: LocalExperience[] = [
     galleryImageUrls: [
       "/images/local-experiences/piney-point-lighthouse-museum-and-historic-park/2.jpg",
       "/images/local-experiences/piney-point-lighthouse-museum-and-historic-park/3.jpg",
+      "/images/local-experiences/piney-point-lighthouse-museum-and-historic-park/4.jpg",
+      "/images/local-experiences/piney-point-lighthouse-museum-and-historic-park/5.jpg",
     ],
     distanceLabel: "19 min drive",
     latitude: null,
