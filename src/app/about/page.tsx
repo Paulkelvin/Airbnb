@@ -12,7 +12,7 @@ export const revalidate = 3600;
 
 export const metadata = {
   title: "About Us",
-  description: "The story behind Potomac Vista Cottage, and why we built a peaceful riverside retreat with the area's best attractions right outside the door.",
+  description: "The story behind Potomac Vista Cottage, and why we built a peaceful cottage with river views and the area's best attractions right outside the door.",
 };
 
 interface SanityAboutPage {
@@ -68,7 +68,7 @@ export default async function PageAbout() {
     : ("/listing-stay" as Route);
 
   const heroTitle = data?.heroTitle ?? "Our Story";
-  const heroSubtitle = data?.heroSubtitle ?? "A peaceful riverside retreat, hosted directly by our team.";
+  const heroSubtitle = data?.heroSubtitle ?? "A peaceful cottage with river views, hosted directly by our team.";
   const stats = data?.stats && data.stats.length > 0 ? data.stats : FALLBACK_STATS;
   const missionTitle = data?.missionTitle ?? "Our Mission";
   const values = data?.values && data.values.length > 0 ? data.values : FALLBACK_VALUES;

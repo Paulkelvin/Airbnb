@@ -21,11 +21,11 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "Potomac Vista Cottage — A Riverside Retreat",
+    default: "Potomac Vista Cottage — River Views Near Leonardtown, MD",
     template: "%s | Potomac",
   },
   description:
-    "Book Potomac Vista Cottage, a peaceful riverside retreat near Leonardtown, MD, and explore our guide to the best nearby restaurants, parks, and waterfronts.",
+    "Book Potomac Vista Cottage, a peaceful cottage with river views near Leonardtown, MD, and explore our guide to the best nearby restaurants, parks, and waterfronts.",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
