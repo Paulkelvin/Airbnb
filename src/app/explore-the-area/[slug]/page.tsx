@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { MapPinIcon, ClockIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import BgGlassmorphism from "@/components/BgGlassmorphism";
 import LocalExperienceCard from "@/components/LocalExperienceCard";
+import LocalExperienceGallery from "@/components/LocalExperienceGallery";
 import ExploreAreaMap from "@/components/ExploreAreaMap/ExploreAreaMap";
 import { getExperienceBySlug, getAllExperiences } from "@/lib/local-experiences";
 import { getPrimaryListing } from "@/modules/listings/queries";
@@ -69,29 +69,7 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
         </div>
 
         {/* GALLERY */}
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="relative aspect-[4/3] sm:aspect-auto sm:row-span-2 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800">
-            <Image
-              src={gallery[0]}
-              alt={experience.title}
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-              priority
-            />
-          </div>
-          {gallery.slice(1, 3).map((url, i) => (
-            <div key={i} className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800">
-              <Image
-                src={url}
-                alt=""
-                fill
-                sizes="(max-width: 768px) 100vw, 25vw"
-                className="object-cover"
-              />
-            </div>
-          ))}
-        </div>
+        <LocalExperienceGallery images={gallery} title={experience.title} />
 
         <div className="mt-12 grid lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-8">
