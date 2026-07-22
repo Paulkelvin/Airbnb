@@ -95,18 +95,7 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
           )}
         </div>
 
-        {related.length > 0 && (
-          <div className="mt-16">
-            <h2 className="text-xl font-semibold mb-6">You might also like</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {related.map((r) => (
-                <LocalExperienceCard key={r.id} data={r} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* GETTING THERE — full-width, at the bottom of the page */}
+        {/* GETTING THERE — full-width, before "You might also like" */}
         <div className="mt-16">
           <h2 className="text-xl font-semibold mb-3">Getting there</h2>
           <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
@@ -145,6 +134,17 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
             </a>
           )}
         </div>
+
+        {related.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-xl font-semibold mb-6">You might also like</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {related.map((r) => (
+                <LocalExperienceCard key={r.id} data={r} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
