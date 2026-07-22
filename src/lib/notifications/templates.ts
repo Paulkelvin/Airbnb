@@ -83,6 +83,15 @@ function formatMoney(amountCents: number, currency: string): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amountCents / 100);
 }
 
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function wrap(firstName: string, bodyHtml: string, _bodyText: string): string {
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -157,6 +166,28 @@ export function renderBookingOtpEmail(code: string, fullName: string): RenderedE
     text,
   );
   return { subject: `${code} is your Potomac booking code`, html, text };
+}
+
+/**
+ * Contact form submission — sent to the site's own inbox, not a guest/host,
+ * so there's no NotificationType/notify() history for it. Escapes all
+ * submitter-supplied fields since this content is untrusted user input
+ * rendered as HTML in an email client.
+ */
+export function renderContactMessageEmail(name: string, email: string, message: string): RenderedEmail {
+  const text = `From: ${name} <${email}>\n\n${message}`;
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeMessage = escapeHtml(message).replace(/\n/g, "<br/>");
+  const html = wrap(
+    "there",
+    `<p style="margin:0 0 16px 0;font-size:16px;line-height:1.5;color:#27272a;">New message from <strong>${safeName}</strong> (<a href="mailto:${safeEmail}" style="color:#18181b;">${safeEmail}</a>):</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px 0;"><tr><td style="background-color:#fafafa;border:1px solid #e4e4e7;border-radius:8px;padding:16px 20px;font-size:14px;line-height:1.6;color:#3f3f46;">
+${safeMessage}
+</td></tr></table>`,
+    text,
+  );
+  return { subject: `New contact form message from ${name}`, html, text };
 }
 
 export function renderEmailTemplate<T extends NotificationType>(

@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { getEmailProvider } from "@/lib/notifications";
+import { renderContactMessageEmail } from "@/lib/notifications/templates";
 import { contactSchema } from "@/lib/validations/contact";
 import type { ActionResult } from "@/lib/validations/auth";
 
@@ -45,11 +46,12 @@ export async function sendContactMessage(
 
   const { name, email, message } = parsed.data;
   const provider = getEmailProvider();
+  const rendered = renderContactMessageEmail(name, email, message);
   const result = await provider.send({
     to: SUPPORT_EMAIL,
-    subject: `New contact form message from ${name}`,
-    text: `From: ${name} <${email}>\n\n${message}`,
-    html: `<p><strong>From:</strong> ${name} (${email})</p><p>${message.replace(/\n/g, "<br/>")}</p>`,
+    subject: rendered.subject,
+    text: rendered.text,
+    html: rendered.html,
   });
 
   if (!result.success) {
