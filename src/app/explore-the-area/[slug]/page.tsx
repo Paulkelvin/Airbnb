@@ -31,12 +31,15 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
   const related = allExperiences.filter((e) => e.slug !== experience.slug).slice(0, 3);
 
   const hasCottageCoords = primaryListing?.latitude != null && primaryListing?.longitude != null;
+  // No origin param — Google Maps fills that in with the visitor's current
+  // location (via device GPS on mobile, or prompts for it on desktop).
+  // Most visitors are viewing this page while still planning the trip, not
+  // standing at the cottage, so directions "from the cottage" would send
+  // the wrong people the wrong way.
   const directionsHref =
-    hasCottageCoords && experience.latitude != null && experience.longitude != null
-      ? `https://www.google.com/maps/dir/?api=1&origin=${primaryListing!.latitude},${primaryListing!.longitude}&destination=${experience.latitude},${experience.longitude}`
-      : experience.latitude != null && experience.longitude != null
-        ? `https://www.google.com/maps/search/?api=1&query=${experience.latitude},${experience.longitude}`
-        : null;
+    experience.latitude != null && experience.longitude != null
+      ? `https://www.google.com/maps/dir/?api=1&destination=${experience.latitude},${experience.longitude}`
+      : null;
 
   return (
     <div className="nc-LocalExperiencePage overflow-hidden relative">
@@ -71,62 +74,25 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
         {/* GALLERY */}
         <LocalExperienceGallery images={gallery} title={experience.title} />
 
-        <div className="mt-12 grid lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2 space-y-8">
-            <div>
-              <h2 className="text-xl font-semibold mb-3">Why guests love it</h2>
-              <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                {experience.description}
-              </p>
-            </div>
-
-            {experience.websiteUrl && (
-              <a
-                href={experience.websiteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-6000 hover:text-primary-700"
-              >
-                <GlobeAltIcon className="w-4 h-4" />
-                Visit website
-              </a>
-            )}
+        <div className="mt-12 max-w-3xl space-y-8">
+          <div>
+            <h2 className="text-xl font-semibold mb-3">Why guests love it</h2>
+            <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">
+              {experience.description}
+            </p>
           </div>
 
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Getting there</h2>
-            {experience.latitude != null && experience.longitude != null ? (
-              <ExploreAreaMap
-                className="aspect-square"
-                cottage={
-                  hasCottageCoords
-                    ? {
-                        // Fuzzed for this map marker only — directionsHref
-                        // below still uses the precise coordinates, since
-                        // real turn-by-turn directions must stay accurate.
-                        ...fuzzCoordinates(primaryListing!.latitude!, primaryListing!.longitude!, primaryListing!.slug),
-                        label: "Potomac Vista Cottage",
-                      }
-                    : { lat: experience.latitude, lng: experience.longitude, label: "Potomac Vista Cottage" }
-                }
-                experiences={[experience]}
-              />
-            ) : (
-              <div className="aspect-square rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 dark:text-neutral-400 text-sm">
-                Map not available
-              </div>
-            )}
-            {directionsHref && (
-              <a
-                href={directionsHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-center px-5 py-2.5 rounded-full border border-neutral-200 dark:border-neutral-700 text-sm font-medium hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors"
-              >
-                Get directions from the cottage
-              </a>
-            )}
-          </div>
+          {experience.websiteUrl && (
+            <a
+              href={experience.websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-6000 hover:text-primary-700"
+            >
+              <GlobeAltIcon className="w-4 h-4" />
+              Visit website
+            </a>
+          )}
         </div>
 
         {related.length > 0 && (
@@ -139,6 +105,46 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
             </div>
           </div>
         )}
+
+        {/* GETTING THERE — full-width, at the bottom of the page */}
+        <div className="mt-16">
+          <h2 className="text-xl font-semibold mb-3">Getting there</h2>
+          <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
+            {experience.distanceLabel} from Potomac Vista Cottage
+          </p>
+          {experience.latitude != null && experience.longitude != null ? (
+            <ExploreAreaMap
+              className="aspect-[16/9] sm:aspect-[21/9]"
+              cottage={
+                hasCottageCoords
+                  ? {
+                      // Fuzzed for this map marker only — directionsHref
+                      // above uses the precise destination coordinates
+                      // regardless, since turn-by-turn directions must
+                      // stay accurate.
+                      ...fuzzCoordinates(primaryListing!.latitude!, primaryListing!.longitude!, primaryListing!.slug),
+                      label: "Potomac Vista Cottage",
+                    }
+                  : { lat: experience.latitude, lng: experience.longitude, label: "Potomac Vista Cottage" }
+              }
+              experiences={[experience]}
+            />
+          ) : (
+            <div className="aspect-[16/9] sm:aspect-[21/9] rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-500 dark:text-neutral-400 text-sm">
+              Map not available
+            </div>
+          )}
+          {directionsHref && (
+            <a
+              href={directionsHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-block text-center px-5 py-2.5 rounded-full border border-neutral-200 dark:border-neutral-700 text-sm font-medium hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors"
+            >
+              Get Directions
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );
