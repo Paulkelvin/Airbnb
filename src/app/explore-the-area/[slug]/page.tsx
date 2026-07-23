@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MapPinIcon, ClockIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import BgGlassmorphism from "@/components/BgGlassmorphism";
+import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import LocalExperienceCard from "@/components/LocalExperienceCard";
 import LocalExperienceGallery from "@/components/LocalExperienceGallery";
 import ExploreAreaMap from "@/components/ExploreAreaMap/ExploreAreaMap";
@@ -46,12 +47,23 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
       <BgGlassmorphism />
       <div className="container relative py-16 lg:py-24">
         <div className="max-w-3xl">
-          <Link
-            href={"/explore-the-area" as Route}
-            className="text-sm font-medium text-primary-6000 hover:text-primary-700"
-          >
-            ← Explore the Area
-          </Link>
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              href={"/explore-the-area" as Route}
+              className="text-sm font-medium text-primary-6000 hover:text-primary-700"
+            >
+              ← Explore the Area
+            </Link>
+            {primaryListing && (
+              <ButtonPrimary
+                href={`/listing-stay-detail/${primaryListing.slug}` as Route}
+                sizeClass="px-4 py-2"
+                fontSize="text-sm"
+              >
+                Continue booking →
+              </ButtonPrimary>
+            )}
+          </div>
           <h1 className="mt-3 text-3xl md:text-4xl font-semibold">{experience.title}</h1>
           <p className="mt-3 text-lg text-neutral-600 dark:text-neutral-300">{experience.tagline}</p>
           <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
