@@ -14,7 +14,7 @@ import {
 
 export const metadata = { title: "User Management" };
 
-const STATUSES = ["ALL", "ACTIVE", "SUSPENDED"] as const;
+const STATUSES = ["ALL", "ACTIVE", "SUSPENDED", "DELETED"] as const;
 
 export default async function AdminUsersPage({
   searchParams,

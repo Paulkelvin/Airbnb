@@ -44,12 +44,70 @@ export async function unsuspendUser(userId: string): Promise<ActionResult<{ id: 
 
 export async function verifyUser(userId: string): Promise<ActionResult<{ id: string }>> {
   const admin = await requireAdmin();
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, isVerified: true } });
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, isVerified: true, status: true } });
   if (!user) return { success: false, error: { code: "NOT_FOUND", message: "User not found" } };
+  if (user.status !== "ACTIVE") return { success: false, error: { code: "INVALID_STATE", message: "Only active users can be verified" } };
   if (user.isVerified) return { success: false, error: { code: "INVALID_STATE", message: "User is already verified" } };
 
   await prisma.user.update({ where: { id: userId }, data: { isVerified: true } });
   await auditLog(admin.id, "user.verify", "User", userId);
+  revalidatePath("/admin/users");
+  return { success: true, data: { id: userId } };
+}
+
+export async function deleteUser(userId: string): Promise<ActionResult<{ id: string }>> {
+  const admin = await requireAdmin();
+  if (userId === admin.id) {
+    return { success: false, error: { code: "FORBIDDEN", message: "You cannot delete your own account" } };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      status: true,
+      _count: {
+        select: {
+          bookingsAsGuest: { where: { status: { in: ["PENDING", "CONFIRMED", "ACTIVE", "CHECKED_IN"] } } },
+          bookingsAsHost: { where: { status: { in: ["PENDING", "CONFIRMED", "ACTIVE", "CHECKED_IN"] } } },
+        },
+      },
+    },
+  });
+  if (!user) return { success: false, error: { code: "NOT_FOUND", message: "User not found" } };
+  if (user.status === "DELETED") return { success: false, error: { code: "INVALID_STATE", message: "User is already deleted" } };
+
+  const activeBookings = user._count.bookingsAsGuest + user._count.bookingsAsHost;
+  if (activeBookings > 0) {
+    return {
+      success: false,
+      error: {
+        code: "IN_USE",
+        message: `Cannot delete — ${activeBookings} active booking(s) exist. Cancel or complete them first.`,
+      },
+    };
+  }
+
+  await prisma.$transaction([
+    prisma.listing.updateMany({ where: { hostId: userId, status: "PUBLISHED" }, data: { status: "PAUSED" } }),
+    prisma.user.update({
+      where: { id: userId },
+      data: {
+        status: "DELETED",
+        email: `deleted-${userId}@removed.local`,
+        firstName: "Deleted",
+        lastName: "User",
+        phone: null,
+        avatarUrl: null,
+        bio: null,
+        passwordHash: null,
+        passwordResetToken: null,
+        passwordResetExpiresAt: null,
+      },
+    }),
+  ]);
+  await auditLog(admin.id, "user.delete", "User", userId, { originalEmail: user.email });
   revalidatePath("/admin/users");
   return { success: true, data: { id: userId } };
 }
