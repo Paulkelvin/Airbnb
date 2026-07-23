@@ -27,12 +27,12 @@ export default async function AccountSavelists() {
 
       {items.length === 0 ? (
         <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 p-12 text-center">
-          <p className="text-neutral-500 dark:text-neutral-400">You haven&apos;t saved any listings yet.</p>
+          <p className="text-neutral-500 dark:text-neutral-400">You haven&apos;t saved any stays yet.</p>
           <Link
-            href="/listing-stay"
+            href="/listing-stay-detail/potomac-vista-cottage"
             className="mt-4 inline-block rounded-full border border-neutral-300 dark:border-neutral-600 px-5 py-2 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           >
-            Explore listings
+            View the cottage
           </Link>
         </div>
       ) : (

@@ -50,7 +50,7 @@ export default async function AdminMessagesPage() {
           <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
             {conversations.map((c) => {
               const participantNames = c.participants
-                .map((p) => `${p.user.firstName} ${p.user.lastName}`)
+                .map((p) => [p.user.firstName, p.user.lastName].filter(Boolean).join(" "))
                 .join(", ");
               const lastMessage = c.messages[0];
               const preview = lastMessage?.body

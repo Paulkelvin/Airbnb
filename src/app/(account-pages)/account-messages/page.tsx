@@ -50,7 +50,7 @@ export default async function AccountMessagesPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className={`truncate ${isUnread ? "font-semibold" : "font-medium"}`}>
-                      {other ? `${other.firstName} ${other.lastName}` : "Unknown"}
+                      {other ? [other.firstName, other.lastName].filter(Boolean).join(" ") : "Unknown"}
                     </h3>
                     {isUnread && <span className="w-2 h-2 rounded-full bg-primary-6000 flex-shrink-0" />}
                   </div>

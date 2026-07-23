@@ -166,7 +166,7 @@ export function toDetailViewModel(
     })),
     host: {
       id: listing.host.id,
-      name: `${listing.host.firstName} ${listing.host.lastName}`,
+      name: [listing.host.firstName, listing.host.lastName].filter(Boolean).join(" "),
       avatarUrl: listing.host.avatarUrl,
     },
     pricing,
@@ -190,7 +190,7 @@ export function toCardViewModel(listing: ListingWithRelations): StayDataType {
       id: listing.host.id,
       firstName: listing.host.firstName,
       lastName: listing.host.lastName,
-      displayName: `${listing.host.firstName} ${listing.host.lastName}`,
+      displayName: [listing.host.firstName, listing.host.lastName].filter(Boolean).join(" "),
       avatar: listing.host.avatarUrl ?? "",
       count: 0,
       desc: "",

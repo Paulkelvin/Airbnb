@@ -29,7 +29,7 @@ export default async function ConversationPage({ params }: { params: { id: strin
           &larr; Back to messages
         </Link>
         <h2 className="text-2xl font-semibold mt-2">
-          {other ? `${other.firstName} ${other.lastName}` : "Conversation"}
+          {other ? [other.firstName, other.lastName].filter(Boolean).join(" ") : "Conversation"}
         </h2>
         {conversation.listing && (
           <Link

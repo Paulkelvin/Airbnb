@@ -23,7 +23,7 @@ function toRow(booking: Awaited<ReturnType<typeof getMyBookingsAsGuest>>[number]
     leaseEndDate: booking.leaseEndDate ? booking.leaseEndDate.toISOString() : null,
     totalPrice: booking.totalPrice ? Number(booking.totalPrice) : null,
     monthlyRentSnapshot: booking.monthlyRentSnapshot ? Number(booking.monthlyRentSnapshot) : null,
-    counterpartyName: `${booking.host.firstName} ${booking.host.lastName}`,
+    counterpartyName: [booking.host.firstName, booking.host.lastName].filter(Boolean).join(" "),
   };
 }
 
@@ -41,7 +41,7 @@ export default async function AccountBookingsPage() {
   const guestRows = guestBookings.map(toRow);
   const hostRows = hostBookings.map((booking) => ({
     ...toRow(booking),
-    counterpartyName: `${booking.guest.firstName} ${booking.guest.lastName}`,
+    counterpartyName: [booking.guest.firstName, booking.guest.lastName].filter(Boolean).join(" "),
   }));
 
   return (

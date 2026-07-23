@@ -35,7 +35,7 @@ export const Nav = () => {
     "/account-password",
     "/account-billing",
   ];
-  const adminOnlyNav = new Set(["/account-listings", "/account-billing"]);
+  const adminOnlyNav = new Set(["/account-listings", "/account-billing", "/account-savelists"]);
   const listNav = isAdmin ? allNav : allNav.filter((item) => !adminOnlyNav.has(item));
 
   return (

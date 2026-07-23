@@ -121,10 +121,10 @@ export default function BookingsList({
       <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 p-12 text-center">
         <p className="text-neutral-500 dark:text-neutral-400">{emptyMessage}</p>
         <Link
-          href={"/listing-stay" as Route}
+          href={"/listing-stay-detail/potomac-vista-cottage" as Route}
           className="mt-4 inline-block rounded-full border border-neutral-300 dark:border-neutral-600 px-5 py-2 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
         >
-          Browse stays
+          View the cottage
         </Link>
       </div>
     );

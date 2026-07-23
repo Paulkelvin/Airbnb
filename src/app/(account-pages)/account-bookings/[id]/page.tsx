@@ -76,7 +76,7 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
             <Row label="Lease term" value={`${booking.leaseTermMonths ?? "—"} months`} />
           </>
         )}
-        <Row label={viewerRole === "guest" ? "Host" : "Guest"} value={`${counterparty.firstName} ${counterparty.lastName}`} />
+        <Row label={viewerRole === "guest" ? "Host" : "Guest"} value={[counterparty.firstName, counterparty.lastName].filter(Boolean).join(" ")} />
         <BookingMessageEntry
           bookingId={booking.id}
           existingConversationId={conversationId}

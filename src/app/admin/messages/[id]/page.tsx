@@ -39,7 +39,7 @@ export default async function AdminConversationDetailPage({
   const participantMap = new Map(
     conversation.participants.map((p) => [
       p.userId,
-      `${p.user.firstName} ${p.user.lastName}`,
+      [p.user.firstName, p.user.lastName].filter(Boolean).join(" "),
     ]),
   );
 
@@ -77,7 +77,7 @@ export default async function AdminConversationDetailPage({
             <span className="text-neutral-500 dark:text-neutral-400">Participants: </span>
             <span className="text-neutral-900 dark:text-neutral-100">
               {conversation.participants
-                .map((p) => `${p.user.firstName} ${p.user.lastName}`)
+                .map((p) => [p.user.firstName, p.user.lastName].filter(Boolean).join(" "))
                 .join(", ")}
             </span>
           </div>

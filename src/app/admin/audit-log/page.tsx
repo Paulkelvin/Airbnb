@@ -46,7 +46,7 @@ export default async function AdminAuditLogPage({
                 </td>
                 <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300">
                   {log.actor
-                    ? `${log.actor.firstName} ${log.actor.lastName}`
+                    ? [log.actor.firstName, log.actor.lastName].filter(Boolean).join(" ")
                     : "System"}
                   {log.actor && (
                     <div className="text-xs text-neutral-400">{log.actor.email}</div>
