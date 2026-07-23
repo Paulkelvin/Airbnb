@@ -46,24 +46,35 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
     <div className="nc-LocalExperiencePage overflow-hidden relative">
       <BgGlassmorphism />
       <div className="container relative py-16 lg:py-24">
-        <div className="max-w-3xl">
-          <div className="flex items-center justify-between gap-3">
-            <Link
-              href={"/explore-the-area" as Route}
-              className="text-sm font-medium text-primary-6000 hover:text-primary-700"
+        {primaryListing && (
+          // Fixed rather than in-flow: the page is long (gallery, description,
+          // map, related places below), and the whole point of this button is
+          // that a guest who clicked here from the booking flow can get back
+          // to it without scrolling up, so it needs to stay on screen the
+          // entire time, not just near the top of the content. Wrapped in its
+          // own positioned div rather than passing `fixed` straight into
+          // ButtonPrimary's className — Button's own base classes already
+          // include `relative`, and Tailwind's cascade order (not JSX order)
+          // decides which position utility wins, so stacking them on the same
+          // element is unreliable.
+          <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-40">
+            <ButtonPrimary
+              href={`/listing-stay-detail/${primaryListing.slug}` as Route}
+              sizeClass="px-4 py-2"
+              fontSize="text-sm"
+              className="shadow-lg"
             >
-              ← Explore the Area
-            </Link>
-            {primaryListing && (
-              <ButtonPrimary
-                href={`/listing-stay-detail/${primaryListing.slug}` as Route}
-                sizeClass="px-4 py-2"
-                fontSize="text-sm"
-              >
-                Continue booking →
-              </ButtonPrimary>
-            )}
+              Continue booking →
+            </ButtonPrimary>
           </div>
+        )}
+        <div className="max-w-3xl">
+          <Link
+            href={"/explore-the-area" as Route}
+            className="text-sm font-medium text-primary-6000 hover:text-primary-700"
+          >
+            ← Explore the Area
+          </Link>
           <h1 className="mt-3 text-3xl md:text-4xl font-semibold">{experience.title}</h1>
           <p className="mt-3 text-lg text-neutral-600 dark:text-neutral-300">{experience.tagline}</p>
           <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
