@@ -22,6 +22,7 @@ import MobileBookingBar from "./MobileBookingBar";
 import InquiryForm from "./InquiryForm";
 import ReviewsSection, { type ListingReview } from "./ReviewsSection";
 import WhereYouSleep from "./WhereYouSleep";
+import WaterAccessNotice from "./WaterAccessNotice";
 import LocalExperienceCard from "@/components/LocalExperienceCard";
 import Link from "next/link";
 import type { ListingDetailViewModel } from "@/modules/listings/types";
@@ -244,6 +245,8 @@ export default function ListingDetailView({
               )}
             </div>
           </div>
+
+          <WaterAccessNotice />
 
           {/* SECTION 2: DESCRIPTION */}
           <div className="listingSection__wrap">
