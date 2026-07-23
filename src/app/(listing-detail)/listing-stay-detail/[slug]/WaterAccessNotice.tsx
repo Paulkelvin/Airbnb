@@ -21,7 +21,10 @@ export default function WaterAccessNotice({
 }: {
   experiences: LocalExperience[];
 }) {
-  const waterfront = experiences.filter((e) => e.category === "Waterfront");
+  // Only ones with a verified photo — this strip is a quick visual preview,
+  // not a directory, so an entry with no photo yet isn't worth a thumbnail
+  // slot (and an empty src would otherwise render a broken image box).
+  const waterfront = experiences.filter((e) => e.category === "Waterfront" && e.imageUrl);
 
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30 p-4 sm:p-5">

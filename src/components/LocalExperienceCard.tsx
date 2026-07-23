@@ -1,7 +1,7 @@
 import React, { FC } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPinIcon } from "@heroicons/react/24/outline";
+import { MapPinIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import Badge from "@/components/ui/Badge";
 import { CATEGORY_EMOJI, type LocalExperience } from "@/data/local-experiences";
 import type { Route } from "@/routers/types";
@@ -23,13 +23,22 @@ const LocalExperienceCard: FC<LocalExperienceCardProps> = ({ className = "", dat
     >
       <div className="relative w-full">
         <div className="relative w-full aspect-w-4 aspect-h-3">
-          <Image
-            src={imageUrl}
-            alt={title}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={title}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            // No verified photo of this place yet — a muted placeholder
+            // rather than passing an empty src to next/image (which
+            // renders a broken image box instead of hiding gracefully).
+            <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800">
+              <PhotoIcon className="w-8 h-8 text-neutral-300 dark:text-neutral-600" />
+            </div>
+          )}
         </div>
         <Badge
           name={`${CATEGORY_EMOJI[category] ?? ""} ${category}`.trim()}

@@ -33,6 +33,11 @@ const LocalExperienceGallery: FC<LocalExperienceGalleryProps> = ({ images, title
   const hiddenCount = images.length - previewCount;
   const isSingleImage = previewCount === 1;
 
+  // A place with no verified photo yet renders nothing here rather than an
+  // empty gray box — images[0] would otherwise be undefined and get passed
+  // straight to next/image as an invalid src.
+  if (images.length === 0) return null;
+
   const openAt = (index: number) => {
     const params = getNewParam({ value: index });
     router.push(`${pathname}/?${params}` as Route);
