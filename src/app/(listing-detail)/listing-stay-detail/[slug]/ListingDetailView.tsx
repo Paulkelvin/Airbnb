@@ -366,7 +366,7 @@ export default function ListingDetailView({
                           : "Flexible"
                       }
                     />
-                    <Row label="Pet policy" value={titleCase(listing.pricing.petPolicy)} />
+                    <Row label="Pet policy" value={formatPetPolicy(listing.pricing.petPolicy, listing.pricing.petFeeAmount)} />
                   </>
                 ) : (
                   <>
@@ -383,7 +383,7 @@ export default function ListingDetailView({
                     />
                     <Row
                       label="Pet policy"
-                      value={titleCase(listing.pricing.petPolicy)}
+                      value={formatPetPolicy(listing.pricing.petPolicy, listing.pricing.petFeeAmount)}
                     />
                     <Row
                       label="Utilities included"
@@ -568,4 +568,12 @@ function titleCase(value: string) {
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
+}
+
+// Surfaces the fee amount right on the summary row — it was otherwise only
+// mentioned in the long-form description, easy to miss if a guest never
+// expands "Read more".
+function formatPetPolicy(policy: string, feeAmount: number | null) {
+  const label = titleCase(policy);
+  return policy === "ALLOWED" && feeAmount ? `${label} ($${feeAmount} fee)` : label;
 }

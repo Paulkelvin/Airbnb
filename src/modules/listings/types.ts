@@ -63,6 +63,7 @@ export interface ListingDetailViewModel {
         instantBook: boolean;
         cancellationPolicy: string;
         petPolicy: string;
+        petFeeAmount: number | null;
       }
     | {
         rentalType: "LONG_TERM";
@@ -73,6 +74,7 @@ export interface ListingDetailViewModel {
         availableFromDate: string | null;
         utilitiesIncluded: boolean;
         petPolicy: string;
+        petFeeAmount: number | null;
         earlyTerminationPolicy: string;
       };
   ownerId: string;
@@ -106,6 +108,7 @@ export function toDetailViewModel(
           instantBook: listing.instantBook ?? false,
           cancellationPolicy: listing.cancellationPolicy ?? "MODERATE",
           petPolicy: listing.petPolicy ?? "NOT_ALLOWED",
+          petFeeAmount: metadata.petFeeAmount ?? null,
         }
       : {
           rentalType: "LONG_TERM",
@@ -120,6 +123,7 @@ export function toDetailViewModel(
             : null,
           utilitiesIncluded: listing.utilitiesIncluded ?? false,
           petPolicy: listing.petPolicy ?? "NOT_ALLOWED",
+          petFeeAmount: metadata.petFeeAmount ?? null,
           earlyTerminationPolicy: listing.earlyTerminationPolicy ?? "STANDARD",
         };
 

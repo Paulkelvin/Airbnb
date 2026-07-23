@@ -11,6 +11,10 @@ const listingMetadataSchema = z
     // time from checkInTime through this bound), not a fixed moment like
     // checkOutTime. "HH:MM" 24h, same format as checkInTime/checkOutTime.
     checkInWindowEnd: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    // Flat one-time fee for bringing a pet, shown alongside petPolicy —
+    // there's no dedicated column since it only applies when petPolicy is
+    // ALLOWED, same rationale as checkInWindowEnd above.
+    petFeeAmount: z.number().positive(),
   })
   .partial();
 
