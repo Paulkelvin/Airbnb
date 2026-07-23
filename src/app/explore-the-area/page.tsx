@@ -5,7 +5,7 @@ import ExploreAreaMap from "@/components/ExploreAreaMap/ExploreAreaMap";
 import { getAllExperiences } from "@/lib/local-experiences";
 import { getPrimaryListing } from "@/modules/listings/queries";
 import { fuzzCoordinates } from "@/lib/geo-fuzz";
-import { CATEGORY_EMOJI, sortCategories } from "@/data/local-experiences";
+import { CATEGORY_EMOJI, EXPERIENCE_CATEGORIES, sortCategories } from "@/data/local-experiences";
 import type { Route } from "@/routers/types";
 
 export const metadata = {
@@ -34,9 +34,16 @@ export default async function ExploreTheAreaPage({
   ]);
   const categories = sortCategories(Array.from(new Set(experiences.map((a) => a.category))));
   const activeCategory = searchParams.category;
+  // "All" still respects the canonical category order (Waterfront first, per
+  // the source brief) rather than the raw data-layer order — otherwise the
+  // pills promise an order the grid below doesn't deliver.
   const visible = activeCategory
     ? experiences.filter((a) => a.category === activeCategory)
-    : experiences;
+    : [...experiences].sort((a, b) => {
+        const ai = EXPERIENCE_CATEGORIES.indexOf(a.category as (typeof EXPERIENCE_CATEGORIES)[number]);
+        const bi = EXPERIENCE_CATEGORIES.indexOf(b.category as (typeof EXPERIENCE_CATEGORIES)[number]);
+        return (ai === -1 ? EXPERIENCE_CATEGORIES.length : ai) - (bi === -1 ? EXPERIENCE_CATEGORIES.length : bi);
+      });
 
   const cottage =
     primaryListing?.latitude != null && primaryListing?.longitude != null

@@ -20,12 +20,21 @@ export default async function AdminConversationDetailPage({
 }: {
   params: { id: string };
 }) {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const conversation = await getConversationByIdUnchecked(params.id);
   if (!conversation) {
     notFound();
   }
+
+  // This admin view stays read-only by design (Domain Model Spec §2.12:
+  // ADMIN access is an audit-logged dispute-resolution escape hatch, not a
+  // general reply channel — see getConversationForAdmin in
+  // modules/messaging/actions.ts). When the admin is themselves a genuine
+  // participant (the single host account on this site always is), route
+  // them to their own inbox thread to actually reply, rather than adding a
+  // second, unaudited write path into every conversation on the platform.
+  const canReplyAsParticipant = conversation.participants.some((p) => p.userId === admin.id);
 
   const participantMap = new Map(
     conversation.participants.map((p) => [
@@ -41,13 +50,21 @@ export default async function AdminConversationDetailPage({
         description={`${conversation.messages.length} message${conversation.messages.length !== 1 ? "s" : ""}`}
       />
 
-      <div className="mb-6">
+      <div className="mb-6 flex items-center justify-between gap-4">
         <Link
           href={"/admin/messages" as never}
           className="text-sm text-neutral-500 hover:underline"
         >
           &larr; Back to all messages
         </Link>
+        {canReplyAsParticipant && (
+          <Link
+            href={`/account-messages/${conversation.id}` as never}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200 transition-colors"
+          >
+            Reply to this conversation
+          </Link>
+        )}
       </div>
 
       <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4 mb-6 space-y-3">
@@ -133,6 +150,21 @@ export default async function AdminConversationDetailPage({
               </div>
             );
           })}
+        </div>
+        <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/40">
+          {canReplyAsParticipant ? (
+            <Link
+              href={`/account-messages/${conversation.id}` as never}
+              className="text-sm font-medium text-primary-6000 hover:underline"
+            >
+              Reply to this conversation &rarr;
+            </Link>
+          ) : (
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              This admin view is read-only (dispute-resolution access, audit-logged) — you&apos;re not
+              a participant in this conversation, so replying isn&apos;t available here.
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -6,7 +6,12 @@ import Heading from "@/components/ui/Heading";
 import ButtonSecondary from "@/components/ui/ButtonSecondary";
 import LocalExperienceCard from "@/components/LocalExperienceCard";
 import ExploreAreaMap from "@/components/ExploreAreaMap/ExploreAreaMap";
-import { CATEGORY_EMOJI, sortCategories, type LocalExperience } from "@/data/local-experiences";
+import {
+  CATEGORY_EMOJI,
+  EXPERIENCE_CATEGORIES,
+  sortCategories,
+  type LocalExperience,
+} from "@/data/local-experiences";
 import type { Route } from "@/routers/types";
 
 export interface SectionExploreAreaProps {
@@ -37,10 +42,18 @@ const SectionExploreArea: FC<SectionExploreAreaProps> = ({
   );
 
   const visible = useMemo(() => {
-    const source = activeCategory
-      ? allExperiences.filter((e) => e.category === activeCategory)
-      : experiences;
-    return source.slice(0, limit);
+    if (activeCategory) {
+      return allExperiences.filter((e) => e.category === activeCategory).slice(0, limit);
+    }
+    // "All" still respects the canonical category order (Waterfront first,
+    // per the source brief) rather than the featured list's raw order —
+    // otherwise the pills promise an order the grid below doesn't deliver.
+    const sorted = [...experiences].sort((a, b) => {
+      const ai = EXPERIENCE_CATEGORIES.indexOf(a.category as (typeof EXPERIENCE_CATEGORIES)[number]);
+      const bi = EXPERIENCE_CATEGORIES.indexOf(b.category as (typeof EXPERIENCE_CATEGORIES)[number]);
+      return (ai === -1 ? EXPERIENCE_CATEGORIES.length : ai) - (bi === -1 ? EXPERIENCE_CATEGORIES.length : bi);
+    });
+    return sorted.slice(0, limit);
   }, [activeCategory, allExperiences, experiences, limit]);
 
   const viewAllHref = (
