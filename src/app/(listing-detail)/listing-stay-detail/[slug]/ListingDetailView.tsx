@@ -335,7 +335,6 @@ export default function ListingDetailView({
                       <Row
                         label="Minimum nights"
                         value={`${listing.pricing.minNights}`}
-                        shaded
                       />
                     )}
                     {listing.pricing.maxNights && (
@@ -563,11 +562,13 @@ function Row({
   return (
     <div
       className={`px-4 py-3 flex justify-between items-center space-x-4 rounded-lg text-sm ${
-        shaded ? "bg-neutral-100 dark:bg-neutral-800" : ""
+        shaded ? "bg-primary-50 dark:bg-primary-900/20" : ""
       }`}
     >
       <span>{label}</span>
-      <span>{value}</span>
+      <span className={shaded ? "font-semibold text-neutral-900 dark:text-neutral-100" : ""}>
+        {value}
+      </span>
     </div>
   );
 }

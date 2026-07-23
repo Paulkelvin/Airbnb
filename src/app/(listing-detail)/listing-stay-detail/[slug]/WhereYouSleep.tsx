@@ -40,16 +40,19 @@ export default function WhereYouSleep({
   return (
     <div className="listingSection__wrap">
       <h2 className="text-2xl font-semibold">Where you&apos;ll sleep</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      {/* Mobile: a peek carousel — each card is ~62% wide so the next one is
+       * about half-visible at rest, signalling there's more to swipe to
+       * without needing arrows or dots. Desktop keeps the original 2-up grid. */}
+      <div className="flex sm:grid sm:grid-cols-2 gap-4 sm:gap-5 overflow-x-auto sm:overflow-visible snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
         {bedrooms.map((bedroom) => (
-          <div key={bedroom.label} className="space-y-2.5">
+          <div key={bedroom.label} className="shrink-0 w-[62%] sm:w-auto sm:shrink snap-start space-y-2.5">
             <div className="relative aspect-[4/3] rounded-xl overflow-hidden">
               <Image
                 loader={cloudinaryLoader}
                 src={bedroom.imageUrl}
                 alt={bedroom.label}
                 fill
-                sizes="(max-width: 640px) 100vw, 50vw"
+                sizes="(max-width: 640px) 62vw, 50vw"
                 className="object-cover"
               />
             </div>
