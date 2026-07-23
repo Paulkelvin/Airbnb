@@ -136,6 +136,7 @@ function ShortTermBookingForm({
     pets: 0,
   });
   const guestCount = guestBreakdown.adults + guestBreakdown.children;
+  const [calendarOpen, setCalendarOpen] = useState(!initialDates.checkIn || !initialDates.checkOut);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -287,36 +288,50 @@ function ShortTermBookingForm({
           <label className="block text-xs font-medium text-neutral-500 mb-1">
             Check in — Check out
           </label>
-          {(!checkInDate || !checkOutDate) && (
-            <p className="mb-1 text-xs text-neutral-400">
-              {checkInDate && !checkOutDate
-                ? "Now pick your check-out date"
-                : "Pick a check-in date, then a check-out date"}
-            </p>
+          {checkInDate && checkOutDate && !calendarOpen ? (
+            <button
+              type="button"
+              className="w-full text-left text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors"
+              onClick={() => setCalendarOpen(true)}
+            >
+              {checkInDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              {" — "}
+              {checkOutDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              <span className="ml-2 text-xs text-primary-6000 dark:text-primary-400">Change</span>
+            </button>
+          ) : (
+            <>
+              <p className="mb-1 text-xs text-neutral-400">
+                {checkInDate && !checkOutDate
+                  ? "Now pick your check-out date"
+                  : "Pick a check-in date, then a check-out date"}
+              </p>
+              <div className="flex justify-center">
+                <DatePicker
+                  selected={checkInDate}
+                  onChange={(dates) => {
+                    const [start, end] = dates as [Date | null, Date | null];
+                    setCheckInDate(start);
+                    setCheckOutDate(end);
+                    if (start && end) setCalendarOpen(false);
+                  }}
+                  startDate={checkInDate}
+                  endDate={checkOutDate}
+                  selectsRange
+                  minDate={new Date()}
+                  excludeDates={excludeDates}
+                  monthsShown={1}
+                  inline
+                  renderCustomHeader={(p) => (
+                    <DatePickerCustomHeaderTwoMonth {...p} monthsShown={1} />
+                  )}
+                  renderDayContents={(day, date) => (
+                    <DatePickerCustomDay dayOfMonth={day} date={date} />
+                  )}
+                />
+              </div>
+            </>
           )}
-          <div className="flex justify-center">
-            <DatePicker
-              selected={checkInDate}
-              onChange={(dates) => {
-                const [start, end] = dates as [Date | null, Date | null];
-                setCheckInDate(start);
-                setCheckOutDate(end);
-              }}
-              startDate={checkInDate}
-              endDate={checkOutDate}
-              selectsRange
-              minDate={new Date()}
-              excludeDates={excludeDates}
-              monthsShown={1}
-              inline
-              renderCustomHeader={(p) => (
-                <DatePickerCustomHeaderTwoMonth {...p} monthsShown={1} />
-              )}
-              renderDayContents={(day, date) => (
-                <DatePickerCustomDay dayOfMonth={day} date={date} />
-              )}
-            />
-          </div>
         </div>
         <GuestSelector
           maxOccupants={maxOccupants}
