@@ -41,7 +41,7 @@ const LocalExperienceGallery: FC<LocalExperienceGalleryProps> = ({ images, title
 
   return (
     <>
-      {/* Mobile: a peek carousel — each tile is ~65% wide so the next one is
+      {/* Mobile: a peek carousel — each tile is ~72% wide so the next one is
        * about half-visible at rest, signalling there's more to swipe to. The
        * first tile keeps the page's normal left inset (lines up with the
        * heading/description above it) — only the right side bleeds past the
@@ -59,13 +59,13 @@ const LocalExperienceGallery: FC<LocalExperienceGalleryProps> = ({ images, title
         <button
           type="button"
           onClick={() => openAt(0)}
-          className={`relative ${isSingleImage ? "w-full" : "w-[65%] shrink-0 snap-start"} sm:w-auto sm:shrink aspect-[5/4] sm:aspect-auto sm:row-span-2 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none`}
+          className={`relative ${isSingleImage ? "w-full" : "w-[72%] shrink-0 snap-start"} sm:w-auto sm:shrink aspect-[4/5] sm:aspect-auto sm:row-span-2 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none`}
         >
           <Image
             src={images[0]}
             alt={title}
             fill
-            sizes="(max-width: 768px) 65vw, 50vw"
+            sizes="(max-width: 768px) 72vw, 50vw"
             className="object-cover"
             priority
           />
@@ -78,13 +78,13 @@ const LocalExperienceGallery: FC<LocalExperienceGalleryProps> = ({ images, title
               type="button"
               key={url}
               onClick={() => openAt(index)}
-              className="relative w-[65%] sm:w-auto shrink-0 sm:shrink aspect-[5/4] sm:aspect-[4/3] snap-start rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none"
+              className="relative w-[72%] sm:w-auto shrink-0 sm:shrink aspect-[4/5] sm:aspect-[4/3] snap-start rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none"
             >
               <Image
                 src={url}
                 alt=""
                 fill
-                sizes="(max-width: 768px) 65vw, 25vw"
+                sizes="(max-width: 768px) 72vw, 25vw"
                 className="object-cover"
               />
               {isLastVisible && (

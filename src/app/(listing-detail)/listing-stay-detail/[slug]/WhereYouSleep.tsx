@@ -42,8 +42,11 @@ export default function WhereYouSleep({
       <h2 className="text-2xl font-semibold">Where you&apos;ll sleep</h2>
       {/* Mobile: a peek carousel — each card is ~62% wide so the next one is
        * about half-visible at rest, signalling there's more to swipe to
-       * without needing arrows or dots. Desktop keeps the original 2-up grid. */}
-      <div className="flex sm:grid sm:grid-cols-2 gap-4 sm:gap-5 overflow-x-auto sm:overflow-visible snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+       * without needing arrows or dots. Only the right edge bleeds past the
+       * viewport (so the next card peeks in) — the first card keeps the
+       * page's normal left inset, lining up with the heading above it.
+       * Desktop keeps the original 2-up grid. */}
+      <div className="flex sm:grid sm:grid-cols-2 gap-4 sm:gap-5 overflow-x-auto sm:overflow-visible snap-x snap-mandatory no-scrollbar -mr-4 pr-4 sm:mr-0 sm:pr-0">
         {bedrooms.map((bedroom) => (
           <div key={bedroom.label} className="shrink-0 w-[62%] sm:w-auto sm:shrink snap-start space-y-2.5">
             <div className="relative aspect-[4/3] rounded-xl overflow-hidden">

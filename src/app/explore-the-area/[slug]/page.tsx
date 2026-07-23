@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MapPinIcon, ClockIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import BgGlassmorphism from "@/components/BgGlassmorphism";
-import ButtonPrimary from "@/components/ui/ButtonPrimary";
+import ContinueBookingButton from "./ContinueBookingButton";
 import LocalExperienceCard from "@/components/LocalExperienceCard";
 import LocalExperienceGallery from "@/components/LocalExperienceGallery";
 import ExploreAreaMap from "@/components/ExploreAreaMap/ExploreAreaMap";
@@ -47,31 +47,20 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
     <div className="nc-LocalExperiencePage overflow-hidden relative">
       <BgGlassmorphism />
       <div className="container relative py-16 lg:py-24">
-        {/* Sticky rather than fixed: fixed pins to a raw viewport offset, so
-         * scrolling back up left it floating disconnected from the "Explore
-         * the Area" link instead of sitting beside it like it does at rest.
-         * Sticky keeps its natural in-flow position (beside the link, here)
-         * until scrolling would carry it off-screen, then holds it in place
-         * — and returns it to that same spot once you scroll back up. Its
-         * containing block is this row's parent, the full-height page
-         * container below, so it stays stuck through the whole scroll range
-         * rather than just the height of the row itself. */}
-        <div className="sticky top-0 z-40 max-w-3xl py-3 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm flex items-center justify-between gap-4">
+        {/* position:sticky doesn't work here — nc-LocalExperiencePage below
+         * has overflow-hidden (to clip BgGlassmorphism's decorative blobs),
+         * which breaks sticky's containing-block chain to the viewport, so
+         * it just scrolled away with the page instead of sticking. See
+         * ContinueBookingButton.tsx for the fixed-position-with-visibility-
+         * tracking approach used instead. */}
+        <div className="max-w-3xl flex items-center justify-between gap-4">
           <Link
             href={"/explore-the-area" as Route}
             className="text-sm font-medium text-primary-6000 hover:text-primary-700"
           >
             ← Explore the Area
           </Link>
-          {primaryListing && (
-            <ButtonPrimary
-              href={`/listing-stay-detail/${primaryListing.slug}` as Route}
-              sizeClass="px-4 py-2"
-              fontSize="text-sm"
-            >
-              Continue booking →
-            </ButtonPrimary>
-          )}
+          {primaryListing && <ContinueBookingButton listingSlug={primaryListing.slug} />}
         </div>
         <div className="max-w-3xl">
           <h1 className="mt-3 text-3xl md:text-4xl font-semibold">{experience.title}</h1>

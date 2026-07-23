@@ -327,7 +327,7 @@ export default function ListingDetailView({
               <div className="text-sm sm:text-base text-neutral-6000 dark:text-neutral-300 -mb-4">
                 {listing.pricing.rentalType === "SHORT_TERM" ? (
                   <>
-                    <Row label="Nightly rate" value={`$${listing.pricing.nightlyPrice}`} shaded />
+                    <Row label="Nightly rate" value={`$${listing.pricing.nightlyPrice}`} />
                     {listing.pricing.cleaningFee !== null && (
                       <Row label="Cleaning fee" value={`$${listing.pricing.cleaningFee}`} />
                     )}
@@ -347,7 +347,6 @@ export default function ListingDetailView({
                           policy={listing.pricing.cancellationPolicy as CancellationPolicy}
                         />
                       }
-                      shaded
                     />
                     <Row
                       label="Check-in"
@@ -366,13 +365,12 @@ export default function ListingDetailView({
                           ? formatTime(listing.pricing.checkOutTime)
                           : "Flexible"
                       }
-                      shaded
                     />
                     <Row label="Pet policy" value={titleCase(listing.pricing.petPolicy)} />
                   </>
                 ) : (
                   <>
-                    <Row label="Monthly rent" value={`$${listing.pricing.monthlyRent}`} shaded />
+                    <Row label="Monthly rent" value={`$${listing.pricing.monthlyRent}`} />
                     {listing.pricing.securityDeposit !== null && (
                       <Row
                         label="Security deposit"
@@ -382,7 +380,6 @@ export default function ListingDetailView({
                     <Row
                       label="Minimum lease"
                       value={`${listing.pricing.minLeaseTermMonths} months`}
-                      shaded
                     />
                     <Row
                       label="Pet policy"
@@ -391,7 +388,6 @@ export default function ListingDetailView({
                     <Row
                       label="Utilities included"
                       value={listing.pricing.utilitiesIncluded ? "Yes" : "No"}
-                      shaded
                     />
                   </>
                 )}
@@ -550,25 +546,11 @@ export default function ListingDetailView({
   );
 }
 
-function Row({
-  label,
-  value,
-  shaded,
-}: {
-  label: string;
-  value: React.ReactNode;
-  shaded?: boolean;
-}) {
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div
-      className={`px-4 py-3 flex justify-between items-center space-x-4 rounded-lg text-sm ${
-        shaded ? "bg-primary-50 dark:bg-primary-900/20" : ""
-      }`}
-    >
+    <div className="px-4 py-3 flex justify-between items-center space-x-4 rounded-lg text-sm">
       <span>{label}</span>
-      <span className={shaded ? "font-semibold text-neutral-900 dark:text-neutral-100" : ""}>
-        {value}
-      </span>
+      <span>{value}</span>
     </div>
   );
 }
