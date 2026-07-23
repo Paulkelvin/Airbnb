@@ -32,15 +32,16 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
   const related = allExperiences.filter((e) => e.slug !== experience.slug).slice(0, 3);
 
   const hasCottageCoords = primaryListing?.latitude != null && primaryListing?.longitude != null;
-  // No origin param — Google Maps fills that in with the visitor's current
-  // location (via device GPS on mobile, or prompts for it on desktop).
-  // Most visitors are viewing this page while still planning the trip, not
-  // standing at the cottage, so directions "from the cottage" would send
-  // the wrong people the wrong way.
+  // Explicit origin (the cottage's real, unfuzzed coordinates) so the link
+  // always resolves to a real route instead of depending on the visitor's
+  // device geolocation, which can be denied/unavailable and was producing
+  // "can't find a way there" for guests.
   const directionsHref =
-    experience.latitude != null && experience.longitude != null
-      ? `https://www.google.com/maps/dir/?api=1&destination=${experience.latitude},${experience.longitude}`
-      : null;
+    hasCottageCoords && experience.latitude != null && experience.longitude != null
+      ? `https://www.google.com/maps/dir/?api=1&origin=${primaryListing!.latitude},${primaryListing!.longitude}&destination=${experience.latitude},${experience.longitude}`
+      : experience.latitude != null && experience.longitude != null
+        ? `https://www.google.com/maps/dir/?api=1&destination=${experience.latitude},${experience.longitude}`
+        : null;
 
   return (
     <div className="nc-LocalExperiencePage overflow-hidden relative">
