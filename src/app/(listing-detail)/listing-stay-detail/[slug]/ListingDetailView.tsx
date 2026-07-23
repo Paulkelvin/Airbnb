@@ -348,7 +348,9 @@ export default function ListingDetailView({
                       label="Check-in"
                       value={
                         listing.pricing.checkInTime
-                          ? formatTime(listing.pricing.checkInTime)
+                          ? listing.pricing.checkInWindowEnd
+                            ? `${formatTime(listing.pricing.checkInTime)} – ${formatTime(listing.pricing.checkInWindowEnd)}`
+                            : formatTime(listing.pricing.checkInTime)
                           : "Flexible"
                       }
                     />

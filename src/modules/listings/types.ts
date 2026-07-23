@@ -9,6 +9,7 @@ import type {
 } from "@prisma/client";
 import type { Route } from "@/routers/types";
 import type { StayDataType } from "@/data/types";
+import { parseListingMetadata } from "./metadata";
 
 export type ListingWithRelations = Listing & {
   address: Address | null;
@@ -57,6 +58,7 @@ export interface ListingDetailViewModel {
         weeklyDiscountPercent: number | null;
         monthlyDiscountPercent: number | null;
         checkInTime: string | null;
+        checkInWindowEnd: string | null;
         checkOutTime: string | null;
         instantBook: boolean;
         cancellationPolicy: string;
@@ -83,6 +85,7 @@ function toNumber(value: unknown): number {
 export function toDetailViewModel(
   listing: ListingWithRelations,
 ): ListingDetailViewModel {
+  const metadata = parseListingMetadata(listing.metadata);
   const pricing: ListingDetailViewModel["pricing"] =
     listing.rentalType === "SHORT_TERM"
       ? {
@@ -98,6 +101,7 @@ export function toDetailViewModel(
             ? toNumber(listing.monthlyDiscountPercent)
             : null,
           checkInTime: listing.checkInTime,
+          checkInWindowEnd: metadata.checkInWindowEnd ?? null,
           checkOutTime: listing.checkOutTime,
           instantBook: listing.instantBook ?? false,
           cancellationPolicy: listing.cancellationPolicy ?? "MODERATE",

@@ -37,6 +37,34 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
 ];
 
+/**
+ * Every route gated by requireAuth()/requireAdmin() (account pages, admin,
+ * add-listing) re-checks the session server-side on each real request — but
+ * without an explicit no-store, Next's default Cache-Control for these
+ * (`public, max-age=0, must-revalidate`) doesn't stop the browser's
+ * back-forward cache from restoring a fully-rendered "logged in" snapshot
+ * after logout, since bfcache eligibility is governed by no-store, not
+ * max-age. That server-side check then never re-runs on a back-navigation.
+ * "public" is also wrong on its own for session-derived content — nothing
+ * user-specific should be cacheable by a shared/CDN cache.
+ */
+const noStoreHeader = [{ key: "Cache-Control", value: "private, no-store, must-revalidate" }];
+const authGatedRoutes = [
+  "/account",
+  "/account-listings",
+  "/account-billing",
+  "/account-savelists",
+  "/account-messages",
+  "/account-messages/:path*",
+  "/account-notifications",
+  "/account-password",
+  "/account-bookings",
+  "/account-bookings/:path*",
+  "/admin/:path*",
+  "/add-listing",
+  "/add-listing/:path*",
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -50,6 +78,7 @@ const nextConfig = {
         source: "/(.*)",
         headers: securityHeaders,
       },
+      ...authGatedRoutes.map((source) => ({ source, headers: noStoreHeader })),
     ];
   },
   images: {
