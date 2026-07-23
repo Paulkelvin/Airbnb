@@ -209,7 +209,7 @@ export default async function BlogPostPage({
                   day: "numeric",
                 })}
               </span>
-              {sanityPost.estimatedReadingTime && (
+              {sanityPost.estimatedReadingTime != null && (
                 <>
                   <span>&middot;</span>
                   <span>{sanityPost.estimatedReadingTime} min read</span>

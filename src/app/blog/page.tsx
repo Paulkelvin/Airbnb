@@ -108,7 +108,7 @@ export default async function BlogPage() {
     const rest = sanityPosts.slice(1);
     const featuredImage = featured.mainImage
       ? urlFor(featured.mainImage).width(1200).quality(85).url()
-      : "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633867/blog/top-10-tips-for-first-time-hosts.jpg";
+      : "";
 
     return (
       <div className="nc-BlogPage overflow-hidden relative">
@@ -139,7 +139,7 @@ export default async function BlogPage() {
               <div className="flex flex-col justify-center">
                 <span className="text-sm text-neutral-500 dark:text-neutral-400">
                   {formatDate(featured.publishedAt)}
-                  {featured.estimatedReadingTime
+                  {featured.estimatedReadingTime != null
                     ? ` · ${featured.estimatedReadingTime} min read`
                     : ""}
                 </span>
@@ -169,14 +169,14 @@ export default async function BlogPage() {
                   category={post.categories?.[0]?.title || "General"}
                   date={formatDate(post.publishedAt)}
                   readTime={
-                    post.estimatedReadingTime
+                    post.estimatedReadingTime != null
                       ? `${post.estimatedReadingTime} min read`
-                      : "5 min read"
+                      : "1 min read"
                   }
                   imageUrl={
                     post.mainImage
                       ? urlFor(post.mainImage).width(800).quality(80).url()
-                      : "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633867/blog/top-10-tips-for-first-time-hosts.jpg"
+                      : ""
                   }
                 />
               ))}
@@ -192,7 +192,7 @@ export default async function BlogPage() {
     <div className="nc-BlogPage overflow-hidden relative">
       <BgGlassmorphism />
       <div className="container relative py-16 lg:py-28">
-        <h1 className="text-3xl md:text-4xl font-semibold">Stories &amp; Guides</h1>
+        <h1 className="text-3xl md:text-4xl font-semibold">Blog</h1>
         <p className="block mt-3 text-neutral-500 dark:text-neutral-400 text-lg">
           Insights, tips, and stories about finding your perfect stay.
         </p>

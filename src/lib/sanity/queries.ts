@@ -10,7 +10,7 @@ export const allPostsQuery = groq`
     mainImage,
     "categories": categories[]->{ title, slug },
     "author": author->{ name, slug, image },
-    "estimatedReadingTime": round(length(pt::text(body)) / 5 / 200)
+    "estimatedReadingTime": select(round(length(pt::text(body)) / 5 / 200) < 1 => 1, round(length(pt::text(body)) / 5 / 200))
   }
 `;
 
@@ -26,7 +26,7 @@ export const postBySlugQuery = groq`
     seo,
     "categories": categories[]->{ title, slug },
     "author": author->{ name, slug, image, bio },
-    "estimatedReadingTime": round(length(pt::text(body)) / 5 / 200)
+    "estimatedReadingTime": select(round(length(pt::text(body)) / 5 / 200) < 1 => 1, round(length(pt::text(body)) / 5 / 200))
   }
 `;
 
@@ -54,7 +54,7 @@ export const postsByCategoryQuery = groq`
     mainImage,
     "categories": categories[]->{ title, slug },
     "author": author->{ name, slug, image },
-    "estimatedReadingTime": round(length(pt::text(body)) / 5 / 200)
+    "estimatedReadingTime": select(round(length(pt::text(body)) / 5 / 200) < 1 => 1, round(length(pt::text(body)) / 5 / 200))
   }
 `;
 
