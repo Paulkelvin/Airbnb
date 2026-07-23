@@ -21,6 +21,7 @@ import BookingWidget from "./BookingWidget";
 import MobileBookingBar from "./MobileBookingBar";
 import InquiryForm from "./InquiryForm";
 import ReviewsSection, { type ListingReview } from "./ReviewsSection";
+import WhereYouSleep from "./WhereYouSleep";
 import LocalExperienceCard from "@/components/LocalExperienceCard";
 import Link from "next/link";
 import type { ListingDetailViewModel } from "@/modules/listings/types";
@@ -263,6 +264,8 @@ export default function ListingDetailView({
               </button>
             )}
           </div>
+
+          <WhereYouSleep images={listing.images} />
 
           {/* SECTION 3: AMENITIES */}
           <div className="listingSection__wrap !space-y-4">
