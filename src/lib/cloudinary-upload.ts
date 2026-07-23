@@ -51,6 +51,49 @@ async function compressImage(file: File): Promise<File> {
 }
 
 /**
+ * For uploads that go through a Next.js server action instead of
+ * Cloudinary's direct-from-browser upload (Sanity asset uploads — see
+ * uploadCmsImage in modules/cms/actions.ts): this Next.js version's server
+ * actions cap request bodies at 1MB with no config knob available to raise
+ * it, so a single resize pass isn't reliable — this re-encodes at
+ * progressively lower quality/size until the result actually fits.
+ */
+export async function compressImageForServerAction(
+  file: File,
+  maxBytes = 900 * 1024,
+): Promise<File> {
+  if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    let dimension = Math.min(1600, Math.max(bitmap.width, bitmap.height));
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const scale = Math.min(1, dimension / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return file;
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+      const quality = Math.max(0.8 - attempt * 0.15, 0.35);
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/jpeg", quality),
+      );
+      if (!blob) return file;
+      if (blob.size <= maxBytes || attempt === 4) {
+        return new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" });
+      }
+      dimension = Math.round(dimension * 0.75);
+    }
+    return file;
+  } catch {
+    return file;
+  }
+}
+
+/**
  * Unsigned direct-from-browser upload. Requires NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
  * and an unsigned upload preset (NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) scoped to
  * image formats only. The API secret is never exposed to the client.

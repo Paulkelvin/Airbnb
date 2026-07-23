@@ -12,6 +12,7 @@ import {
   deleteAuthor,
   uploadCmsImage,
 } from "@/modules/cms/actions";
+import { compressImageForServerAction } from "@/lib/cloudinary-upload";
 import type { CmsCategoryItem, CmsAuthorItem } from "@/modules/cms/queries";
 
 export default function CategoriesAuthorsManager({
@@ -92,8 +93,9 @@ export default function CategoriesAuthorsManager({
     setError(null);
     setUploadingAuthorImage(true);
     try {
+      const compressed = await compressImageForServerAction(file);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressed);
       const result = await uploadCmsImage(formData);
       if (!result.success) {
         setError(result.error.message);

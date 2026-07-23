@@ -90,7 +90,18 @@ const Footer: React.FC = () => {
     <>
       <div
         className={`nc-Footer relative py-16 lg:py-20 border-t border-neutral-200 dark:border-neutral-700 ${
-          isListingDetail ? "pb-28 lg:pb-20" : ""
+          isListingDetail
+            ? "pb-28 lg:pb-20"
+            : // The fixed mobile FooterNav (rendered after this Footer, on
+              // every other page) grows taller than its base ~64px on any
+              // device with a home-indicator safe area — the plain py-16
+              // bottom padding here was sized for a safe-area-less nav, so
+              // on real notched/Dynamic-Island phones the nav overlapped
+              // and hid the last bit of the Legal column instead of
+              // leaving a clean gap. This adds that safe area on top of
+              // the same padding, only below md (where FooterNav is
+              // visible at all) — md/lg reset back to the original values.
+              "pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-16 lg:pb-20"
         }`}
       >
         <div className="container grid grid-cols-2 gap-y-10 gap-x-5 sm:gap-x-8 md:grid-cols-4 lg:grid-cols-4 lg:gap-x-10 ">

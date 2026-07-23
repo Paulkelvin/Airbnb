@@ -70,13 +70,13 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     typedRoutes: true,
-    // Object form (not `true`) so we can raise bodySizeLimit above the 1MB
-    // default — uploadPostImage sends raw photo bytes through a server
-    // action rather than Cloudinary's direct-from-browser upload used
-    // elsewhere, so it needs headroom for real phone-camera photos.
-    serverActions: {
-      bodySizeLimit: "10mb",
-    },
+    // Next 13.5.11 only accepts a boolean here — the object form (to raise
+    // bodySizeLimit) that a couple of Sanity-image-upload actions relied on
+    // isn't supported by this version and was silently rejected (logged as
+    // an "Invalid next.config.js options" warning, not a hard error).
+    // uploadCmsImage compresses images client-side before upload instead,
+    // to stay under the actual 1MB default rather than trying to raise it.
+    serverActions: true,
   },
   async headers() {
     return [

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createPost, updatePost, uploadCmsImage, type PostFormInput } from "@/modules/cms/actions";
+import { compressImageForServerAction } from "@/lib/cloudinary-upload";
 import { blocksToPlainText } from "@/modules/cms/portable-text";
 import type { CmsAuthorItem, CmsCategoryItem, CmsPostDetail } from "@/modules/cms/queries";
 
@@ -49,8 +50,9 @@ export default function PostForm({
     setError(null);
     setUploadingImage(true);
     try {
+      const compressed = await compressImageForServerAction(file);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressed);
       const result = await uploadCmsImage(formData);
       if (!result.success) {
         setError(result.error.message);
