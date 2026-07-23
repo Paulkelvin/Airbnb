@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useTransition, useMemo } from "react";
-import { signIn, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import Link from "next/link";
 import { register } from "@/actions/auth";
-import { getDefaultDashboardPath } from "@/lib/dashboard-path";
+import type { Route } from "@/routers/types";
 
 function getPasswordStrength(password: string): {
   score: number;
@@ -31,6 +31,12 @@ function getPasswordStrength(password: string): {
 
 const PageSignUp = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
+  const safeCallbackUrl =
+    callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+      ? callbackUrl
+      : null;
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[] | undefined>>();
@@ -64,8 +70,7 @@ const PageSignUp = () => {
         return;
       }
 
-      const session = await getSession();
-      router.push(getDefaultDashboardPath(session?.user.roles ?? ["CUSTOMER"]));
+      router.push((safeCallbackUrl ?? "/") as Route);
       router.refresh();
     });
   }

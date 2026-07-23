@@ -77,6 +77,7 @@ export default function RootLayout({
             <Footer />
           </SiteChrome>
         </AuthSessionProvider>
+        <div id="datepicker-portal" />
       </body>
     </html>
   );

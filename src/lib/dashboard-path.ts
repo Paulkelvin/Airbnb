@@ -8,7 +8,7 @@ const ROLE_PRIORITY: UserRole[] = ["ADMIN", "HOST", "CUSTOMER"];
 const ROLE_DASHBOARD_PATH: Record<UserRole, Route> = {
   ADMIN: "/admin" as Route,
   HOST: "/account-listings" as Route,
-  CUSTOMER: "/account-bookings" as Route,
+  CUSTOMER: "/" as Route,
 };
 
 /**
