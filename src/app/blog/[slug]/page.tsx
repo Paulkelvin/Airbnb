@@ -31,41 +31,41 @@ interface SanityPost {
 
 // --- Hardcoded fallback posts (until Sanity is connected) ---
 const fallbackPosts: Record<string, { title: string; category: string; date: string; readTime: string; image: string; content: string }> = {
-  "top-10-tips-for-first-time-hosts": {
-    title: "Top 10 Tips for First-Time Hosts",
-    category: "Hosting", date: "July 12, 2026", readTime: "6 min read",
-    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633867/blog/top-10-tips-for-first-time-hosts.jpg",
-    content: "Starting as a host can feel overwhelming, but these ten tips will set you up for success from your very first guest.\n\n**1. Invest in Great Photos**\nYour listing photos are the first thing potential guests see. Use natural light, declutter every room, and shoot from corner angles to make spaces look larger.\n\n**2. Write an Honest Description**\nDon't oversell — set accurate expectations. Guests appreciate honesty and reward it with better reviews.\n\n**3. Price Competitively at First**\nStart slightly below similar listings to attract your first bookings and reviews.\n\n**4. Create a House Manual**\nA comprehensive guide saves you from answering the same questions repeatedly.\n\n**5. Stock the Essentials**\nFresh towels, quality linens, toiletries, and coffee go a long way.\n\n**6. Communicate Proactively**\nSend a welcome message before check-in with directions and details.\n\n**7. Set Clear House Rules**\nBe upfront about policies to prevent misunderstandings.\n\n**8. Automate Where Possible**\nSmart locks and automated messaging reduce manual work.\n\n**9. Respond Quickly**\nFast response times directly impact your search ranking.\n\n**10. Ask for Reviews**\nA polite nudge after checkout makes all the difference.",
+  "bring-your-kayak-guide-to-the-closest-launches": {
+    title: "Bring Your Kayak? Your Guide to the Closest Launches",
+    category: "Waterfront", date: "July 23, 2026", readTime: "3 min read",
+    image: "/images/local-experiences/great-mills-canoe-and-kayak-launch/kayaker-on-the-river.jpg",
+    content: "Potomac Vista Cottage sits back from the water on a quiet street, with no private beach, dock, or pier on site. That does not mean you need to leave your kayak at home. St. Mary's County maintains 15 public landings, and three sit closer to the cottage than the county wharf most guests default to.\n\n**Great Mills Canoe and Kayak Launch**\nOn Route 5, this launch puts you straight onto the St. Mary's River.\n\n**St. Mary's City Waterfront Launch**\nRight by the college, with calm water and easy parking.\n\n**Point Lookout State Park**\nFor a bigger day out, this spot adds a lighthouse, a Civil War museum, and a swimming beach to the trip.\n\n**Left Your Gear at Home?**\nPatuxent Adventure Center rents kayaks and paddleboards right in Leonardtown, at the wharf and at McIntosh Run Park, so getting on the water does not require owning a boat.",
   },
-  "best-neighborhoods-for-long-term-rentals": {
-    title: "Best Neighborhoods for Long-Term Rentals in 2026",
-    category: "Guides", date: "July 8, 2026", readTime: "8 min read",
-    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633898/blog/best-neighborhoods-for-long-term-rentals.jpg",
-    content: "With remote work now the norm, the concept of 'home' has become wonderfully flexible. Here are the neighborhoods attracting the most long-term renters in 2026.\n\n**Austin, TX — East Austin**\nVibrant creative neighborhood with walkable food scene and co-working spaces. Average one-bedroom: ~$1,800/month.\n\n**Denver, CO — RiNo**\nCity energy with mountain access. Converted warehouses house breweries, galleries, and startups.\n\n**Mexico City — Roma Norte**\nTree-lined streets, art deco architecture, and incredible food. Furnished apartments: $800-1,200/month.",
+  "no-beach-on-site-where-to-swim-near-leonardtown": {
+    title: "No Beach on Site? Here's Where Our Guests Go for Sand and Sun",
+    category: "Waterfront", date: "July 20, 2026", readTime: "3 min read",
+    image: "/images/local-experiences/point-lookout-state-park/swimming-beach.jpg",
+    content: "Guests ask us often whether the cottage has its own beach. It does not, but St. Mary's County has real sand and real water close by, and we would rather point you to the right one than let you guess.\n\n**Breton Beach**\nThe closest option, right in Leonardtown — a small stretch of white sand on Breton Bay that is better for sunbathing, picnicking, and fishing than for swimming laps.\n\n**Greenwell State Park**\nFor actual swimming, this spot on the Patuxent River has gentle, family friendly water.\n\n**Point Lookout State Park**\nA designated swimming beach on the Chesapeake Bay, with showers and restrooms.\n\n**Plan the Trip**\nPack a cooler, bring the kids or the dog, and treat it as a day trip rather than a walk out your back door.",
   },
-  "how-to-photograph-your-property": {
-    title: "How to Photograph Your Property Like a Pro",
-    category: "Hosting", date: "July 3, 2026", readTime: "5 min read",
-    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633898/blog/how-to-photograph-your-property.jpg",
-    content: "Your listing photos are the single most important factor in whether a guest clicks 'Book' or keeps scrolling.\n\n**Timing Is Everything**\nShoot during golden hours for warm, soft light.\n\n**Declutter Ruthlessly**\nRemove personal items and excess furniture.\n\n**Shoot From Corners**\nCapture maximum room in a single frame.\n\n**Edit Lightly**\nSlightly increase brightness and straighten horizons. Don't over-filter.",
+  "eating-and-drinking-guide-to-leonardtown": {
+    title: "A Local's Guide to Eating and Drinking in Leonardtown",
+    category: "Dining", date: "July 16, 2026", readTime: "4 min read",
+    image: "/images/local-experiences/leonardtown-wharf-park/pier-at-sunset.jpg",
+    content: "Leonardtown punches above its weight for a small town. Here is where we send our guests.\n\n**Seafood on the Water**\nRuddy Duck Seafood and Alehouse sits right on the water and is the closest full dinner option.\n\n**Casual Seafood**\nSweetbay Restaurant and Bar and Crab Knockers Seafood cover casual seafood done well.\n\n**Italian**\nIl Piccolo Morso is the pick when you want something other than seafood.\n\n**Wine and Beer**\nPort of Leonardtown Winery pairs a tasting room with live music in a park setting, and Brudergarten Beer Garden does the same with beer.\n\n**Something Sweet**\nSave room for Heritage Chocolates on the way home.",
   },
-  "summer-travel-trends": {
-    title: "Summer 2026 Travel Trends: Where Everyone Is Going",
-    category: "Travel", date: "June 28, 2026", readTime: "7 min read",
-    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633899/blog/summer-travel-trends.jpg",
-    content: "Every summer has its destinations. Here's where travelers are heading this summer.\n\n**Coastal Croatia**\nBeyond Dubrovnik, travelers are discovering the quieter Dalmatian islands.\n\n**Japanese Countryside**\nTraditional ryokans in rural regions offer a Japan most visitors never see.\n\n**Montana & Wyoming**\nCabin rentals near Yellowstone and Glacier see record demand.",
+  "piney-point-lighthouse-hidden-gem": {
+    title: "Piney Point Lighthouse: Our Closest Hidden Gem",
+    category: "History", date: "July 12, 2026", readTime: "3 min read",
+    image: "/images/local-experiences/piney-point-lighthouse-museum-and-historic-park/lighthouse-and-historic-boat.jpg",
+    content: "It is easy to miss and it should not be. Piney Point Lighthouse is the single closest attraction to Potomac Vista Cottage, and it comes with a small sandy beach and a boardwalk along the Potomac.\n\n**A Museum, a Walk, a View**\nIt is a museum, a walk, and a place to watch the river, all in one stop.\n\n**Pair It With Lunch**\nStop at Ruddy Duck on the way back for a half day trip that does not require a full tank of gas.",
   },
-  "remote-work-friendly-stays": {
-    title: "The Rise of Remote-Work-Friendly Stays",
-    category: "Trends", date: "June 22, 2026", readTime: "6 min read",
-    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633871/blog/remote-work-friendly-stays.jpg",
-    content: "A growing segment of travelers aren't choosing between work and travel — they're doing both.\n\n**What Remote Workers Need**\nReliable internet (50+ Mbps), dedicated workspace, good lighting for calls, and quiet during business hours.\n\n**The Business Case**\nRemote-work-friendly properties command 15-25% higher rates with longer average stays.",
+  "rent-a-kayak-near-the-wharf": {
+    title: "Don't Own a Kayak? Rent One Near the Wharf",
+    category: "Waterfront", date: "July 9, 2026", readTime: "2 min read",
+    image: "/images/local-experiences/leonardtown-wharf-park/pier-over-the-water.jpg",
+    content: "Not every guest travels with their own boat, and that is fine.\n\n**Two Locations**\nPatuxent Adventure Center, based in Leonardtown, rents kayaks and paddleboards at both the town wharf and McIntosh Run Park.\n\n**New to Paddling?**\nThey also run SUP classes for anyone who has never paddled before.\n\n**The Bottom Line**\nIt turns a day on the water from a logistics problem into a phone call.",
   },
-  "ultimate-guest-welcome-guide": {
-    title: "The Ultimate Guest Welcome Guide",
-    category: "Hosting", date: "June 15, 2026", readTime: "5 min read",
-    image: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784633872/blog/ultimate-guest-welcome-guide.jpg",
-    content: "The first five minutes after a guest walks through your door determine the tone of their entire stay.\n\n**The Welcome Basket**\nLocal treats, wine from a nearby vineyard, fresh fruit, and a handwritten note. Cost: under $30. Impact: priceless.\n\n**The House Manual**\nWi-Fi password on page one. Appliance instructions. Your top 5 restaurant picks.",
+  "planning-your-stay-potomac-vista-cottage": {
+    title: "Planning Your Stay: What to Know Before You Arrive",
+    category: "Guides", date: "July 5, 2026", readTime: "3 min read",
+    image: "/images/local-experiences/leonardtown-wharf-park/compass-plaza-benches.jpg",
+    content: "A few things worth knowing before you get here.\n\n**Check In**\nSelf service with keyless entry, available from 4 PM to 11 PM.\n\n**Water Access**\nThe cottage does not have a private beach, dock, or pier, so if getting on the water is part of your trip, see our guides to the nearest launches and beaches.\n\n**Pets**\nWell behaved dogs are welcome, up to two, on a leash, with a pet fee.\n\n**Parking**\nFits two vehicles in the driveway, with an EV charger on site.\n\n**Around Town**\nOnce you are settled in, Leonardtown's restaurants, wineries, and waterfront are all a short drive away.",
   },
 };
 
