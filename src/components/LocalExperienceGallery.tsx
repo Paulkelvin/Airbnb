@@ -31,6 +31,7 @@ const LocalExperienceGallery: FC<LocalExperienceGalleryProps> = ({ images, title
   const galleryImages: ListingGalleryImage[] = images.map((url, id) => ({ id, url }));
   const previewCount = Math.min(images.length, MAX_PREVIEW_TILES);
   const hiddenCount = images.length - previewCount;
+  const isSingleImage = previewCount === 1;
 
   const openAt = (index: number) => {
     const params = getNewParam({ value: index });
@@ -44,13 +45,21 @@ const LocalExperienceGallery: FC<LocalExperienceGalleryProps> = ({ images, title
        * about half-visible at rest, signalling there's more to swipe to. The
        * first tile keeps the page's normal left inset (lines up with the
        * heading/description above it) — only the right side bleeds past the
-       * viewport edge so the next photo peeks in.
+       * viewport edge so the next photo peeks in. When there's only one
+       * photo there's nothing to swipe to, so it's centered instead of
+       * sitting flush left.
        * sm+: the original 1-large + small-tiles grid, unchanged. */}
-      <div className="mt-10 flex sm:grid sm:grid-cols-2 gap-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory no-scrollbar -mr-4 pr-4 sm:mr-0 sm:pr-0">
+      <div
+        className={`mt-10 flex sm:grid sm:grid-cols-2 gap-3 ${
+          isSingleImage
+            ? "justify-center"
+            : "overflow-x-auto sm:overflow-visible snap-x snap-mandatory no-scrollbar -mr-4 pr-4 sm:mr-0 sm:pr-0"
+        }`}
+      >
         <button
           type="button"
           onClick={() => openAt(0)}
-          className="relative w-[65%] sm:w-auto shrink-0 sm:shrink aspect-[4/3] sm:aspect-auto sm:row-span-2 snap-start rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none"
+          className={`relative ${isSingleImage ? "w-full" : "w-[65%] shrink-0 snap-start"} sm:w-auto sm:shrink aspect-[5/4] sm:aspect-auto sm:row-span-2 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none`}
         >
           <Image
             src={images[0]}
@@ -69,7 +78,7 @@ const LocalExperienceGallery: FC<LocalExperienceGalleryProps> = ({ images, title
               type="button"
               key={url}
               onClick={() => openAt(index)}
-              className="relative w-[65%] sm:w-auto shrink-0 sm:shrink aspect-[4/3] snap-start rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none"
+              className="relative w-[65%] sm:w-auto shrink-0 sm:shrink aspect-[5/4] sm:aspect-[4/3] snap-start rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none"
             >
               <Image
                 src={url}
