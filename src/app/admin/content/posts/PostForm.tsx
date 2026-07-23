@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createPost, updatePost, uploadPostImage, type PostFormInput } from "@/modules/cms/actions";
+import { createPost, updatePost, uploadCmsImage, type PostFormInput } from "@/modules/cms/actions";
 import { blocksToPlainText } from "@/modules/cms/portable-text";
 import type { CmsAuthorItem, CmsCategoryItem, CmsPostDetail } from "@/modules/cms/queries";
 
@@ -51,7 +51,7 @@ export default function PostForm({
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const result = await uploadPostImage(formData);
+      const result = await uploadCmsImage(formData);
       if (!result.success) {
         setError(result.error.message);
         return;

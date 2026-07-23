@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
-import { getConversationByIdUnchecked } from "@/modules/messaging/queries";
+import { getConversationForAdmin } from "@/modules/messaging/actions";
 import { AdminPageHeader, AdminBadge } from "../../AdminUI";
 
 export const metadata = { title: "Conversation – Admin" };
@@ -22,18 +22,19 @@ export default async function AdminConversationDetailPage({
 }) {
   const admin = await requireAdmin();
 
-  const conversation = await getConversationByIdUnchecked(params.id);
-  if (!conversation) {
+  const result = await getConversationForAdmin({ conversationId: params.id });
+  if (!result.success) {
     notFound();
   }
+  const conversation = result.data;
 
   // This admin view stays read-only by design (Domain Model Spec §2.12:
   // ADMIN access is an audit-logged dispute-resolution escape hatch, not a
-  // general reply channel — see getConversationForAdmin in
-  // modules/messaging/actions.ts). When the admin is themselves a genuine
-  // participant (the single host account on this site always is), route
-  // them to their own inbox thread to actually reply, rather than adding a
-  // second, unaudited write path into every conversation on the platform.
+  // general reply channel — getConversationForAdmin above writes the audit
+  // log row). When the admin is themselves a genuine participant (the
+  // single host account on this site always is), route them to their own
+  // inbox thread to actually reply, rather than adding a second, unaudited
+  // write path into every conversation on the platform.
   const canReplyAsParticipant = conversation.participants.some((p) => p.userId === admin.id);
 
   const participantMap = new Map(

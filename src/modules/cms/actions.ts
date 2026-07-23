@@ -43,7 +43,7 @@ export interface PostFormInput {
  * Cloudinary, unlike the rest of the site's images) so it can be referenced
  * from post.mainImage and read back with the standard Sanity image
  * pipeline/urlFor(), matching how Sanity Studio itself would store it. */
-export async function uploadPostImage(
+export async function uploadCmsImage(
   formData: FormData,
 ): Promise<ActionResult<{ assetId: string; url: string }>> {
   await requireAdmin();
@@ -253,6 +253,7 @@ export async function deleteCategory(id: string): Promise<ActionResult<{ id: str
 export async function createAuthor(input: {
   name: string;
   bio?: string;
+  imageAssetId?: string;
 }): Promise<ActionResult<{ id: string }>> {
   await requireAdmin();
   if (!input.name.trim()) return fail("Name is required");
@@ -261,6 +262,9 @@ export async function createAuthor(input: {
     name: input.name.trim(),
     slug: { _type: "slug", current: slugify(input.name) },
     bio: input.bio?.trim() || undefined,
+    ...(input.imageAssetId
+      ? { image: { _type: "image", asset: { _type: "reference", _ref: input.imageAssetId } } }
+      : {}),
   });
   revalidatePath("/admin/content/categories-authors");
   return { success: true, data: { id: doc._id } };
@@ -268,7 +272,7 @@ export async function createAuthor(input: {
 
 export async function updateAuthor(
   id: string,
-  input: { name: string; bio?: string },
+  input: { name: string; bio?: string; imageAssetId?: string },
 ): Promise<ActionResult<{ id: string }>> {
   await requireAdmin();
   if (!input.name.trim()) return fail("Name is required");
@@ -278,6 +282,9 @@ export async function updateAuthor(
       name: input.name.trim(),
       slug: { _type: "slug", current: slugify(input.name) },
       bio: input.bio?.trim() || undefined,
+      ...(input.imageAssetId
+        ? { image: { _type: "image", asset: { _type: "reference", _ref: input.imageAssetId } } }
+        : {}),
     })
     .commit();
   revalidatePath("/admin/content/categories-authors");

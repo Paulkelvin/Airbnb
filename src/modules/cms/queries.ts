@@ -27,6 +27,7 @@ export interface CmsAuthorItem {
   name: string;
   slug: string;
   bio: string | null;
+  imageUrl: string | null;
 }
 
 export interface CmsPostDetail extends CmsPostListItem {
@@ -111,7 +112,7 @@ export async function getAdminCategories(): Promise<CmsCategoryItem[]> {
 export async function getAdminAuthors(): Promise<CmsAuthorItem[]> {
   return sanityClient.fetch(groq`
     *[_type == "author"] | order(name asc) {
-      _id, name, "slug": slug.current, bio
+      _id, name, "slug": slug.current, bio, "imageUrl": image.asset->url
     }
   `);
 }

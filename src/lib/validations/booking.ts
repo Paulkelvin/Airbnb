@@ -1,5 +1,24 @@
 import { z } from "zod";
 
+// Guests submit checkInDate as their browser's *local* midnight for the
+// selected day (see BookingWidget.tsx's datepicker handling). Once that's
+// serialized as a Date instant, it can land on the *previous* UTC calendar
+// day for any negative-UTC-offset guest (all of the US) once the UTC day
+// has already rolled over — e.g. a guest booking "today" in the evening,
+// their time, gets rejected as "in the past" because the server's UTC
+// clock has already ticked into tomorrow. A flat "today at UTC midnight"
+// cutoff can't tell those apart, so this tolerates a grace window wide
+// enough to cover every real-world UTC offset (-12 to +14) instead.
+const PAST_DATE_GRACE_MS = 26 * 60 * 60 * 1000;
+export function isNotInThePast(date: Date): boolean {
+  const todayUTCMidnight = Date.UTC(
+    new Date().getUTCFullYear(),
+    new Date().getUTCMonth(),
+    new Date().getUTCDate(),
+  );
+  return date.getTime() >= todayUTCMidnight - PAST_DATE_GRACE_MS;
+}
+
 export const createShortTermBookingSchema = z
   .object({
     listingId: z.string().uuid(),
@@ -20,7 +39,7 @@ export const createShortTermBookingSchema = z
     message: "Check-out date must be after check-in date",
     path: ["checkOutDate"],
   })
-  .refine((data) => data.checkInDate >= new Date(new Date().toDateString()), {
+  .refine((data) => isNotInThePast(data.checkInDate), {
     message: "Check-in date cannot be in the past",
     path: ["checkInDate"],
   });
@@ -40,7 +59,7 @@ export const createBookingPaymentIntentSchema = z
     message: "Check-out date must be after check-in date",
     path: ["checkOutDate"],
   })
-  .refine((data) => data.checkInDate >= new Date(new Date().toDateString()), {
+  .refine((data) => isNotInThePast(data.checkInDate), {
     message: "Check-in date cannot be in the past",
     path: ["checkInDate"],
   });

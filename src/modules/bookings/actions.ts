@@ -18,6 +18,7 @@ import {
   cancelBookingSchema,
   acceptDeclineBookingSchema,
   terminateLeaseSchema,
+  isNotInThePast,
   type CreateShortTermBookingInput,
   type CreateBookingPaymentIntentInput,
   type CreateLongTermBookingInput,
@@ -386,8 +387,7 @@ export async function createLongTermBooking(
     };
   }
 
-  const today = new Date(new Date().toDateString());
-  if (data.leaseStartDate < today) {
+  if (!isNotInThePast(data.leaseStartDate)) {
     return {
       success: false,
       error: { code: "VALIDATION_ERROR", message: "Lease start date cannot be in the past" },

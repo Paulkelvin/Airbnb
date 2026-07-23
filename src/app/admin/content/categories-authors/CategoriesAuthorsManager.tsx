@@ -10,6 +10,7 @@ import {
   createAuthor,
   updateAuthor,
   deleteAuthor,
+  uploadCmsImage,
 } from "@/modules/cms/actions";
 import type { CmsCategoryItem, CmsAuthorItem } from "@/modules/cms/queries";
 
@@ -34,6 +35,9 @@ export default function CategoriesAuthorsManager({
   const [editingAuthorId, setEditingAuthorId] = useState<string | null>(null);
   const [editingAuthorName, setEditingAuthorName] = useState("");
   const [editingAuthorBio, setEditingAuthorBio] = useState("");
+  const [editingAuthorImageUrl, setEditingAuthorImageUrl] = useState("");
+  const [editingAuthorImageAssetId, setEditingAuthorImageAssetId] = useState<string | undefined>(undefined);
+  const [uploadingAuthorImage, setUploadingAuthorImage] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<{ kind: "category" | "author"; id: string; label: string } | null>(null);
 
@@ -79,12 +83,39 @@ export default function CategoriesAuthorsManager({
     setEditingAuthorId(a._id);
     setEditingAuthorName(a.name);
     setEditingAuthorBio(a.bio ?? "");
+    setEditingAuthorImageUrl(a.imageUrl ?? "");
+    setEditingAuthorImageAssetId(undefined);
+  }
+
+  async function handleAuthorImageFile(file: File | undefined) {
+    if (!file) return;
+    setError(null);
+    setUploadingAuthorImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const result = await uploadCmsImage(formData);
+      if (!result.success) {
+        setError(result.error.message);
+        return;
+      }
+      setEditingAuthorImageUrl(result.data.url);
+      setEditingAuthorImageAssetId(result.data.assetId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploadingAuthorImage(false);
+    }
   }
 
   function saveEditAuthor(id: string) {
     if (!editingAuthorName.trim()) return;
     startTransition(async () => {
-      const result = await updateAuthor(id, { name: editingAuthorName.trim(), bio: editingAuthorBio });
+      const result = await updateAuthor(id, {
+        name: editingAuthorName.trim(),
+        bio: editingAuthorBio,
+        imageAssetId: editingAuthorImageAssetId,
+      });
       if (!result.success) setError(result.error.message);
       setEditingAuthorId(null);
       router.refresh();
@@ -235,6 +266,25 @@ export default function CategoriesAuthorsManager({
                       value={editingAuthorBio}
                       onChange={(e) => setEditingAuthorBio(e.target.value)}
                     />
+                    <div className="flex items-center gap-3">
+                      {editingAuthorImageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={editingAuthorImageUrl}
+                          alt=""
+                          className="w-12 h-12 rounded-full object-cover border border-neutral-200 dark:border-neutral-700"
+                        />
+                      )}
+                      <label className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border border-neutral-300 dark:border-neutral-600 cursor-pointer hover:border-neutral-400">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleAuthorImageFile(e.target.files?.[0])}
+                        />
+                        {uploadingAuthorImage ? "Uploading..." : editingAuthorImageUrl ? "Replace photo" : "Upload photo"}
+                      </label>
+                    </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => saveEditAuthor(a._id)}
@@ -253,7 +303,15 @@ export default function CategoriesAuthorsManager({
                   </div>
                 ) : (
                   <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex items-center gap-2">
+                      {a.imageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={a.imageUrl}
+                          alt=""
+                          className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                        />
+                      )}
                       <span className="text-sm text-neutral-900 dark:text-neutral-100">{a.name}</span>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">

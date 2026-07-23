@@ -119,8 +119,12 @@ export async function createReview(input: CreateReviewInput): Promise<ActionResu
     return { created, counterpart };
   });
 
+  const listing = await prisma.listing.findUnique({
+    where: { id: booking.listingId },
+    select: { title: true, slug: true },
+  });
+
   if (review.counterpart) {
-    const listing = await prisma.listing.findUnique({ where: { id: booking.listingId }, select: { title: true } });
     const listingTitle = listing?.title ?? "your listing";
     const hostReviewId = direction === "GUEST_TO_HOST" ? review.created.id : review.counterpart.id;
     const hostRating = direction === "GUEST_TO_HOST" ? data.rating : review.counterpart.rating;
@@ -141,7 +145,13 @@ export async function createReview(input: CreateReviewInput): Promise<ActionResu
     });
   }
 
-  revalidatePath(`/listing-stay-detail`);
+  // A bare "/listing-stay-detail" isn't a real route (only the dynamic
+  // "/listing-stay-detail/[slug]" child is) and revalidatePath doesn't
+  // cascade to it, so this was silently failing to invalidate the actual
+  // listing page's cache.
+  if (listing?.slug) {
+    revalidatePath(`/listing-stay-detail/${listing.slug}`);
+  }
   revalidatePath("/account-bookings");
 
   return { success: true, data: { id: review.created.id } };
@@ -195,7 +205,10 @@ export async function hideReview(input: ReviewIdInput): Promise<ActionResult<{ i
     return { success: false, error: { code: "VALIDATION_ERROR", message: "Invalid request" } };
   }
 
-  const review = await prisma.review.findUnique({ where: { id: parsed.data.reviewId } });
+  const review = await prisma.review.findUnique({
+    where: { id: parsed.data.reviewId },
+    include: { listing: { select: { slug: true } } },
+  });
   if (!review) {
     return { success: false, error: { code: "NOT_FOUND", message: "Review not found" } };
   }
@@ -218,7 +231,11 @@ export async function hideReview(input: ReviewIdInput): Promise<ActionResult<{ i
     });
   });
 
-  revalidatePath("/listing-stay-detail");
+  // A bare "/listing-stay-detail" isn't a real route (only the dynamic
+  // "/listing-stay-detail/[slug]" child is) and revalidatePath doesn't
+  // cascade to it, so this was silently failing to invalidate the actual
+  // listing page's cache.
+  revalidatePath(`/listing-stay-detail/${review.listing.slug}`);
 
   return { success: true, data: { id: review.id } };
 }

@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { prisma } from "@/lib/db";
 import type { UserRole } from "@prisma/client";
 
 /**
@@ -16,7 +17,22 @@ export async function getSession() {
 
 export async function getCurrentUser() {
   const session = await getSession();
-  return session?.user ?? null;
+  if (!session?.user) return null;
+
+  // The session comes from a 30-day JWT that only gets refreshed on login
+  // or an explicit client-side update() call — an admin suspending a user
+  // or revoking their admin role otherwise has no effect until that JWT
+  // happens to expire, leaving the suspended/demoted account with full
+  // access in the meantime. Re-checking status/roles against the DB on
+  // every lookup (an indexed PK read) makes those admin actions take
+  // effect immediately instead.
+  const current = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { status: true, roles: true },
+  });
+  if (!current || current.status !== "ACTIVE") return null;
+
+  return { ...session.user, roles: current.roles };
 }
 
 export async function requireAuth() {
