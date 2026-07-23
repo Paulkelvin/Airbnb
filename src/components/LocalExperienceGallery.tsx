@@ -41,9 +41,12 @@ const LocalExperienceGallery: FC<LocalExperienceGalleryProps> = ({ images, title
   return (
     <>
       {/* Mobile: a peek carousel — each tile is ~65% wide so the next one is
-       * about half-visible at rest, signalling there's more to swipe to.
+       * about half-visible at rest, signalling there's more to swipe to. The
+       * first tile keeps the page's normal left inset (lines up with the
+       * heading/description above it) — only the right side bleeds past the
+       * viewport edge so the next photo peeks in.
        * sm+: the original 1-large + small-tiles grid, unchanged. */}
-      <div className="mt-10 flex sm:grid sm:grid-cols-2 gap-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="mt-10 flex sm:grid sm:grid-cols-2 gap-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory no-scrollbar -mr-4 pr-4 sm:mr-0 sm:pr-0">
         <button
           type="button"
           onClick={() => openAt(0)}
