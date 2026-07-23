@@ -47,35 +47,33 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
     <div className="nc-LocalExperiencePage overflow-hidden relative">
       <BgGlassmorphism />
       <div className="container relative py-16 lg:py-24">
-        {primaryListing && (
-          // Fixed rather than in-flow: the page is long (gallery, description,
-          // map, related places below), and the whole point of this button is
-          // that a guest who clicked here from the booking flow can get back
-          // to it without scrolling up, so it needs to stay on screen the
-          // entire time, not just near the top of the content. Wrapped in its
-          // own positioned div rather than passing `fixed` straight into
-          // ButtonPrimary's className — Button's own base classes already
-          // include `relative`, and Tailwind's cascade order (not JSX order)
-          // decides which position utility wins, so stacking them on the same
-          // element is unreliable.
-          <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-40">
-            <ButtonPrimary
-              href={`/listing-stay-detail/${primaryListing.slug}` as Route}
-              sizeClass="px-4 py-2"
-              fontSize="text-sm"
-              className="shadow-lg"
-            >
-              Continue booking →
-            </ButtonPrimary>
-          </div>
-        )}
-        <div className="max-w-3xl">
+        {/* Sticky rather than fixed: fixed pins to a raw viewport offset, so
+         * scrolling back up left it floating disconnected from the "Explore
+         * the Area" link instead of sitting beside it like it does at rest.
+         * Sticky keeps its natural in-flow position (beside the link, here)
+         * until scrolling would carry it off-screen, then holds it in place
+         * — and returns it to that same spot once you scroll back up. Its
+         * containing block is this row's parent, the full-height page
+         * container below, so it stays stuck through the whole scroll range
+         * rather than just the height of the row itself. */}
+        <div className="sticky top-0 z-40 max-w-3xl py-3 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm flex items-center justify-between gap-4">
           <Link
             href={"/explore-the-area" as Route}
             className="text-sm font-medium text-primary-6000 hover:text-primary-700"
           >
             ← Explore the Area
           </Link>
+          {primaryListing && (
+            <ButtonPrimary
+              href={`/listing-stay-detail/${primaryListing.slug}` as Route}
+              sizeClass="px-4 py-2"
+              fontSize="text-sm"
+            >
+              Continue booking →
+            </ButtonPrimary>
+          )}
+        </div>
+        <div className="max-w-3xl">
           <h1 className="mt-3 text-3xl md:text-4xl font-semibold">{experience.title}</h1>
           <p className="mt-3 text-lg text-neutral-600 dark:text-neutral-300">{experience.tagline}</p>
           <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
