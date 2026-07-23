@@ -7,6 +7,8 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import NcInputNumber from "@/components/NcInputNumber";
+import DatePickerCustomHeaderTwoMonth from "@/components/DatePickerCustomHeaderTwoMonth";
+import DatePickerCustomDay from "@/components/DatePickerCustomDay";
 import GuestSelector, { type GuestBreakdown } from "./GuestSelector";
 import InlineBookingAuth from "./InlineBookingAuth";
 import {
@@ -196,13 +198,11 @@ function ShortTermBookingForm({
         });
         if (!result.success) {
           setError(result.error.message);
+          if (result.error.code === "DATES_UNAVAILABLE") router.refresh();
           return;
         }
         router.push(`/account-bookings/${result.data.id}` as Route);
       } catch {
-        // requireAuth() throws rather than returning an ActionResult if the
-        // session expired between the OTP step and this call — surface that
-        // as a normal inline error instead of an unhandled rejection.
         setError("Your session expired. Please confirm your booking again.");
       }
     });
@@ -222,6 +222,7 @@ function ShortTermBookingForm({
         });
         if (!result.success) {
           setError(result.error.message);
+          if (result.error.code === "DATES_UNAVAILABLE") router.refresh();
           return;
         }
         setClientSecret(result.data.clientSecret);
@@ -248,6 +249,7 @@ function ShortTermBookingForm({
         });
         if (!result.success) {
           setError(result.error.message);
+          if (result.error.code === "DATES_UNAVAILABLE") router.refresh();
           return;
         }
         router.push(`/account-bookings/${result.data.id}` as Route);
@@ -291,25 +293,29 @@ function ShortTermBookingForm({
                 : "Pick a check-in date, then a check-out date"}
             </p>
           )}
-          <DatePicker
-            selected={checkInDate}
-            onChange={(dates) => {
-              const [start, end] = dates as [Date | null, Date | null];
-              setCheckInDate(start);
-              setCheckOutDate(end);
-            }}
-            startDate={checkInDate}
-            endDate={checkOutDate}
-            selectsRange
-            minDate={new Date()}
-            excludeDates={excludeDates}
-            monthsShown={1}
-            className="w-full text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 bg-transparent"
-            placeholderText="Add dates"
-            portalId="datepicker-portal"
-            popperClassName="!z-[100]"
-            customInput={<NoKeyboardInput />}
-          />
+          <div className="flex justify-center">
+            <DatePicker
+              selected={checkInDate}
+              onChange={(dates) => {
+                const [start, end] = dates as [Date | null, Date | null];
+                setCheckInDate(start);
+                setCheckOutDate(end);
+              }}
+              startDate={checkInDate}
+              endDate={checkOutDate}
+              selectsRange
+              minDate={new Date()}
+              excludeDates={excludeDates}
+              monthsShown={1}
+              inline
+              renderCustomHeader={(p) => (
+                <DatePickerCustomHeaderTwoMonth {...p} monthsShown={1} />
+              )}
+              renderDayContents={(day, date) => (
+                <DatePickerCustomDay dayOfMonth={day} date={date} />
+              )}
+            />
+          </div>
         </div>
         <GuestSelector
           maxOccupants={maxOccupants}
