@@ -246,7 +246,7 @@ export default function ListingDetailView({
             </div>
           </div>
 
-          <WaterAccessNotice />
+          <WaterAccessNotice experiences={experiences} />
 
           {/* SECTION 2: DESCRIPTION */}
           <div className="listingSection__wrap">

@@ -40,6 +40,10 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
   },
+  // viewport-fit=cover exposes env(safe-area-inset-bottom) so the fixed
+  // mobile footer nav can pad itself clear of the home-indicator/gesture bar
+  // instead of sitting flush underneath it.
+  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
 };
 
 export default function RootLayout({
