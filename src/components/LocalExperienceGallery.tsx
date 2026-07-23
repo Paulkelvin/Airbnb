@@ -40,17 +40,20 @@ const LocalExperienceGallery: FC<LocalExperienceGalleryProps> = ({ images, title
 
   return (
     <>
-      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Mobile: a peek carousel — each tile is ~65% wide so the next one is
+       * about half-visible at rest, signalling there's more to swipe to.
+       * sm+: the original 1-large + small-tiles grid, unchanged. */}
+      <div className="mt-10 flex sm:grid sm:grid-cols-2 gap-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
           type="button"
           onClick={() => openAt(0)}
-          className="relative aspect-[4/3] sm:aspect-auto sm:row-span-2 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none"
+          className="relative w-[65%] sm:w-auto shrink-0 sm:shrink aspect-[4/3] sm:aspect-auto sm:row-span-2 snap-start rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none"
         >
           <Image
             src={images[0]}
             alt={title}
             fill
-            sizes="(max-width: 768px) 100vw, 50vw"
+            sizes="(max-width: 768px) 65vw, 50vw"
             className="object-cover"
             priority
           />
@@ -63,13 +66,13 @@ const LocalExperienceGallery: FC<LocalExperienceGalleryProps> = ({ images, title
               type="button"
               key={url}
               onClick={() => openAt(index)}
-              className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none"
+              className="relative w-[65%] sm:w-auto shrink-0 sm:shrink aspect-[4/3] snap-start rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 focus:outline-none"
             >
               <Image
                 src={url}
                 alt=""
                 fill
-                sizes="(max-width: 768px) 100vw, 25vw"
+                sizes="(max-width: 768px) 65vw, 25vw"
                 className="object-cover"
               />
               {isLastVisible && (
