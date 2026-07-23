@@ -34,7 +34,7 @@ export interface CmsPostDetail extends CmsPostListItem {
   categoryIds: string[];
   excerpt: string | null;
   body: unknown;
-  mainImage: unknown;
+  mainImageUrl: string | null;
   seo: { metaTitle?: string; metaDescription?: string } | null;
 }
 
@@ -70,7 +70,7 @@ export async function getAdminPost(id: string): Promise<CmsPostDetail | null> {
       "categoryIds": categories[]._ref,
       excerpt,
       body,
-      mainImage,
+      "mainImageUrl": mainImage.asset->url,
       seo
     }`,
     { id },

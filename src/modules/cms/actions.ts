@@ -31,6 +31,33 @@ export interface PostFormInput {
   publishedAt: string | null;
   metaTitle?: string;
   metaDescription?: string;
+  /** Only set when the admin uploads a new cover photo this session — a
+   * Sanity asset reference, not a URL, so blog pages can keep using
+   * urlFor() the same way as any image set from Sanity Studio directly.
+   * Omitted (rather than null) when unchanged, so the mainImage field is
+   * left untouched on the existing document. */
+  mainImageAssetId?: string;
+}
+
+/** Uploads a blog cover photo directly to Sanity's asset store (not
+ * Cloudinary, unlike the rest of the site's images) so it can be referenced
+ * from post.mainImage and read back with the standard Sanity image
+ * pipeline/urlFor(), matching how Sanity Studio itself would store it. */
+export async function uploadPostImage(
+  formData: FormData,
+): Promise<ActionResult<{ assetId: string; url: string }>> {
+  await requireAdmin();
+  const file = formData.get("file");
+  if (!(file instanceof File)) return fail("No file provided");
+  if (!file.type.startsWith("image/")) return fail("File must be an image");
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const asset = await sanityAdminClient.assets.upload("image", buffer, {
+    filename: file.name,
+    contentType: file.type,
+  });
+
+  return { success: true, data: { assetId: asset._id, url: asset.url } };
 }
 
 export async function createPost(input: PostFormInput): Promise<ActionResult<{ id: string }>> {
@@ -51,6 +78,9 @@ export async function createPost(input: PostFormInput): Promise<ActionResult<{ i
       metaTitle: input.metaTitle?.trim() || undefined,
       metaDescription: input.metaDescription?.trim() || undefined,
     },
+    ...(input.mainImageAssetId
+      ? { mainImage: { _type: "image", asset: { _type: "reference", _ref: input.mainImageAssetId } } }
+      : {}),
   });
 
   revalidatePath("/blog");
@@ -83,6 +113,9 @@ export async function updatePost(
         metaTitle: input.metaTitle?.trim() || undefined,
         metaDescription: input.metaDescription?.trim() || undefined,
       },
+      ...(input.mainImageAssetId
+        ? { mainImage: { _type: "image", asset: { _type: "reference", _ref: input.mainImageAssetId } } }
+        : {}),
     })
     .commit();
 

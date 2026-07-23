@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createPost, updatePost, type PostFormInput } from "@/modules/cms/actions";
+import { createPost, updatePost, uploadPostImage, type PostFormInput } from "@/modules/cms/actions";
 import { blocksToPlainText } from "@/modules/cms/portable-text";
 import type { CmsAuthorItem, CmsCategoryItem, CmsPostDetail } from "@/modules/cms/queries";
 
@@ -36,9 +36,33 @@ export default function PostForm({
   );
   const [metaTitle, setMetaTitle] = useState(post?.seo?.metaTitle ?? "");
   const [metaDescription, setMetaDescription] = useState(post?.seo?.metaDescription ?? "");
+  const [mainImagePreviewUrl, setMainImagePreviewUrl] = useState(post?.mainImageUrl ?? "");
+  const [mainImageAssetId, setMainImageAssetId] = useState<string | undefined>(undefined);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   function toggleCategory(id: string) {
     setCategoryIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
+  }
+
+  async function handleImageFile(file: File | undefined) {
+    if (!file) return;
+    setError(null);
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const result = await uploadPostImage(formData);
+      if (!result.success) {
+        setError(result.error.message);
+        return;
+      }
+      setMainImagePreviewUrl(result.data.url);
+      setMainImageAssetId(result.data.assetId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploadingImage(false);
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -54,6 +78,7 @@ export default function PostForm({
       publishedAt: published ? new Date(publishDate).toISOString() : null,
       metaTitle,
       metaDescription,
+      mainImageAssetId,
     };
     startTransition(async () => {
       const result = post ? await updatePost(post._id, input) : await createPost(input);
@@ -86,6 +111,27 @@ export default function PostForm({
           onChange={(e) => setTitle(e.target.value)}
           required
         />
+      </div>
+
+      <div>
+        <label className={labelClass}>Cover photo</label>
+        {mainImagePreviewUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={mainImagePreviewUrl}
+            alt=""
+            className="mb-2 h-32 w-full max-w-xs rounded-lg object-cover border border-neutral-200 dark:border-neutral-700"
+          />
+        )}
+        <label className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 dark:border-neutral-600 cursor-pointer hover:border-neutral-400">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleImageFile(e.target.files?.[0])}
+          />
+          {uploadingImage ? "Uploading..." : mainImagePreviewUrl ? "Replace photo" : "Upload photo"}
+        </label>
       </div>
 
       <div>

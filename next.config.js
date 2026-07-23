@@ -70,7 +70,13 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     typedRoutes: true,
-    serverActions: true,
+    // Object form (not `true`) so we can raise bodySizeLimit above the 1MB
+    // default — uploadPostImage sends raw photo bytes through a server
+    // action rather than Cloudinary's direct-from-browser upload used
+    // elsewhere, so it needs headroom for real phone-camera photos.
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
   },
   async headers() {
     return [
