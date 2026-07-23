@@ -32,7 +32,7 @@ export function UserActions({
 
   return (
     <div className="flex gap-1 flex-wrap">
-      {status === "ACTIVE" && (
+      {status === "ACTIVE" && !isSelf && (
         <button
           onClick={() => handleAction(() => suspendUser(userId))}
           disabled={isPending}

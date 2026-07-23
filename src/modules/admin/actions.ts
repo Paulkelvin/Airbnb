@@ -20,9 +20,12 @@ async function auditLog(actorId: string, action: string, targetType: string, tar
 
 export async function suspendUser(userId: string): Promise<ActionResult<{ id: string }>> {
   const admin = await requireAdmin();
+  if (userId === admin.id) {
+    return { success: false, error: { code: "FORBIDDEN", message: "You cannot suspend your own account" } };
+  }
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, status: true } });
   if (!user) return { success: false, error: { code: "NOT_FOUND", message: "User not found" } };
-  if (user.status === "SUSPENDED") return { success: false, error: { code: "INVALID_STATE", message: "User is already suspended" } };
+  if (user.status !== "ACTIVE") return { success: false, error: { code: "INVALID_STATE", message: "Only active users can be suspended" } };
 
   await prisma.user.update({ where: { id: userId }, data: { status: "SUSPENDED" } });
   await auditLog(admin.id, "user.suspend", "User", userId);
@@ -119,8 +122,9 @@ export async function setAdminRole(userId: string, makeAdmin: boolean): Promise<
     return { success: false, error: { code: "FORBIDDEN", message: "You cannot remove your own admin access" } };
   }
 
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, roles: true } });
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, roles: true, status: true } });
   if (!user) return { success: false, error: { code: "NOT_FOUND", message: "User not found" } };
+  if (user.status === "DELETED") return { success: false, error: { code: "INVALID_STATE", message: "Cannot change roles on a deleted user" } };
 
   const hasAdmin = user.roles.includes("ADMIN");
   if (makeAdmin === hasAdmin) {

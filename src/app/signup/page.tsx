@@ -66,7 +66,7 @@ const PageSignUp = () => {
 
       if (signInResult?.error) {
         setError("Account created — please sign in.");
-        router.push("/login");
+        router.push(safeCallbackUrl ? `/login?callbackUrl=${encodeURIComponent(safeCallbackUrl)}` : "/login");
         return;
       }
 
@@ -171,7 +171,7 @@ const PageSignUp = () => {
 
           <span className="block text-center text-neutral-700 dark:text-neutral-300">
             Already have an account?{` `}
-            <Link href="/login" className="font-semibold underline">
+            <Link href={safeCallbackUrl ? `/login?callbackUrl=${encodeURIComponent(safeCallbackUrl)}` : "/login"} className="font-semibold underline">
               Sign in
             </Link>
           </span>

@@ -27,6 +27,7 @@ const stripePromise = isStripeCheckoutConfigured() ? loadStripe(getStripePublish
 const NoKeyboardInput = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   (props, ref) => <input {...props} ref={ref} readOnly />,
 );
+NoKeyboardInput.displayName = "NoKeyboardInput";
 
 interface BookingWidgetProps {
   listingId: string;
