@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getMyNotifications, getMyNotificationPreferences } from "@/modules/notifications/queries";
+import { getMyNotifications, getMyNotificationPreferences, HOST_ONLY_TYPES } from "@/modules/notifications/queries";
 import NotificationsClient from "./NotificationsClient";
 
 export const metadata = {
@@ -18,6 +18,11 @@ export default async function AccountNotifications() {
     getMyNotificationPreferences(),
   ]);
 
+  const isHost = user.roles.includes("HOST") || user.roles.includes("ADMIN");
+  const visiblePreferences = isHost
+    ? preferences
+    : preferences.filter((p) => !HOST_ONLY_TYPES.includes(p.type));
+
   return (
     <div className="space-y-6 sm:space-y-8">
       <div>
@@ -33,7 +38,7 @@ export default async function AccountNotifications() {
           readAt: n.readAt ? n.readAt.toISOString() : null,
           createdAt: n.createdAt.toISOString(),
         }))}
-        preferences={preferences}
+        preferences={visiblePreferences}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import React, { forwardRef, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DatePicker from "react-datepicker";
 import { loadStripe } from "@stripe/stripe-js";
@@ -21,6 +21,12 @@ import type { ListingDetailViewModel } from "@/modules/listings/types";
 import type { Route } from "@/routers/types";
 
 const stripePromise = isStripeCheckoutConfigured() ? loadStripe(getStripePublishableKey()) : null;
+
+// HTML readOnly suppresses the mobile virtual keyboard without telling
+// react-datepicker the field is non-interactive (which blocks the calendar).
+const NoKeyboardInput = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  (props, ref) => <input {...props} ref={ref} readOnly />,
+);
 
 interface BookingWidgetProps {
   listingId: string;
@@ -302,7 +308,7 @@ function ShortTermBookingForm({
             placeholderText="Add dates"
             portalId="datepicker-portal"
             popperClassName="!z-[100]"
-            readOnly
+            customInput={<NoKeyboardInput />}
           />
         </div>
         <GuestSelector
@@ -500,7 +506,7 @@ function LongTermBookingForm({
             placeholderText="Select a date"
             portalId="datepicker-portal"
             popperClassName="!z-[100]"
-            readOnly
+            customInput={<NoKeyboardInput />}
           />
         </div>
         <NcInputNumber
