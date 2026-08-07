@@ -144,7 +144,7 @@ const PageLogin = () => {
 
           <p className="text-center text-neutral-600 dark:text-neutral-400 mt-8 text-sm">
             New user?{" "}
-            <Link href="/signup" className="font-semibold text-primary-6000 hover:text-primary-700 dark:hover:text-primary-500">
+            <Link href={safeCallbackUrl ? `/signup?callbackUrl=${encodeURIComponent(safeCallbackUrl)}` : "/signup"} className="font-semibold text-primary-6000 hover:text-primary-700 dark:hover:text-primary-500">
               Create an account
             </Link>
           </p>

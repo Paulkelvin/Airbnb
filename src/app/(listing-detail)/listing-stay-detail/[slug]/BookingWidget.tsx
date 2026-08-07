@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import React, { forwardRef, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DatePicker from "react-datepicker";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import NcInputNumber from "@/components/NcInputNumber";
+import DatePickerCustomHeaderTwoMonth from "@/components/DatePickerCustomHeaderTwoMonth";
+import DatePickerCustomDay from "@/components/DatePickerCustomDay";
 import GuestSelector, { type GuestBreakdown } from "./GuestSelector";
 import InlineBookingAuth from "./InlineBookingAuth";
 import {
@@ -21,6 +23,13 @@ import type { ListingDetailViewModel } from "@/modules/listings/types";
 import type { Route } from "@/routers/types";
 
 const stripePromise = isStripeCheckoutConfigured() ? loadStripe(getStripePublishableKey()) : null;
+
+// HTML readOnly suppresses the mobile virtual keyboard without telling
+// react-datepicker the field is non-interactive (which blocks the calendar).
+const NoKeyboardInput = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  (props, ref) => <input {...props} ref={ref} readOnly />,
+);
+NoKeyboardInput.displayName = "NoKeyboardInput";
 
 interface BookingWidgetProps {
   listingId: string;
@@ -127,6 +136,7 @@ function ShortTermBookingForm({
     pets: 0,
   });
   const guestCount = guestBreakdown.adults + guestBreakdown.children;
+  const [calendarOpen, setCalendarOpen] = useState(!initialDates.checkIn || !initialDates.checkOut);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -190,13 +200,11 @@ function ShortTermBookingForm({
         });
         if (!result.success) {
           setError(result.error.message);
+          if (result.error.code === "DATES_UNAVAILABLE") router.refresh();
           return;
         }
         router.push(`/account-bookings/${result.data.id}` as Route);
       } catch {
-        // requireAuth() throws rather than returning an ActionResult if the
-        // session expired between the OTP step and this call — surface that
-        // as a normal inline error instead of an unhandled rejection.
         setError("Your session expired. Please confirm your booking again.");
       }
     });
@@ -216,6 +224,7 @@ function ShortTermBookingForm({
         });
         if (!result.success) {
           setError(result.error.message);
+          if (result.error.code === "DATES_UNAVAILABLE") router.refresh();
           return;
         }
         setClientSecret(result.data.clientSecret);
@@ -242,6 +251,7 @@ function ShortTermBookingForm({
         });
         if (!result.success) {
           setError(result.error.message);
+          if (result.error.code === "DATES_UNAVAILABLE") router.refresh();
           return;
         }
         router.push(`/account-bookings/${result.data.id}` as Route);
@@ -278,32 +288,50 @@ function ShortTermBookingForm({
           <label className="block text-xs font-medium text-neutral-500 mb-1">
             Check in — Check out
           </label>
-          {(!checkInDate || !checkOutDate) && (
-            <p className="mb-1 text-xs text-neutral-400">
-              {checkInDate && !checkOutDate
-                ? "Now pick your check-out date"
-                : "Pick a check-in date, then a check-out date"}
-            </p>
+          {checkInDate && checkOutDate && !calendarOpen ? (
+            <button
+              type="button"
+              className="w-full text-left text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors"
+              onClick={() => setCalendarOpen(true)}
+            >
+              {checkInDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              {" — "}
+              {checkOutDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              <span className="ml-2 text-xs text-primary-6000 dark:text-primary-400">Change</span>
+            </button>
+          ) : (
+            <>
+              <p className="mb-1 text-xs text-neutral-400">
+                {checkInDate && !checkOutDate
+                  ? "Now pick your check-out date"
+                  : "Pick a check-in date, then a check-out date"}
+              </p>
+              <div className="flex justify-center">
+                <DatePicker
+                  selected={checkInDate}
+                  onChange={(dates) => {
+                    const [start, end] = dates as [Date | null, Date | null];
+                    setCheckInDate(start);
+                    setCheckOutDate(end);
+                    if (start && end) setCalendarOpen(false);
+                  }}
+                  startDate={checkInDate}
+                  endDate={checkOutDate}
+                  selectsRange
+                  minDate={new Date()}
+                  excludeDates={excludeDates}
+                  monthsShown={1}
+                  inline
+                  renderCustomHeader={(p) => (
+                    <DatePickerCustomHeaderTwoMonth {...p} monthsShown={1} />
+                  )}
+                  renderDayContents={(day, date) => (
+                    <DatePickerCustomDay dayOfMonth={day} date={date} />
+                  )}
+                />
+              </div>
+            </>
           )}
-          <DatePicker
-            selected={checkInDate}
-            onChange={(dates) => {
-              const [start, end] = dates as [Date | null, Date | null];
-              setCheckInDate(start);
-              setCheckOutDate(end);
-            }}
-            startDate={checkInDate}
-            endDate={checkOutDate}
-            selectsRange
-            minDate={new Date()}
-            excludeDates={excludeDates}
-            monthsShown={1}
-            className="w-full text-sm border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 bg-transparent"
-            placeholderText="Add dates"
-            portalId="datepicker-portal"
-            popperClassName="!z-[100]"
-            readOnly
-          />
         </div>
         <GuestSelector
           maxOccupants={maxOccupants}
@@ -500,7 +528,7 @@ function LongTermBookingForm({
             placeholderText="Select a date"
             portalId="datepicker-portal"
             popperClassName="!z-[100]"
-            readOnly
+            customInput={<NoKeyboardInput />}
           />
         </div>
         <NcInputNumber

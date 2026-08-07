@@ -12,6 +12,13 @@ const TOGGLEABLE_TYPES: NotificationType[] = [
   "RENT_DUE_REMINDER",
 ];
 
+const HOST_ONLY_TYPES: NotificationType[] = [
+  "NEW_INQUIRY",
+  "PAYOUT_SENT",
+  "LISTING_APPROVED",
+  "LISTING_REJECTED",
+];
+
 /** In-app notification feed — channel IN_APP only; EMAIL rows are a delivery log, not shown here. */
 export async function getMyNotifications(limit = 30) {
   const user = await requireAuth();
@@ -46,4 +53,4 @@ export async function getMyNotificationPreferences() {
   return TOGGLEABLE_TYPES.map((type) => ({ type, emailEnabled: overrides.get(type) ?? true }));
 }
 
-export { TOGGLEABLE_TYPES };
+export { TOGGLEABLE_TYPES, HOST_ONLY_TYPES };

@@ -11,6 +11,7 @@ export interface NcInputNumberProps {
   onChange?: (value: number) => void;
   label?: string;
   desc?: string;
+  onAttemptExceedMax?: () => void;
 }
 
 const NcInputNumber: FC<NcInputNumberProps> = ({
@@ -21,6 +22,7 @@ const NcInputNumber: FC<NcInputNumberProps> = ({
   onChange,
   label,
   desc,
+  onAttemptExceedMax,
 }) => {
   const [value, setValue] = useState(defaultValue);
 
@@ -36,12 +38,17 @@ const NcInputNumber: FC<NcInputNumberProps> = ({
     onChange && onChange(value - 1);
   };
   const handleClickIncrement = () => {
-    if (max && max <= value) return;
+    if (max != null && max <= value) {
+      onAttemptExceedMax?.();
+      return;
+    }
     setValue((state) => {
       return state + 1;
     });
     onChange && onChange(value + 1);
   };
+
+  const atMax = max != null && max <= value;
 
   const renderLabel = () => {
     return (
@@ -78,10 +85,10 @@ const NcInputNumber: FC<NcInputNumberProps> = ({
         </button>
         <span>{value}</span>
         <button
-          className="w-8 h-8 rounded-full flex items-center justify-center border border-neutral-400 dark:border-neutral-500 bg-white dark:bg-neutral-900 focus:outline-none hover:border-neutral-700 disabled:hover:border-neutral-400 dark:disabled:hover:border-neutral-500 disabled:opacity-50 disabled:cursor-default"
+          className={`w-8 h-8 rounded-full flex items-center justify-center border border-neutral-400 dark:border-neutral-500 bg-white dark:bg-neutral-900 focus:outline-none disabled:hover:border-neutral-400 dark:disabled:hover:border-neutral-500 disabled:opacity-50 disabled:cursor-default ${atMax && onAttemptExceedMax ? "opacity-50 cursor-default" : "hover:border-neutral-700"}`}
           type="button"
           onClick={handleClickIncrement}
-          disabled={max ? max <= value : false}
+          disabled={atMax && !onAttemptExceedMax}
         >
           <PlusIcon className="w-4 h-4" />
         </button>

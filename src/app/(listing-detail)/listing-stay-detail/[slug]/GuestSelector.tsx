@@ -3,7 +3,10 @@
 import { Fragment } from "react";
 import { Popover, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { toast } from "sonner";
 import NcInputNumber from "@/components/NcInputNumber";
+
+const GUEST_CAP = 6;
 
 export interface GuestBreakdown {
   adults: number;
@@ -25,7 +28,12 @@ export default function GuestSelector({
   value,
   onChange,
 }: GuestSelectorProps) {
+  const effectiveMax = Math.min(maxOccupants, GUEST_CAP);
   const occupants = value.adults + value.children;
+
+  const handleMaxReached = () => {
+    toast.error(`Maximum ${GUEST_CAP} guests allowed at this property`);
+  };
 
   const summaryParts = [`${occupants} guest${occupants !== 1 ? "s" : ""}`];
   if (value.infants > 0) {
@@ -64,16 +72,18 @@ export default function GuestSelector({
                 desc="Ages 13 or above"
                 defaultValue={value.adults}
                 min={1}
-                max={maxOccupants - value.children}
+                max={effectiveMax - value.children}
                 onChange={(adults) => onChange({ ...value, adults })}
+                onAttemptExceedMax={handleMaxReached}
               />
               <NcInputNumber
                 className="mt-5 w-full"
                 label="Children"
                 desc="Ages 2–12"
                 defaultValue={value.children}
-                max={maxOccupants - value.adults}
+                max={effectiveMax - value.adults}
                 onChange={(children) => onChange({ ...value, children })}
+                onAttemptExceedMax={handleMaxReached}
               />
               <NcInputNumber
                 className="mt-5 w-full"
@@ -94,7 +104,7 @@ export default function GuestSelector({
                 />
               )}
               <p className="mt-5 text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                This place has a maximum of {maxOccupants} guests, not including infants.
+                This place has a maximum of {effectiveMax} guests, not including infants.
                 {petsAllowed && " If you're bringing more than 2 pets, please let your host know."}
               </p>
             </Popover.Panel>
