@@ -3,6 +3,7 @@ import Link from "next/link";
 import { MapPinIcon, ClockIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import BgGlassmorphism from "@/components/BgGlassmorphism";
 import ContinueBookingButton from "./ContinueBookingButton";
+import ScrollToTopOnMount from "./ScrollToTopOnMount";
 import LocalExperienceCard from "@/components/LocalExperienceCard";
 import LocalExperienceGallery from "@/components/LocalExperienceGallery";
 import LocalExperienceDetailSections from "@/components/LocalExperienceDetailSections";
@@ -46,6 +47,7 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
 
   return (
     <div className="nc-LocalExperiencePage overflow-hidden relative">
+      <ScrollToTopOnMount />
       <BgGlassmorphism />
       <div className="container relative py-16 lg:py-24">
         {/* position:sticky doesn't work here — nc-LocalExperiencePage below
