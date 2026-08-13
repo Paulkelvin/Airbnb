@@ -19,7 +19,6 @@ import MobileHeaderGallery from "./MobileHeaderGallery";
 import CancellationPolicyInfo from "./CancellationPolicyInfo";
 import BookingWidget from "./BookingWidget";
 import MobileBookingBar from "./MobileBookingBar";
-import InquiryForm from "./InquiryForm";
 import ReviewsSection, { type ListingReview } from "./ReviewsSection";
 import WhereYouSleep from "./WhereYouSleep";
 import WaterAccessNotice from "./WaterAccessNotice";
@@ -408,11 +407,6 @@ export default function ListingDetailView({
                 <span className="block text-xl font-medium">{listing.host.name}</span>
               </div>
             </div>
-            {!isOwner && (
-              <div className="pt-2">
-                <InquiryForm listingId={listing.id} isAuthenticated={isAuthenticated} />
-              </div>
-            )}
           </div>
 
           {/* SECTION 6: REVIEWS */}
