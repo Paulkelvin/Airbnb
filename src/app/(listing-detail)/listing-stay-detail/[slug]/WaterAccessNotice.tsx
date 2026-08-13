@@ -33,9 +33,9 @@ export default function WaterAccessNotice({
         <div className="text-sm text-amber-900 dark:text-amber-200 space-y-1">
           <p className="font-semibold">A note on water access</p>
           <p>
-            Potomac Vista Cottage does not have direct water access, a private beach, dock, or
-            pier on the property. If getting out on the water is part of your trip, here are
-            nearby places our guests go:
+            Although Potomac Vista Cottage does not have direct water access, a private beach,
+            dock, or pier on the property, if getting out on the water is part of your trip, here
+            are nearby places our guests go:
           </p>
         </div>
       </div>
