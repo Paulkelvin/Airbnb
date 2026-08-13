@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FC, Fragment, useState } from "react";
+import React, { FC, Fragment, useEffect, useRef, useState } from "react";
 import GoogleMapReact from "google-map-react";
 import { Transition } from "@headlessui/react";
 import { CATEGORY_EMOJI, type LocalExperience } from "@/data/local-experiences";
@@ -77,6 +77,32 @@ const ExploreAreaMap: FC<ExploreAreaMapProps> = ({ className = "", cottage, expe
       e.latitude !== null && e.longitude !== null,
   );
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  // Mount the map only once it's near the viewport rather than immediately
+  // on page load. The Google Maps JS API is known to grab focus and
+  // auto-scroll the page toward itself right after its tiles finish
+  // loading (a mobile Safari quirk), which — when the map mounts eagerly on
+  // a page the guest hasn't scrolled to yet — was landing fresh page loads
+  // partway down instead of at the top. Deferring the mount means that
+  // focus-scroll only fires once the guest has actually scrolled here.
+  const [shouldMount, setShouldMount] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldMount(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
     return (
       <div
@@ -88,23 +114,27 @@ const ExploreAreaMap: FC<ExploreAreaMapProps> = ({ className = "", cottage, expe
   }
 
   return (
-    <div className={`rounded-2xl overflow-hidden ${className}`}>
-      <GoogleMapReact
-        defaultZoom={12}
-        center={{ lat: cottage.lat, lng: cottage.lng }}
-        bootstrapURLKeys={{ key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "" }}
-        yesIWantToUseGoogleMapApiInternals
-      >
-        <CottageMarker lat={cottage.lat} lng={cottage.lng} label={cottage.label} />
-        {pinned.map((experience) => (
-          <ExperienceMarker
-            key={experience.id}
-            lat={experience.latitude}
-            lng={experience.longitude}
-            experience={experience}
-          />
-        ))}
-      </GoogleMapReact>
+    <div ref={containerRef} className={`rounded-2xl overflow-hidden ${className}`}>
+      {shouldMount ? (
+        <GoogleMapReact
+          defaultZoom={12}
+          center={{ lat: cottage.lat, lng: cottage.lng }}
+          bootstrapURLKeys={{ key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "" }}
+          yesIWantToUseGoogleMapApiInternals
+        >
+          <CottageMarker lat={cottage.lat} lng={cottage.lng} label={cottage.label} />
+          {pinned.map((experience) => (
+            <ExperienceMarker
+              key={experience.id}
+              lat={experience.latitude}
+              lng={experience.longitude}
+              experience={experience}
+            />
+          ))}
+        </GoogleMapReact>
+      ) : (
+        <div className="w-full h-full bg-neutral-100 dark:bg-neutral-800" />
+      )}
     </div>
   );
 };
