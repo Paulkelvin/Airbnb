@@ -3,6 +3,8 @@
 import React from "react";
 import { Disclosure, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
+import WaterfrontPhotoStrip from "@/components/WaterfrontPhotoStrip";
+import type { LocalExperience } from "@/data/local-experiences";
 
 export interface FaqItem {
   question: string;
@@ -10,7 +12,19 @@ export interface FaqItem {
   category: string;
 }
 
-export default function FaqAccordion({ faqs }: { faqs: FaqItem[] }) {
+// This is the one FAQ answer that also gets the same live waterfront photo
+// strip shown on the listing page's water-access callout, so a guest who
+// finds the answer via FAQ search sees the same visual preview as someone
+// who saw it pre-booking rather than a text-only stand-in.
+const WATER_ACCESS_QUESTION = "Does the Cottage Have Water Access?";
+
+export default function FaqAccordion({
+  faqs,
+  experiences = [],
+}: {
+  faqs: FaqItem[];
+  experiences?: LocalExperience[];
+}) {
   const categories = Array.from(new Set(faqs.map((f) => f.category)));
 
   return (
@@ -42,13 +56,16 @@ export default function FaqAccordion({ faqs }: { faqs: FaqItem[] }) {
                         <Transition
                           enter="transition-all duration-200 ease-out"
                           enterFrom="opacity-0 max-h-0"
-                          enterTo="opacity-100 max-h-96"
+                          enterTo="opacity-100 max-h-[40rem]"
                           leave="transition-all duration-150 ease-in"
-                          leaveFrom="opacity-100 max-h-96"
+                          leaveFrom="opacity-100 max-h-[40rem]"
                           leaveTo="opacity-0 max-h-0"
                         >
                           <Disclosure.Panel className="overflow-hidden px-5 sm:px-6 pb-6 pl-[4.25rem] sm:pl-[4.75rem] text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                            {faq.answer}
+                            <p>{faq.answer}</p>
+                            {faq.question === WATER_ACCESS_QUESTION && (
+                              <WaterfrontPhotoStrip experiences={experiences} />
+                            )}
                           </Disclosure.Panel>
                         </Transition>
                       </div>

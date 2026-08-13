@@ -1,5 +1,6 @@
 import BgGlassmorphism from "@/components/BgGlassmorphism";
 import { getFaqs } from "@/lib/faqs";
+import { getAllExperiences } from "@/lib/local-experiences";
 import FaqAccordion from "./FaqAccordion";
 
 export const revalidate = 3600;
@@ -9,7 +10,7 @@ export const metadata = {
 };
 
 export default async function FaqPage() {
-  const faqs = await getFaqs();
+  const [faqs, experiences] = await Promise.all([getFaqs(), getAllExperiences()]);
 
   return (
     <div className="nc-FaqPage overflow-hidden relative">
@@ -19,7 +20,7 @@ export default async function FaqPage() {
         <span className="block mt-3 text-neutral-500 dark:text-neutral-400 text-lg">
           Everything you need to know about booking, hosting, and staying with Potomac.
         </span>
-        <FaqAccordion faqs={faqs} />
+        <FaqAccordion faqs={faqs} experiences={experiences} />
       </div>
     </div>
   );
