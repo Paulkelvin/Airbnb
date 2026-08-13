@@ -1,7 +1,6 @@
 "use client";
 
 import Logo from "@/components/ui/Logo";
-import SocialsList from "@/components/ui/SocialsList";
 import { CustomLink } from "@/data/types";
 import { Route } from "@/routers/types";
 import React from "react";
@@ -28,10 +27,7 @@ const widgetMenus: WidgetFooterMenu[] = [
   {
     id: "2",
     title: "Support",
-    menus: [
-      { href: "/faq", label: "Help centre" },
-      { href: "/contact", label: "Contact us" },
-    ],
+    menus: [{ href: "/faq", label: "Help centre" }],
   },
   {
     id: "3",
@@ -108,9 +104,6 @@ const Footer: React.FC = () => {
           <div className="grid grid-cols-4 gap-5 col-span-2 md:col-span-4 lg:md:col-span-1 lg:flex lg:flex-col">
             <div className="col-span-2 md:col-span-1">
               <Logo />
-            </div>
-            <div className="col-span-2 flex items-center md:col-span-3">
-              <SocialsList className="flex items-center space-x-3 lg:space-x-0 lg:flex-col lg:space-y-2.5 lg:items-start" />
             </div>
           </div>
           {menus.map(renderWidgetMenuItem)}

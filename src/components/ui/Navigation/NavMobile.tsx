@@ -8,7 +8,6 @@ import { Disclosure, Transition } from "@headlessui/react";
 import { NavItemType } from "./NavigationItem";
 import { NAVIGATION_DEMO } from "@/data/navigation";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
-import SocialsList from "@/components/ui/SocialsList";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import SwitchDarkMode from "@/components/ui/SwitchDarkMode";
 import Link from "next/link";
@@ -138,8 +137,7 @@ const NavMobile: React.FC<NavMobileProps> = ({
         <div className="flex flex-col mt-5 text-neutral-700 dark:text-neutral-300 text-sm">
           <span>Find and book your perfect stay</span>
 
-          <div className="flex justify-between items-center mt-4">
-            <SocialsList itemClass="w-9 h-9 flex items-center justify-center rounded-lg bg-neutral-100 text-xl dark:bg-neutral-800 dark:text-neutral-300" />
+          <div className="flex justify-end items-center mt-4">
             <span className="block">
               <SwitchDarkMode className="bg-neutral-100 dark:bg-neutral-800" />
             </span>

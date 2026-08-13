@@ -3,7 +3,6 @@
 import React from "react";
 import { Disclosure, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
-import Link from "next/link";
 
 export interface FaqItem {
   question: string;
@@ -59,19 +58,6 @@ export default function FaqAccordion({ faqs }: { faqs: FaqItem[] }) {
             </div>
           </div>
         ))}
-      </div>
-
-      <div className="max-w-3xl mt-14 rounded-2xl bg-neutral-50 dark:bg-neutral-800 px-6 py-8 text-center">
-        <h3 className="text-lg font-semibold">Still have questions?</h3>
-        <p className="mt-2 text-neutral-500 dark:text-neutral-400">
-          Our support team is here around the clock.
-        </p>
-        <Link
-          href="/contact"
-          className="mt-4 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-primary-6000 text-white text-sm font-medium hover:bg-primary-700 transition-colors"
-        >
-          Contact support
-        </Link>
       </div>
     </>
   );
