@@ -34,7 +34,7 @@ const FALLBACK_SECTIONS: { heading: string; body: string }[] = [
   { heading: "7. Prohibited conduct", body: "You may not use Potomac for fraudulent bookings, harassment, discrimination, or any activity that violates applicable law. Accounts found in violation may be suspended or terminated." },
   { heading: "8. Limitation of liability", body: "Potomac connects guests and hosts but is not a party to the rental agreement between them. To the extent permitted by law, Potomac is not liable for the condition of a listed property or the conduct of any guest or host." },
   { heading: "9. Changes to these terms", body: "We may update these terms from time to time. Continued use of Potomac after a change means you accept the updated terms." },
-  { heading: "10. Contact us", body: "Questions about these terms? Reach us at support@potomac.com." },
+  { heading: "10. Contact us", body: "Questions about these terms? Reach us through your account's Help Center." },
 ];
 
 export default async function PageTerms() {

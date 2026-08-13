@@ -31,7 +31,7 @@ const FALLBACK_SECTIONS: { heading: string; body: string }[] = [
   { heading: "4. Sharing between guests and hosts", body: "To complete a booking, we share the information necessary for the stay to happen. For example, a guest's name and contact details are shared with their host once a booking is confirmed, and a host's listing address is shared with confirmed guests." },
   { heading: "5. Cookies", body: "We use essential cookies to keep you signed in and to remember preferences like dark mode. We do not use third-party advertising or tracking cookies." },
   { heading: "6. Your rights", body: "You can access, update, or delete most of your account information directly from your account settings at any time. To request a full copy or deletion of your data, contact us using the details below." },
-  { heading: "7. Contact us", body: "Questions about this policy or your data? Reach us at support@potomac.com." },
+  { heading: "7. Contact us", body: "Questions about this policy or your data? Reach us through your account's Help Center." },
 ];
 
 export default async function PagePrivacy() {
