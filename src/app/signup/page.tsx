@@ -65,7 +65,7 @@ const PageSignUp = () => {
       });
 
       if (signInResult?.error) {
-        setError("Account created — please sign in.");
+        setError("Account created. Please sign in.");
         router.push(safeCallbackUrl ? `/login?callbackUrl=${encodeURIComponent(safeCallbackUrl)}` : "/login");
         return;
       }

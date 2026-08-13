@@ -110,7 +110,7 @@ export default function CityComboBox({ cityValue, onCityChange, onSelectCity }: 
       />
       {cityValue && !knownMatch && (
         <p className="mt-1 text-xs text-neutral-400">
-          Not in our curated list — your listing will still work, but this city won&apos;t show up in Top Cities.
+          Not in our curated list. Your listing will still work, but this city won&apos;t show up in Top Cities.
         </p>
       )}
       {open && suggestions.length > 0 && (

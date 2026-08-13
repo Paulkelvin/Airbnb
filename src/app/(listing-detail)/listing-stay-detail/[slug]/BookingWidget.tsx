@@ -286,7 +286,7 @@ function ShortTermBookingForm({
       <div className="border border-neutral-200 dark:border-neutral-700 rounded-3xl p-4 space-y-4">
         <div>
           <label className="block text-xs font-medium text-neutral-500 mb-1">
-            Check in — Check out
+            Check in - Check out
           </label>
           {checkInDate && checkOutDate && !calendarOpen ? (
             <button
@@ -295,7 +295,7 @@ function ShortTermBookingForm({
               onClick={() => setCalendarOpen(true)}
             >
               {checkInDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-              {" — "}
+              {" - "}
               {checkOutDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
               <span className="ml-2 text-xs text-primary-6000 dark:text-primary-400">Change</span>
             </button>
@@ -343,7 +343,7 @@ function ShortTermBookingForm({
 
       <div className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${sameDay ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
         <div className="overflow-hidden">
-          <p className="text-sm text-neutral-500">Pick a different check-out date — check-in and check-out can&apos;t be the same day.</p>
+          <p className="text-sm text-neutral-500">Pick a different check-out date: check-in and check-out can&apos;t be the same day.</p>
         </div>
       </div>
       <div className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${nightsTooFew ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
@@ -438,7 +438,7 @@ function ShortTermBookingForm({
           </ButtonPrimary>
           {!pricing.instantBook && (
             <p className="text-xs text-center text-neutral-500">
-              You won&apos;t be charged yet — the host will confirm your request.
+              You won&apos;t be charged yet. The host will confirm your request.
             </p>
           )}
         </>

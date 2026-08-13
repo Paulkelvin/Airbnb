@@ -147,8 +147,8 @@ export default function BookingsList({
           const isRowPending = isPending && pendingId === b.id;
           const dateLabel =
             b.rentalType === "SHORT_TERM"
-              ? `${formatDate(b.checkInDate)} — ${formatDate(b.checkOutDate)}`
-              : `${formatDate(b.leaseStartDate)} — ${formatDate(b.leaseEndDate)}`;
+              ? `${formatDate(b.checkInDate)} - ${formatDate(b.checkOutDate)}`
+              : `${formatDate(b.leaseStartDate)} - ${formatDate(b.leaseEndDate)}`;
           const priceLabel =
             b.rentalType === "SHORT_TERM"
               ? b.totalPrice !== null

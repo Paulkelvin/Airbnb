@@ -7,7 +7,7 @@ import {
   AdminBadge,
 } from "../AdminUI";
 
-export const metadata = { title: "Messages – Admin" };
+export const metadata = { title: "Messages - Admin" };
 
 function relativeTime(date: Date): string {
   const now = Date.now();
@@ -83,7 +83,7 @@ export default async function AdminMessagesPage() {
                     <span className="truncate block">{preview}</span>
                   </td>
                   <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300 text-xs hidden md:table-cell">
-                    {c.listing ? c.listing.title : "—"}
+                    {c.listing ? c.listing.title : "-"}
                   </td>
                   <td className="px-4 py-3">
                     <AdminBadge tone={typeTone}>{type}</AdminBadge>

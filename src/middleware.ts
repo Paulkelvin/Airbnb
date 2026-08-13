@@ -13,7 +13,7 @@ const MAINTENANCE_PAGE = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>We'll be right back — Potomac Vista Cottage</title>
+<title>We'll be right back - Potomac Vista Cottage</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #faf9f7; color: #1a1a18; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 2rem; text-align: center; }
   .card { max-width: 28rem; }

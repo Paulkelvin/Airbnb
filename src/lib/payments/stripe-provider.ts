@@ -59,7 +59,7 @@ export class StripeConnectProvider implements PaymentProvider {
         payment_method: "pm_card_visa",
         payment_method_types: ["card"],
         confirm: true,
-        description: `Booking ${metadata.bookingId} (${metadata.paymentType}) — payer ${payerRef}`,
+        description: `Booking ${metadata.bookingId} (${metadata.paymentType}) - payer ${payerRef}`,
         metadata: {
           bookingId: metadata.bookingId,
           payerUserId: metadata.payerUserId,
@@ -86,7 +86,7 @@ export class StripeConnectProvider implements PaymentProvider {
       // ("processing" rather than an immediate result), which this
       // synchronous confirm-then-book flow isn't built to wait out.
       payment_method_types: ["card"],
-      description: `Instant-book charge — payer ${payerUserId}`,
+      description: `Instant-book charge - payer ${payerUserId}`,
       metadata: { payerUserId },
     });
     if (!intent.client_secret) {

@@ -200,7 +200,7 @@ export function renderEmailTemplate<T extends NotificationType>(
       const p = payload as NotificationPayloads["BOOKING_CONFIRMED"];
       const text = `Your booking for "${p.listingTitle}" is confirmed. Total: ${formatMoney(p.amount, p.currency)}.`;
       const dates = p.checkInDate && p.checkOutDate
-        ? `<tr><td style="padding:8px 0;font-size:14px;color:#71717a;width:100px;">Dates</td><td style="padding:8px 0;font-size:14px;color:#27272a;">${p.checkInDate} — ${p.checkOutDate}</td></tr>`
+        ? `<tr><td style="padding:8px 0;font-size:14px;color:#71717a;width:100px;">Dates</td><td style="padding:8px 0;font-size:14px;color:#27272a;">${p.checkInDate} - ${p.checkOutDate}</td></tr>`
         : "";
       const html = wrap(firstName, `
 <p style="margin:0 0 20px 0;font-size:16px;line-height:1.5;color:#27272a;">Your booking has been confirmed.</p>
@@ -213,7 +213,7 @@ ${dates}
 </table>
 </td></tr></table>
 <p style="margin:0;font-size:13px;line-height:1.5;color:#71717a;">We look forward to hosting you!</p>`, text);
-      return { subject: `Booking confirmed — ${p.listingTitle}`, text, html };
+      return { subject: `Booking confirmed: ${p.listingTitle}`, text, html };
     }
     case "BOOKING_CANCELLED": {
       const p = payload as NotificationPayloads["BOOKING_CANCELLED"];
@@ -222,7 +222,7 @@ ${dates}
 <p style="margin:0 0 20px 0;font-size:16px;line-height:1.5;color:#27272a;">Your booking for <strong>${p.listingTitle}</strong> has been cancelled.</p>
 ${p.reason ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px 0;"><tr><td style="background-color:#fef2f2;border-left:3px solid #ef4444;border-radius:4px;padding:12px 16px;font-size:14px;color:#991b1b;">${p.reason}</td></tr></table>` : ""}
 <p style="margin:0;font-size:13px;line-height:1.5;color:#71717a;">If you have any questions, please don't hesitate to reach out.</p>`, text);
-      return { subject: `Booking cancelled — ${p.listingTitle}`, text, html };
+      return { subject: `Booking cancelled: ${p.listingTitle}`, text, html };
     }
     case "NEW_MESSAGE": {
       const p = payload as NotificationPayloads["NEW_MESSAGE"];
@@ -242,7 +242,7 @@ ${p.reason ? `<table role="presentation" width="100%" cellpadding="0" cellspacin
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px 0;"><tr><td style="background-color:#fafafa;border:1px solid #e4e4e7;border-radius:8px;padding:16px 20px;font-size:14px;line-height:1.6;color:#3f3f46;font-style:italic;">
 "${p.message}"
 </td></tr></table>`, text);
-      return { subject: `New inquiry — ${p.listingTitle}`, text, html };
+      return { subject: `New inquiry: ${p.listingTitle}`, text, html };
     }
     case "REVIEW_RECEIVED": {
       const p = payload as NotificationPayloads["REVIEW_RECEIVED"];
@@ -254,7 +254,7 @@ ${p.reason ? `<table role="presentation" width="100%" cellpadding="0" cellspacin
 <span style="font-size:24px;color:#f59e0b;letter-spacing:2px;">${stars}</span>
 <p style="margin:8px 0 0 0;font-size:14px;color:#71717a;">${p.rating} out of 5 stars</p>
 </td></tr></table>`, text);
-      return { subject: `New ${p.rating}-star review — ${p.listingTitle}`, text, html };
+      return { subject: `New ${p.rating}-star review: ${p.listingTitle}`, text, html };
     }
     case "PAYOUT_SENT": {
       const p = payload as NotificationPayloads["PAYOUT_SENT"];
@@ -271,11 +271,11 @@ ${p.reason ? `<table role="presentation" width="100%" cellpadding="0" cellspacin
       const p = payload as NotificationPayloads["LISTING_APPROVED"];
       const text = `Your listing "${p.listingTitle}" has been approved and is now live.`;
       const html = wrap(firstName, `
-<p style="margin:0 0 20px 0;font-size:16px;line-height:1.5;color:#27272a;">Great news — your listing <strong>${p.listingTitle}</strong> has been approved and is now live!</p>
+<p style="margin:0 0 20px 0;font-size:16px;line-height:1.5;color:#27272a;">Great news, your listing <strong>${p.listingTitle}</strong> has been approved and is now live!</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px 0;"><tr><td style="background-color:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 20px;text-align:center;font-size:14px;color:#166534;font-weight:600;">
 Listing is live
 </td></tr></table>`, text);
-      return { subject: `Listing approved — ${p.listingTitle}`, text, html };
+      return { subject: `Listing approved: ${p.listingTitle}`, text, html };
     }
     case "LISTING_REJECTED": {
       const p = payload as NotificationPayloads["LISTING_REJECTED"];
@@ -284,7 +284,7 @@ Listing is live
 <p style="margin:0 0 20px 0;font-size:16px;line-height:1.5;color:#27272a;">Your listing <strong>${p.listingTitle}</strong> was not approved.</p>
 ${p.reason ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px 0;"><tr><td style="background-color:#fef2f2;border-left:3px solid #ef4444;border-radius:4px;padding:12px 16px;font-size:14px;color:#991b1b;">${p.reason}</td></tr></table>` : ""}
 <p style="margin:0;font-size:13px;line-height:1.5;color:#71717a;">You can update your listing and resubmit for review.</p>`, text);
-      return { subject: `Listing not approved — ${p.listingTitle}`, text, html };
+      return { subject: `Listing not approved: ${p.listingTitle}`, text, html };
     }
     case "RENT_DUE_REMINDER": {
       const p = payload as NotificationPayloads["RENT_DUE_REMINDER"];
@@ -299,7 +299,7 @@ ${p.reason ? `<table role="presentation" width="100%" cellpadding="0" cellspacin
 <tr><td style="padding:8px 0;font-size:14px;color:#71717a;width:100px;">Due date</td><td style="padding:8px 0;font-size:14px;font-weight:600;color:#27272a;">${p.dueDate}</td></tr>
 </table>
 </td></tr></table>`, text);
-      return { subject: `Rent due soon — ${p.listingTitle}`, text, html };
+      return { subject: `Rent due soon: ${p.listingTitle}`, text, html };
     }
     case "PASSWORD_CHANGED": {
       const text = `Your password was changed. If this wasn't you, contact support immediately.`;

@@ -352,7 +352,7 @@ export default function ListingDetailView({
                       value={
                         listing.pricing.checkInTime
                           ? listing.pricing.checkInWindowEnd
-                            ? `${formatTime(listing.pricing.checkInTime)} – ${formatTime(listing.pricing.checkInWindowEnd)}`
+                            ? `${formatTime(listing.pricing.checkInTime)} - ${formatTime(listing.pricing.checkInWindowEnd)}`
                             : formatTime(listing.pricing.checkInTime)
                           : "Flexible"
                       }
@@ -474,7 +474,7 @@ export default function ListingDetailView({
               </div>
               <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
                 The cottage has sweeping Potomac River views but no private water
-                access — some of the area's best waterfront parks, restaurants, and
+                access. Some of the area's best waterfront parks, restaurants, and
                 attractions are just a short drive away.
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">

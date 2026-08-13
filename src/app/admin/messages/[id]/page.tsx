@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { getConversationForAdmin } from "@/modules/messaging/actions";
 import { AdminPageHeader, AdminBadge } from "../../AdminUI";
 
-export const metadata = { title: "Conversation – Admin" };
+export const metadata = { title: "Conversation - Admin" };
 
 function formatMessageTime(date: Date): string {
   return date.toLocaleString("en-US", {
@@ -162,7 +162,7 @@ export default async function AdminConversationDetailPage({
             </Link>
           ) : (
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              This admin view is read-only (dispute-resolution access, audit-logged) — you&apos;re not
+              This admin view is read-only (dispute-resolution access, audit-logged), you&apos;re not
               a participant in this conversation, so replying isn&apos;t available here.
             </p>
           )}

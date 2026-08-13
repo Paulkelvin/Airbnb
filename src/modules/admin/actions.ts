@@ -87,7 +87,7 @@ export async function deleteUser(userId: string): Promise<ActionResult<{ id: str
       success: false,
       error: {
         code: "IN_USE",
-        message: `Cannot delete — ${activeBookings} active booking(s) exist. Cancel or complete them first.`,
+        message: `Cannot delete: ${activeBookings} active booking(s) exist. Cancel or complete them first.`,
       },
     };
   }
@@ -257,7 +257,7 @@ export async function adminDeleteListing(listingId: string): Promise<ActionResul
       success: false,
       error: {
         code: "IN_USE",
-        message: `Cannot delete — ${listing._count.bookings} active booking(s) exist. Cancel or complete them first.`,
+        message: `Cannot delete: ${listing._count.bookings} active booking(s) exist. Cancel or complete them first.`,
       },
     };
   }
@@ -340,7 +340,7 @@ export async function deletePropertyType(id: string): Promise<ActionResult<{ id:
       success: false,
       error: {
         code: "IN_USE",
-        message: `Can't delete — ${existing._count.listings} listing(s) still use this property type. Mark it inactive instead.`,
+        message: `Can't delete: ${existing._count.listings} listing(s) still use this property type. Mark it inactive instead.`,
       },
     };
   }
@@ -402,7 +402,7 @@ export async function deleteAmenity(id: string): Promise<ActionResult<{ id: stri
       success: false,
       error: {
         code: "IN_USE",
-        message: `Can't delete — ${existing._count.listings} listing(s) still use this amenity. Mark it inactive instead.`,
+        message: `Can't delete: ${existing._count.listings} listing(s) still use this amenity. Mark it inactive instead.`,
       },
     };
   }

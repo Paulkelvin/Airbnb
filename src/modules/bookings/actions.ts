@@ -222,7 +222,7 @@ export async function createShortTermBooking(
           error: {
             code: "DATES_UNAVAILABLE",
             message:
-              "These dates were just booked by someone else. Your payment will be refunded automatically — please choose different dates.",
+              "These dates were just booked by someone else. Your payment will be refunded automatically. Please choose different dates.",
           },
         };
       }

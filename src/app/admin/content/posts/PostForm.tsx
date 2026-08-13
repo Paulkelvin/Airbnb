@@ -137,7 +137,7 @@ export default function PostForm({
       </div>
 
       <div>
-        <label className={labelClass}>Slug (optional — auto-generated from title if left blank)</label>
+        <label className={labelClass}>Slug (optional, auto-generated from title if left blank)</label>
         <input
           className={inputClass}
           value={slug}

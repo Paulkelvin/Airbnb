@@ -52,7 +52,7 @@ const FALLBACK_MISSION_IMAGE_URL =
 const FALLBACK_VALUES = [
   { title: "Trust & Safety", description: "The cottage is maintained and hosted directly by our team, so you always know exactly what you're booking." },
   { title: "Local Experience", description: "We believe the best trips mean living like a local. That's why we built a guide to the area's parks, restaurants, and waterfronts right into the site." },
-  { title: "Fair Pricing", description: "Transparent pricing with no hidden fees — what you see is what you pay." },
+  { title: "Fair Pricing", description: "Transparent pricing with no hidden fees: what you see is what you pay." },
   { title: "Guest First", description: "Every detail, from check-in to checkout, is designed around making your stay effortless and memorable." },
 ];
 
@@ -110,8 +110,8 @@ export default async function PageAbout() {
                 We host the cottage directly, so there's no guesswork about who
                 you're booking with or what to expect at check-in. The cottage
                 doesn't have its own beach, dock, or pier, so we've put together
-                a guide to the best nearby parks, restaurants, and waterfronts —
-                including where to launch a kayak — so there's always more to
+                a guide to the best nearby parks, restaurants, and waterfronts,
+                including where to launch a kayak, so there's always more to
                 explore during your stay.
               </p>
             </>
@@ -147,8 +147,8 @@ export default async function PageAbout() {
             ) : (
               <>
                 <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                  We're on a mission to make booking a stay at the cottage — and
-                  planning everything around it — effortless. Secure payments,
+                  We're on a mission to make booking a stay at the cottage, and
+                  planning everything around it, effortless. Secure payments,
                   clear pricing, and a real team behind the scenes mean you can
                   focus on the trip, not the logistics.
                 </p>

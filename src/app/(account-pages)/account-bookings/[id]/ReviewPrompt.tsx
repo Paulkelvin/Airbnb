@@ -36,7 +36,7 @@ export default function ReviewPrompt({
   const [isPending, startTransition] = useTransition();
 
   if (submitted) {
-    return <p className="text-sm text-neutral-500">Thanks — your review has been submitted.</p>;
+    return <p className="text-sm text-neutral-500">Thanks, your review has been submitted.</p>;
   }
 
   function handleSubmit() {

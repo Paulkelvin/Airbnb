@@ -15,7 +15,7 @@ const REASONS = [
   {
     icon: LockClosedIcon,
     title: "Secure payments",
-    desc: "Your payment is encrypted and held safely until after check-in — hosts never see your card details.",
+    desc: "Your payment is encrypted and held safely until after check-in. Hosts never see your card details.",
   },
   {
     icon: BoltIcon,

@@ -29,10 +29,10 @@ export default async function AccountListingsPage() {
       listing.rentalType === "SHORT_TERM"
         ? listing.nightlyPrice
           ? `$${Number(listing.nightlyPrice)}/night`
-          : "—"
+          : "-"
         : listing.monthlyRent
           ? `$${Number(listing.monthlyRent)}/month`
-          : "—";
+          : "-";
 
     return {
       id: listing.id,

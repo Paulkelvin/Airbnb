@@ -49,14 +49,14 @@ export default async function AdminContentOverviewPage() {
       label: "Pages",
       count: pages.length,
       icon: DocumentIcon,
-      description: "Standalone pages — Terms, Privacy, and any others.",
+      description: "Standalone pages: Terms, Privacy, and any others.",
     },
     {
       href: "/admin/content/about",
       label: "About Page",
       count: null,
       icon: InformationCircleIcon,
-      description: "The public /about page — hero, stats, mission, values.",
+      description: "The public /about page: hero, stats, mission, values.",
     },
     {
       href: "/admin/content/faq",
@@ -78,7 +78,7 @@ export default async function AdminContentOverviewPage() {
     <div>
       <AdminPageHeader
         title="Content"
-        description="Edit your website's blog and page content — changes go straight to the live site."
+        description="Edit your website's blog and page content, changes go straight to the live site."
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {sections.map((section) => (

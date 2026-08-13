@@ -34,7 +34,7 @@ export function getEmailProvider(): EmailProvider {
   } else if (mode === "stub") {
     cachedProvider = new StubEmailProvider();
   } else {
-    throw new Error(`Unknown NOTIFICATIONS_PROVIDER "${mode}" — expected "stub" or "resend".`);
+    throw new Error(`Unknown NOTIFICATIONS_PROVIDER "${mode}", expected "stub" or "resend".`);
   }
 
   return cachedProvider;

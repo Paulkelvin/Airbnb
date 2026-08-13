@@ -56,7 +56,7 @@ export default function PostsTable({ posts }: { posts: CmsPostListItem[] }) {
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300">
-                  {post.authorName ?? "—"}
+                  {post.authorName ?? "-"}
                 </td>
                 <td className="px-4 py-3">
                   <AdminBadge tone={isPublished ? "green" : "gray"}>

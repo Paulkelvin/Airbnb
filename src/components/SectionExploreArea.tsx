@@ -115,7 +115,7 @@ const SectionExploreArea: FC<SectionExploreAreaProps> = ({
         </div>
       ) : (
         <p key="empty" className="text-center text-neutral-500 dark:text-neutral-400 animate-fadeIn">
-          Nothing in this category yet — check back soon.
+          Nothing in this category yet - check back soon.
         </p>
       )}
 

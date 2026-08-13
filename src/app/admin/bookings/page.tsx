@@ -73,9 +73,9 @@ export default async function AdminBookingsPage({
                   ${Number(booking.totalPrice).toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400 text-xs">
-                  {booking.checkInDate ? new Date(booking.checkInDate).toLocaleDateString() : "—"}
-                  {" – "}
-                  {booking.checkOutDate ? new Date(booking.checkOutDate).toLocaleDateString() : "—"}
+                  {booking.checkInDate ? new Date(booking.checkInDate).toLocaleDateString() : "-"}
+                  {" - "}
+                  {booking.checkOutDate ? new Date(booking.checkOutDate).toLocaleDateString() : "-"}
                 </td>
                 <td className="px-4 py-3">
                   <BookingActions

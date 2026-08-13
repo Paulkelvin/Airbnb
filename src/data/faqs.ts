@@ -9,7 +9,7 @@ export const faqs: Faq[] = [
     category: "Booking",
     question: "How do I book Potomac Vista Cottage?",
     answer:
-      "Pick your dates on the cottage's page and select \"Reserve.\" You'll confirm your guest count, review the price breakdown, and pay securely — most stays confirm instantly, no waiting on approval.",
+      "Pick your dates on the cottage's page and select \"Reserve.\" You'll confirm your guest count, review the price breakdown, and pay securely. Most stays confirm instantly, no waiting on approval.",
   },
   {
     category: "Booking",
@@ -21,7 +21,7 @@ export const faqs: Faq[] = [
     category: "Payments",
     question: "Is my payment secure?",
     answer:
-      "Your card details are encrypted and processed through Stripe — we never see or store your payment information directly. Funds are only released after your check-in, so you're protected if something doesn't match what was described.",
+      "Your card details are encrypted and processed through Stripe; we never see or store your payment information directly. Funds are only released after your check-in, so you're protected if something doesn't match what was described.",
   },
   {
     category: "Payments",
@@ -33,7 +33,7 @@ export const faqs: Faq[] = [
     category: "Cancellations",
     question: "What is the cancellation policy?",
     answer:
-      "The cancellation policy — Flexible, Moderate, or Strict — is shown clearly on the cottage's page and at checkout before you pay. You can view the exact refund timeline for your dates on your booking confirmation at any time.",
+      "The cancellation policy (Flexible, Moderate, or Strict) is shown clearly on the cottage's page and at checkout before you pay. You can view the exact refund timeline for your dates on your booking confirmation at any time.",
   },
   {
     category: "Cancellations",
@@ -45,7 +45,7 @@ export const faqs: Faq[] = [
     category: "Trust & Safety",
     question: "Who do I actually book with?",
     answer:
-      "Potomac Vista Cottage is hosted directly by our team — there's no third-party host to vet, since we manage the property ourselves. Every booking is tied to a verified account, and guest reviews after each stay keep us accountable.",
+      "Potomac Vista Cottage is hosted directly by our team, so there's no third-party host to vet since we manage the property ourselves. Every booking is tied to a verified account, and guest reviews after each stay keep us accountable.",
   },
   {
     category: "Trust & Safety",

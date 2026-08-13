@@ -64,16 +64,16 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
         <Row label="Status" value={booking.status.replace(/_/g, " ")} />
         {booking.rentalType === "SHORT_TERM" ? (
           <>
-            <Row label="Check in" value={fmt(booking.checkInDate) ?? "—"} />
-            <Row label="Check out" value={fmt(booking.checkOutDate) ?? "—"} />
-            <Row label="Guests" value={String(booking.guestCount ?? "—")} />
-            <Row label="Nights" value={String(booking.nights ?? "—")} />
+            <Row label="Check in" value={fmt(booking.checkInDate) ?? "-"} />
+            <Row label="Check out" value={fmt(booking.checkOutDate) ?? "-"} />
+            <Row label="Guests" value={String(booking.guestCount ?? "-")} />
+            <Row label="Nights" value={String(booking.nights ?? "-")} />
           </>
         ) : (
           <>
-            <Row label="Lease start" value={fmt(booking.leaseStartDate) ?? "—"} />
-            <Row label="Lease end" value={fmt(booking.leaseEndDate) ?? "—"} />
-            <Row label="Lease term" value={`${booking.leaseTermMonths ?? "—"} months`} />
+            <Row label="Lease start" value={fmt(booking.leaseStartDate) ?? "-"} />
+            <Row label="Lease end" value={fmt(booking.leaseEndDate) ?? "-"} />
+            <Row label="Lease term" value={`${booking.leaseTermMonths ?? "-"} months`} />
           </>
         )}
         <Row label={viewerRole === "guest" ? "Host" : "Guest"} value={[counterparty.firstName, counterparty.lastName].filter(Boolean).join(" ")} />
@@ -127,7 +127,7 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
           {booking.payments.map((p) => (
             <Row
               key={p.id}
-              label={`${p.type.replace(/_/g, " ")} — ${p.status}`}
+              label={`${p.type.replace(/_/g, " ")} - ${p.status}`}
               value={`$${(p.amount / 100).toFixed(2)}`}
             />
           ))}

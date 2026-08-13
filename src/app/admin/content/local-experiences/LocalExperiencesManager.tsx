@@ -79,7 +79,7 @@ export default function LocalExperiencesManager({
     if (!file) return;
     if (!isImageUploadConfigured()) {
       setError(
-        "Image uploads aren't configured yet — set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.",
+        "Image uploads aren't configured yet, set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.",
       );
       return;
     }
@@ -189,7 +189,7 @@ export default function LocalExperiencesManager({
       </div>
 
       <div>
-        <label className={labelClass}>URL slug (optional — auto-generated from title if left blank)</label>
+        <label className={labelClass}>URL slug (optional, auto-generated from title if left blank)</label>
         <input
           className={inputClass}
           placeholder="riverbend-park"
@@ -199,7 +199,7 @@ export default function LocalExperiencesManager({
       </div>
 
       <div>
-        <label className={labelClass}>Tagline — the one-line hook shown on cards</label>
+        <label className={labelClass}>Tagline - the one-line hook shown on cards</label>
         <input
           className={inputClass}
           placeholder="e.g. Ideal for morning walks and sunset views"
@@ -209,7 +209,7 @@ export default function LocalExperiencesManager({
       </div>
 
       <div>
-        <label className={labelClass}>Description — longer narrative for its own page</label>
+        <label className={labelClass}>Description - longer narrative for its own page</label>
         <textarea
           className={inputClass}
           rows={3}
@@ -265,7 +265,7 @@ export default function LocalExperiencesManager({
       </div>
 
       <div>
-        <label className={labelClass}>Gallery image URLs (optional — one per line)</label>
+        <label className={labelClass}>Gallery image URLs (optional, one per line)</label>
         <textarea
           className={`${inputClass} font-mono text-xs`}
           rows={3}
@@ -277,7 +277,7 @@ export default function LocalExperiencesManager({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className={labelClass}>Latitude (optional — powers the map)</label>
+          <label className={labelClass}>Latitude (optional, powers the map)</label>
           <input
             className={inputClass}
             placeholder="38.9977"
@@ -286,7 +286,7 @@ export default function LocalExperiencesManager({
           />
         </div>
         <div>
-          <label className={labelClass}>Longitude (optional — powers the map)</label>
+          <label className={labelClass}>Longitude (optional, powers the map)</label>
           <input
             className={inputClass}
             placeholder="-77.2472"
@@ -301,7 +301,7 @@ export default function LocalExperiencesManager({
           <label className={labelClass}>Opening hours (optional)</label>
           <input
             className={inputClass}
-            placeholder="e.g. Daily, 9am–6pm"
+            placeholder="e.g. Daily, 9am-6pm"
             value={form.openingHours}
             onChange={(e) => setForm((f) => ({ ...f, openingHours: e.target.value }))}
           />

@@ -97,7 +97,7 @@ export default async function ExploreTheAreaPage({
 
         {visible.length === 0 && (
           <p className="mt-10 text-center text-neutral-500 dark:text-neutral-400">
-            Nothing in this category yet — check back soon.
+            Nothing in this category yet - check back soon.
           </p>
         )}
 

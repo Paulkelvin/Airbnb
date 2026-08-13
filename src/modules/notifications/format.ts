@@ -34,7 +34,7 @@ export function summarizeNotification(
     case "LISTING_REJECTED":
       return String(payload.listingTitle ?? "");
     case "RENT_DUE_REMINDER":
-      return `${payload.listingTitle} — due ${payload.dueDate}`;
+      return `${payload.listingTitle}, due ${payload.dueDate}`;
     case "PASSWORD_CHANGED":
       return "Your password was changed";
     case "PAYMENT_FAILED":

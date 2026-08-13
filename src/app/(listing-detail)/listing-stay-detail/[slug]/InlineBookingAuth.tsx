@@ -111,7 +111,7 @@ export default function InlineBookingAuth({
             Continue
           </ButtonPrimary>
           <p className="text-xs text-neutral-400">
-            We&apos;ll email you a code — no password needed.
+            We&apos;ll email you a code, no password needed.
           </p>
         </form>
       </div>

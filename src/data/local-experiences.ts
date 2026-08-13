@@ -98,7 +98,7 @@ export const localExperiences: LocalExperience[] = [
     category: "Waterfront",
     tagline: "A public launch on Route 5 with direct access to the St. Mary's River.",
     description:
-      "The closest public kayak and canoe launch to the cottage, right on the St. Mary's River off Route 5. There's no launch on the property itself, so this is where guests go to get out on the water — bring your own kayak, paddleboard, or gear.",
+      "The closest public kayak and canoe launch to the cottage, right on the St. Mary's River off Route 5. There's no launch on the property itself, so this is where guests go to get out on the water: bring your own kayak, paddleboard, or gear.",
     imageUrl: "/images/local-experiences/great-mills-canoe-and-kayak-launch/canoeing-under-canopy.jpg",
     galleryImageUrls: [
       "/images/local-experiences/great-mills-canoe-and-kayak-launch/kayaker-on-the-river.jpg",
@@ -121,7 +121,7 @@ export const localExperiences: LocalExperience[] = [
     category: "Waterfront",
     tagline: "A quiet state park with river access, trails, and picnic spots.",
     description:
-      "A Maryland state park along the St. Mary's River with a launch, hiking trails, and picnic areas — a short drive from the cottage and an easy way to spend an afternoon on the water.",
+      "A Maryland state park along the St. Mary's River with a launch, hiking trails, and picnic areas, a short drive from the cottage and an easy way to spend an afternoon on the water.",
     imageUrl: "/images/local-experiences/st-marys-river-state-park/launch-dock-view.jpg",
     galleryImageUrls: [
       "/images/local-experiences/st-marys-river-state-park/wooden-footbridge.jpg",
@@ -144,7 +144,7 @@ export const localExperiences: LocalExperience[] = [
     category: "Waterfront",
     tagline: "A scenic day trip where the Potomac meets the Chesapeake Bay.",
     description:
-      "At the southern tip of the county, where the Potomac River meets the Chesapeake Bay. Swimming beach, fishing pier, camping, and Civil War history — worth the drive for a full day out.",
+      "At the southern tip of the county, where the Potomac River meets the Chesapeake Bay. Swimming beach, fishing pier, camping, and Civil War history, worth the drive for a full day out.",
     imageUrl: "/images/local-experiences/point-lookout-state-park/sunset-over-civil-war-camp.jpg",
     galleryImageUrls: [
       "/images/local-experiences/point-lookout-state-park/aerial-view-of-the-point.jpg",

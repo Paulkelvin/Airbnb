@@ -79,7 +79,7 @@ export default function GuestSelector({
               <NcInputNumber
                 className="mt-5 w-full"
                 label="Children"
-                desc="Ages 2–12"
+                desc="Ages 2-12"
                 defaultValue={value.children}
                 max={effectiveMax - value.adults}
                 onChange={(children) => onChange({ ...value, children })}

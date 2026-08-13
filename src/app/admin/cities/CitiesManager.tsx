@@ -153,7 +153,7 @@ export function CitiesManager({
       />
       <p className="text-xs text-neutral-400">
         {total.toLocaleString()} match{total === 1 ? "" : "es"}
-        {total > cities.length ? ` — showing first ${cities.length}, keep typing to narrow it down` : ""}
+        {total > cities.length ? ` - showing first ${cities.length}, keep typing to narrow it down` : ""}
       </p>
 
       <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 divide-y divide-neutral-100 dark:divide-neutral-700 max-h-[32rem] overflow-y-auto">

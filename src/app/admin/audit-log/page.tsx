@@ -62,7 +62,7 @@ export default async function AdminAuditLogPage({
                   <span className="font-mono">{log.targetId.slice(0, 8)}...</span>
                 </td>
                 <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400 text-xs max-w-xs truncate">
-                  {log.metadata ? JSON.stringify(log.metadata) : "—"}
+                  {log.metadata ? JSON.stringify(log.metadata) : "-"}
                 </td>
               </tr>
             ))}

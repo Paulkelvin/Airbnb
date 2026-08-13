@@ -21,7 +21,7 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "Potomac Vista Cottage — River Views Near Leonardtown, MD",
+    default: "Potomac Vista Cottage - River Views Near Leonardtown, MD",
     template: "%s | Potomac",
   },
   description:

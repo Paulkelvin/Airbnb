@@ -169,7 +169,7 @@ export default function AddListingWizard({
     if (!files || files.length === 0) return;
     if (!isImageUploadConfigured()) {
       setError(
-        "Image uploads aren't configured yet — set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.",
+        "Image uploads aren't configured yet, set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.",
       );
       return;
     }
@@ -401,7 +401,7 @@ export default function AddListingWizard({
               <Checkbox
                 name="flexibleCheckInOut"
                 label="No fixed check-in/check-out time"
-                subLabel="Choose this for self check-in or a flexible arrival — guests won't see a specific time"
+                subLabel="Choose this for self check-in or a flexible arrival, guests won't see a specific time"
                 defaultChecked={flexibleCheckInOut}
                 onChange={(checked) => {
                   setFlexibleCheckInOut(checked);
@@ -540,7 +540,7 @@ export default function AddListingWizard({
                     </label>
                   </div>
                   <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                    PNG or JPG, up to 10MB each — larger photos are resized automatically
+                    PNG or JPG, up to 10MB each. Larger photos are resized automatically
                   </p>
                 </div>
               </div>
@@ -730,8 +730,8 @@ export default function AddListingWizard({
               </p>
               <p className="text-neutral-500">
                 {listing.rentalType === "SHORT_TERM"
-                  ? `$${listing.nightlyPrice ?? "—"}/night`
-                  : `$${listing.monthlyRent ?? "—"}/month`}
+                  ? `$${listing.nightlyPrice ?? "-"}/night`
+                  : `$${listing.monthlyRent ?? "-"}/month`}
               </p>
               <p className="text-neutral-500">
                 {listing.bedrooms} bed · {listing.bathrooms} bath · up to{" "}
@@ -789,7 +789,7 @@ export default function AddListingWizard({
         <div>
           <span className="text-4xl font-semibold">{stepIndex + 1}</span>{" "}
           <span className="text-lg text-neutral-500 dark:text-neutral-400">
-            / {STEPS.length} — {STEPS[stepIndex]}
+            / {STEPS.length} - {STEPS[stepIndex]}
           </span>
         </div>
 

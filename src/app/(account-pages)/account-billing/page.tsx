@@ -29,7 +29,7 @@ const AccountBilling = async () => {
         <span className="text-xl font-semibold block">Payout account</span>
         <span className="text-neutral-700 dark:text-neutral-300 block mt-2">
           Connect a Stripe account to receive payouts as a host. Onboarding is
-          hosted by Stripe — we never see or store your bank details.
+          hosted by Stripe; we never see or store your bank details.
         </span>
         <div className="pt-6">
           <PayoutOnboarding initialStatus={initialStatus} />

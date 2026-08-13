@@ -37,7 +37,7 @@ export default function AboutPageForm({ aboutPage }: { aboutPage: CmsAboutPage |
     if (!file) return;
     if (!isImageUploadConfigured()) {
       setError(
-        "Image uploads aren't configured yet — set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.",
+        "Image uploads aren't configured yet, set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.",
       );
       return;
     }
@@ -129,7 +129,7 @@ export default function AboutPageForm({ aboutPage }: { aboutPage: CmsAboutPage |
       )}
       {saved && (
         <div className="rounded-lg bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 text-sm px-4 py-3">
-          Saved — the About page has been updated.
+          Saved. The About page has been updated.
         </div>
       )}
 

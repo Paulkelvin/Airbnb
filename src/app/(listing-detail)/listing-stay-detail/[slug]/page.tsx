@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const description = [
     vm.title,
     location && `in ${location}`,
-    `— ${vm.bedrooms} bed${vm.bedrooms !== 1 ? "s" : ""}, ${vm.bathrooms} bath${vm.bathrooms !== 1 ? "s" : ""}`,
+    `- ${vm.bedrooms} bed${vm.bedrooms !== 1 ? "s" : ""}, ${vm.bathrooms} bath${vm.bathrooms !== 1 ? "s" : ""}`,
     `· From ${priceLabel}`,
     vm.reviewCount > 0
       ? `· ${vm.avgRating.toFixed(1)} stars (${vm.reviewCount} review${vm.reviewCount !== 1 ? "s" : ""})`

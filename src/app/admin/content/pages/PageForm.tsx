@@ -50,7 +50,7 @@ export default function PageForm({ page }: { page?: CmsPageDetail }) {
       </div>
 
       <div>
-        <label className={labelClass}>URL slug (optional — auto-generated from title if left blank)</label>
+        <label className={labelClass}>URL slug (optional, auto-generated from title if left blank)</label>
         <input
           className={inputClass}
           value={slug}

@@ -45,7 +45,7 @@ export function getPaymentProvider(): PaymentProvider {
   } else if (mode === "stub") {
     cachedProvider = new StubPaymentProvider();
   } else {
-    throw new Error(`Unknown PAYMENTS_PROVIDER "${mode}" — expected "stub" or "stripe".`);
+    throw new Error(`Unknown PAYMENTS_PROVIDER "${mode}", expected "stub" or "stripe".`);
   }
 
   return cachedProvider;

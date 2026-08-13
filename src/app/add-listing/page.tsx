@@ -24,7 +24,7 @@ export default async function AddListingStartPage() {
         <div>
           <h2 className="text-2xl font-semibold">Create your listing</h2>
           <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-            A few basics to get your draft started — you can fill in everything
+            A few basics to get your draft started. You can fill in everything
             else over the next few steps, and your progress is saved as you go.
           </span>
         </div>

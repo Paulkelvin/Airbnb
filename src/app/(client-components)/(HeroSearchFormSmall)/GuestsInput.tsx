@@ -119,7 +119,7 @@ const GuestsInput: FC<GuestsInputProps> = ({
           onChange={(value) => handleChangeData(value, "guestChildren")}
           max={4}
           label="Children"
-          desc="Ages 2–12"
+          desc="Ages 2-12"
         />
 
         <NcInputNumber
@@ -128,7 +128,7 @@ const GuestsInput: FC<GuestsInputProps> = ({
           onChange={(value) => handleChangeData(value, "guestInfants")}
           max={4}
           label="Infants"
-          desc="Ages 0–2"
+          desc="Ages 0-2"
         />
       </div>
     </div>
