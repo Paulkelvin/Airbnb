@@ -38,6 +38,11 @@ export const CATEGORY_EMOJI: Record<string, string> = {
   History: "🏛️",
 };
 
+export interface LocalExperienceDetailSection {
+  heading: string;
+  body: string;
+}
+
 export interface LocalExperience {
   id: string;
   slug: string;
@@ -53,6 +58,10 @@ export interface LocalExperience {
   openingHours: string | null;
   websiteUrl: string | null;
   featured: boolean;
+  /** Optional structured sections (hours, fees, policies, activities) shown
+   * as an accordion below the overview — only Point Lookout has these so
+   * far, most locations don't need this much detail. */
+  detailSections: LocalExperienceDetailSection[];
 }
 
 // Fallback content shown if Sanity isn't configured, matching the pattern
@@ -103,6 +112,7 @@ export const localExperiences: LocalExperience[] = [
     openingHours: null,
     websiteUrl: null,
     featured: true,
+    detailSections: [],
   },
   {
     id: "2",
@@ -125,6 +135,7 @@ export const localExperiences: LocalExperience[] = [
     openingHours: null,
     websiteUrl: null,
     featured: true,
+    detailSections: [],
   },
   {
     id: "3",
@@ -147,6 +158,7 @@ export const localExperiences: LocalExperience[] = [
     openingHours: null,
     websiteUrl: null,
     featured: true,
+    detailSections: [],
   },
   {
     id: "4",
@@ -169,6 +181,7 @@ export const localExperiences: LocalExperience[] = [
     openingHours: null,
     websiteUrl: null,
     featured: true,
+    detailSections: [],
   },
   {
     id: "5",
@@ -191,5 +204,6 @@ export const localExperiences: LocalExperience[] = [
     openingHours: null,
     websiteUrl: null,
     featured: true,
+    detailSections: [],
   },
 ];

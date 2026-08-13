@@ -94,7 +94,7 @@ export const aboutPageQuery = groq`
 const localExperienceFields = `
   _id, title, "slug": slug.current, category, tagline, description, imageUrl,
   galleryImageUrls, distanceLabel, latitude, longitude, openingHours,
-  websiteUrl, featured
+  websiteUrl, featured, detailSections[]{heading, body}
 `;
 
 export const featuredLocalExperiencesQuery = groq`

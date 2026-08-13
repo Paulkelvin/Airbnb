@@ -5,6 +5,7 @@ import BgGlassmorphism from "@/components/BgGlassmorphism";
 import ContinueBookingButton from "./ContinueBookingButton";
 import LocalExperienceCard from "@/components/LocalExperienceCard";
 import LocalExperienceGallery from "@/components/LocalExperienceGallery";
+import LocalExperienceDetailSections from "@/components/LocalExperienceDetailSections";
 import ExploreAreaMap from "@/components/ExploreAreaMap/ExploreAreaMap";
 import { getExperienceBySlug, getAllExperiences } from "@/lib/local-experiences";
 import { getPrimaryListing } from "@/modules/listings/queries";
@@ -88,9 +89,11 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
         <div className="mt-12 max-w-3xl space-y-8">
           <div>
             <h2 className="text-xl font-semibold mb-3">Why guests love it</h2>
-            <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">
-              {experience.description}
-            </p>
+            <div className="space-y-4 text-neutral-600 dark:text-neutral-300 leading-relaxed">
+              {experience.description.split("\n\n").map((paragraph, i) => (
+                <p key={i}>{paragraph}</p>
+              ))}
+            </div>
           </div>
 
           {experience.websiteUrl && (
@@ -105,6 +108,8 @@ export default async function LocalExperiencePage({ params }: { params: { slug: 
             </a>
           )}
         </div>
+
+        <LocalExperienceDetailSections sections={experience.detailSections} />
 
         {/* GETTING THERE — full-width, before "You might also like" */}
         <div className="mt-16">

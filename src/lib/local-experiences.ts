@@ -7,6 +7,7 @@ import {
 import {
   localExperiences as staticExperiences,
   type LocalExperience,
+  type LocalExperienceDetailSection,
 } from "@/data/local-experiences";
 
 interface SanityLocalExperience {
@@ -24,6 +25,7 @@ interface SanityLocalExperience {
   openingHours: string | null;
   websiteUrl: string | null;
   featured: boolean;
+  detailSections?: LocalExperienceDetailSection[];
 }
 
 function toLocalExperience(a: SanityLocalExperience): LocalExperience {
@@ -42,6 +44,7 @@ function toLocalExperience(a: SanityLocalExperience): LocalExperience {
     openingHours: a.openingHours,
     websiteUrl: a.websiteUrl,
     featured: a.featured,
+    detailSections: a.detailSections ?? [],
   };
 }
 
