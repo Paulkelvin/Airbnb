@@ -33,8 +33,9 @@ const SectionHero: FC<SectionHeroProps> = ({ className = "", listingHref }) => {
           <span className="text-base md:text-lg text-neutral-500 dark:text-neutral-400">
             A peaceful, private retreat with sweeping Potomac River views, just
             minutes from Leonardtown's restaurants, shops, and public water access.
-            It does not have a private beach, dock, or pier on site, but nearby
-            launches, beaches, and dining put everything you need within easy reach.
+            Although it does not have a private beach, dock, or pier on site,
+            nearby launches, beaches, and dining put everything you need within
+            easy reach.
           </span>
           {listingHref && (
             <ButtonPrimary href={listingHref} sizeClass="px-5 py-4 sm:px-7">
