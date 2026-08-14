@@ -142,6 +142,7 @@ export async function getPublishedListings(
  * needing this function to change.
  */
 export async function getPrimaryListing(): Promise<{
+  id: string;
   slug: string;
   title: string;
   latitude: number | null;
@@ -150,10 +151,11 @@ export async function getPrimaryListing(): Promise<{
   const listing = await prisma.listing.findFirst({
     where: { status: "PUBLISHED" },
     orderBy: { publishedAt: "desc" },
-    select: { slug: true, title: true, address: { select: { latitude: true, longitude: true } } },
+    select: { id: true, slug: true, title: true, address: { select: { latitude: true, longitude: true } } },
   });
   if (!listing) return null;
   return {
+    id: listing.id,
     slug: listing.slug,
     title: listing.title,
     latitude: listing.address?.latitude ?? null,
