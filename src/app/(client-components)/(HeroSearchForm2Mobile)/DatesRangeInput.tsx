@@ -11,6 +11,11 @@ export interface StayDatesRangeInputProps {
   startDate: Date | null;
   endDate: Date | null;
   onChange: (dates: [Date | null, Date | null]) => void;
+  /** Full UTC ISO date strings (e.g. "2026-07-25T00:00:00.000Z") already
+   * booked/blocked — same convention as BookingWidget's excludeDates, so
+   * this picker stops letting guests pick dates the real booking widget
+   * would reject anyway. */
+  blockedDates?: string[];
 }
 
 const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
@@ -18,7 +23,12 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
   startDate,
   endDate,
   onChange,
+  blockedDates = [],
 }) => {
+  const excludeDates = React.useMemo(
+    () => blockedDates.map((d) => new Date(new Date(d).toDateString())),
+    [blockedDates],
+  );
   // Two months side by side is cramped on a phone-width viewport — collapse
   // to one month there so the modal isn't dominated by the calendar; the
   // header's existing prev/next arrows already give month-to-month
@@ -60,6 +70,8 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
           startDate={startDate}
           endDate={endDate}
           selectsRange
+          excludeDates={excludeDates}
+          minDate={new Date(new Date().toDateString())}
           monthsShown={monthsShown}
           showPopperArrow={false}
           inline

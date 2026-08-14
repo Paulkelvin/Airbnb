@@ -8,6 +8,7 @@ import SectionFaqHighlights from "@/components/SectionFaqHighlights";
 import { getFeaturedExperiences, getAllExperiences } from "@/lib/local-experiences";
 import { getFaqs } from "@/lib/faqs";
 import { getPrimaryListing } from "@/modules/listings/queries";
+import { getBlockedDatesForListing } from "@/modules/bookings/queries";
 import { fuzzCoordinates } from "@/lib/geo-fuzz";
 import type { Route } from "@/routers/types";
 
@@ -23,13 +24,18 @@ async function PageHome() {
   const listingHref = primaryListing
     ? (`/listing-stay-detail/${primaryListing.slug}` as Route)
     : null;
+  const blockedDates = primaryListing ? await getBlockedDatesForListing(primaryListing.id) : [];
 
   return (
     <main className="nc-PageHome relative overflow-hidden">
       <BgGlassmorphism />
 
       <div className="container relative space-y-24 mb-24 lg:space-y-28 lg:mb-28">
-        <SectionHero className="pt-10 lg:pt-16 lg:pb-16" listingHref={listingHref} />
+        <SectionHero
+          className="pt-10 lg:pt-16 lg:pb-16"
+          listingHref={listingHref}
+          blockedDates={blockedDates}
+        />
 
         <SectionWhyBookWithUs />
 

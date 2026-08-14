@@ -23,7 +23,10 @@ function toISODate(date: Date | null): string | null {
  * params BookingWidget reads to pre-fill itself) instead of a multi-listing
  * search results page.
  */
-const CottageAvailabilityForm: FC<{ listingHref: string }> = ({ listingHref }) => {
+const CottageAvailabilityForm: FC<{ listingHref: string; blockedDates?: string[] }> = ({
+  listingHref,
+  blockedDates = [],
+}) => {
   const [dates, setDates] = useState<[Date | null, Date | null]>([null, null]);
   const [guests, setGuests] = useState(0);
 
@@ -40,7 +43,7 @@ const CottageAvailabilityForm: FC<{ listingHref: string }> = ({ listingHref }) =
 
   return (
     <form className="w-full relative mt-8 flex rounded-full shadow-xl dark:shadow-2xl bg-white dark:bg-neutral-800">
-      <StayDatesRangeInput className="flex-1" onDatesChange={setDates} />
+      <StayDatesRangeInput className="flex-1" onDatesChange={setDates} blockedDates={blockedDates} />
       <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div>
       <GuestsInput className="flex-1" buttonSubmitHref={submitLink} onGuestsChange={setGuests} />
     </form>

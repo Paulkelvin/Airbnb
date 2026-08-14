@@ -12,15 +12,24 @@ export interface StayDatesRangeInputProps {
   className?: string;
   fieldClassName?: string;
   onDatesChange?: (dates: [Date | null, Date | null]) => void;
+  /** Full UTC ISO date strings already booked/blocked — same convention as
+   * BookingWidget's excludeDates, so this picker stops letting guests pick
+   * dates the real booking widget would reject anyway. */
+  blockedDates?: string[];
 }
 
 const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
   className = "[ lg:nc-flex-2 ]",
   fieldClassName = "[ nc-hero-field-padding ]",
   onDatesChange,
+  blockedDates = [],
 }) => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const excludeDates = React.useMemo(
+    () => blockedDates.map((d) => new Date(new Date(d).toDateString())),
+    [blockedDates],
+  );
   //
 
   // A brief, finite highlight (not a continuous blink — that's an
@@ -114,6 +123,8 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
                   startDate={startDate}
                   endDate={endDate}
                   selectsRange
+                  excludeDates={excludeDates}
+                  minDate={new Date(new Date().toDateString())}
                   monthsShown={2}
                   showPopperArrow={false}
                   inline

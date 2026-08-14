@@ -14,6 +14,7 @@ export interface StaySearchFormValues {
 
 export interface StaySearchFormProps {
   onValuesChange?: (values: StaySearchFormValues) => void;
+  blockedDates?: string[];
 }
 
 /**
@@ -22,7 +23,7 @@ export interface StaySearchFormProps {
  * without the "Where" step (see CottageAvailabilityForm, its desktop
  * equivalent, for the same simplification).
  */
-const StaySearchForm: React.FC<StaySearchFormProps> = ({ onValuesChange }) => {
+const StaySearchForm: React.FC<StaySearchFormProps> = ({ onValuesChange, blockedDates = [] }) => {
   const [fieldNameShow, setFieldNameShow] = useState<"dates" | "guests">("dates");
   //
   const [guestInput, setGuestInput] = useState<GuestsObject>({
@@ -72,6 +73,7 @@ const StaySearchForm: React.FC<StaySearchFormProps> = ({ onValuesChange }) => {
             startDate={startDate}
             endDate={endDate}
             onChange={onChangeDate}
+            blockedDates={blockedDates}
           />
         )}
       </div>

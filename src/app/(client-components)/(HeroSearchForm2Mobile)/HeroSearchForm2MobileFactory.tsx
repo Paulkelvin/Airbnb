@@ -6,15 +6,18 @@ import type { Route } from "@/routers/types";
 
 const HeroSearchForm2MobileFactory = () => {
   const [listingHref, setListingHref] = useState<Route | null>(null);
+  const [blockedDates, setBlockedDates] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     fetch("/api/listings/primary")
       .then((res) => res.json())
-      .then((data: { slug: string | null }) => {
-        if (!cancelled && data.slug) {
+      .then((data: { slug: string | null; blockedDates?: string[] }) => {
+        if (cancelled) return;
+        if (data.slug) {
           setListingHref(`/listing-stay-detail/${data.slug}` as Route);
         }
+        setBlockedDates(data.blockedDates ?? []);
       })
       .catch(() => {});
     return () => {
@@ -22,7 +25,7 @@ const HeroSearchForm2MobileFactory = () => {
     };
   }, []);
 
-  return <HeroSearchForm2Mobile listingHref={listingHref} />;
+  return <HeroSearchForm2Mobile listingHref={listingHref} blockedDates={blockedDates} />;
 };
 
 export default HeroSearchForm2MobileFactory;

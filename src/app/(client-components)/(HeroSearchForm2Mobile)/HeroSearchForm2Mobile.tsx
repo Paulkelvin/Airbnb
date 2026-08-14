@@ -30,7 +30,13 @@ function toISODate(date: Date | null): string | null {
  * appended as query params for BookingWidget to read. Renders nothing if
  * there's no published listing yet (see SectionHero for the same fallback).
  */
-const HeroSearchForm2Mobile = ({ listingHref }: { listingHref: Route | null }) => {
+const HeroSearchForm2Mobile = ({
+  listingHref,
+  blockedDates = [],
+}: {
+  listingHref: Route | null;
+  blockedDates?: string[];
+}) => {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [values, setValues] = useState<StaySearchFormValues | null>(null);
@@ -129,7 +135,7 @@ const HeroSearchForm2Mobile = ({ listingHref }: { listingHref: Route | null }) =
                       <div className="flex-1 pt-12 px-1.5 sm:px-4 flex overflow-hidden">
                         <div className="flex-1 overflow-y-auto hiddenScrollbar py-4">
                           <div className="transition-opacity animate-[myblur_0.4s_ease-in-out]">
-                            <StaySearchForm onValuesChange={setValues} />
+                            <StaySearchForm onValuesChange={setValues} blockedDates={blockedDates} />
                           </div>
                         </div>
                       </div>

@@ -8,6 +8,7 @@ export interface SectionHeroProps {
   className?: string;
   /** The cottage's own listing page — null if there's no published listing yet. */
   listingHref: Route | null;
+  blockedDates?: string[];
 }
 
 // Real photos of Potomac Vista Cottage (from the listing gallery) — a
@@ -20,7 +21,7 @@ const HERO_IMAGES = [
   "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784642254/listings/potomac-vista-cottage/sunset-over-water.jpg",
 ];
 
-const SectionHero: FC<SectionHeroProps> = ({ className = "", listingHref }) => {
+const SectionHero: FC<SectionHeroProps> = ({ className = "", listingHref, blockedDates = [] }) => {
   return (
     <div
       className={`nc-SectionHero flex flex-col-reverse lg:flex-col relative ${className}`}
@@ -50,7 +51,7 @@ const SectionHero: FC<SectionHeroProps> = ({ className = "", listingHref }) => {
 
       {listingHref && (
         <div className="hidden lg:block z-10 mb-12 lg:mb-0 lg:-mt-24 w-full">
-          <CottageAvailabilityForm listingHref={listingHref} />
+          <CottageAvailabilityForm listingHref={listingHref} blockedDates={blockedDates} />
         </div>
       )}
     </div>
