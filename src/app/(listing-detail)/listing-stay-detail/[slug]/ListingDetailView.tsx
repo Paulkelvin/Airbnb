@@ -22,6 +22,7 @@ import MobileBookingBar from "./MobileBookingBar";
 import ReviewsSection, { type ListingReview } from "./ReviewsSection";
 import WhereYouSleep from "./WhereYouSleep";
 import WaterAccessNotice from "./WaterAccessNotice";
+import ScrollToTopOnMount from "@/components/ScrollToTopOnMount";
 import LocalExperienceCard from "@/components/LocalExperienceCard";
 import Link from "next/link";
 import type { ListingDetailViewModel } from "@/modules/listings/types";
@@ -101,6 +102,7 @@ export default function ListingDetailView({
     // height plus a small margin — pb-36 (144px) left ~75px of dead white
     // space below the last section on mobile before hitting the fixed bar.
     <div className="nc-ListingStayDetailPage pb-20 lg:pb-0">
+      <ScrollToTopOnMount />
       {listing.status !== "PUBLISHED" && isAdmin && (
         <div className="mb-6 rounded-xl bg-yellow-50 text-yellow-800 px-4 py-3 text-sm">
           This listing is <strong>{listing.status.replace("_", " ").toLowerCase()}</strong> and

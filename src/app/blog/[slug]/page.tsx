@@ -7,6 +7,7 @@ import Link from "next/link";
 import { sanityClient, urlFor } from "@/lib/sanity/client";
 import { postBySlugQuery, postSlugsQuery } from "@/lib/sanity/queries";
 import PortableTextBody from "@/components/sanity/PortableTextBody";
+import ScrollToTopOnMount from "@/components/ScrollToTopOnMount";
 import { getSiteUrl } from "@/lib/site-url";
 
 export const revalidate = 3600;
@@ -189,6 +190,7 @@ export default async function BlogPostPage({
 
     return (
       <div className="nc-BlogPostPage overflow-hidden relative">
+        <ScrollToTopOnMount />
         <JsonLd post={sanityPost} slug={params.slug} />
         <BgGlassmorphism />
         <div className="container relative py-16 lg:py-28">
@@ -284,6 +286,7 @@ export default async function BlogPostPage({
 
   return (
     <div className="nc-BlogPostPage overflow-hidden relative">
+      <ScrollToTopOnMount />
       <BgGlassmorphism />
       <div className="container relative py-16 lg:py-28">
         <article className="max-w-3xl mx-auto">

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { MapPinIcon, ClockIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import BgGlassmorphism from "@/components/BgGlassmorphism";
 import ContinueBookingButton from "./ContinueBookingButton";
-import ScrollToTopOnMount from "./ScrollToTopOnMount";
+import ScrollToTopOnMount from "@/components/ScrollToTopOnMount";
 import LocalExperienceCard from "@/components/LocalExperienceCard";
 import LocalExperienceGallery from "@/components/LocalExperienceGallery";
 import LocalExperienceDetailSections from "@/components/LocalExperienceDetailSections";
