@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, AuthError } from "@/lib/auth";
 import type { ActionResult } from "@/lib/validations/auth";
 import { sanityAdminClient } from "./sanity-admin-client";
 import { plainTextToBlocks } from "./portable-text";
@@ -17,6 +17,18 @@ function slugify(title: string): string {
 
 function fail<T>(message: string): ActionResult<T> {
   return { success: false, error: { code: "VALIDATION_ERROR", message } };
+}
+
+async function checkAdmin<T>(): Promise<ActionResult<T> | null> {
+  try {
+    await requireAdmin();
+    return null;
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return fail(err.message);
+    }
+    return fail("Unable to verify your session — please refresh and try again.");
+  }
 }
 
 // ---------- Posts ----------
@@ -46,7 +58,8 @@ export interface PostFormInput {
 export async function uploadCmsImage(
   formData: FormData,
 ): Promise<ActionResult<{ assetId: string; url: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ assetId: string; url: string }>();
+  if (authErr) return authErr;
   const file = formData.get("file");
   if (!(file instanceof File)) return fail("No file provided");
   if (!file.type.startsWith("image/")) return fail("File must be an image");
@@ -61,7 +74,8 @@ export async function uploadCmsImage(
 }
 
 export async function createPost(input: PostFormInput): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.title.trim()) return fail("Title is required");
 
   const slug = slugify(input.slug || input.title);
@@ -95,7 +109,8 @@ export async function updatePost(
   id: string,
   input: PostFormInput,
 ): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.title.trim()) return fail("Title is required");
 
   const slug = slugify(input.slug || input.title);
@@ -128,7 +143,8 @@ export async function updatePost(
 }
 
 export async function deletePost(id: string): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   await sanityAdminClient.delete(id);
   revalidatePath("/blog");
   revalidatePath("/sitemap.xml");
@@ -147,7 +163,8 @@ export interface PageFormInput {
 }
 
 export async function createPage(input: PageFormInput): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.title.trim()) return fail("Title is required");
 
   const slug = slugify(input.slug || input.title);
@@ -172,7 +189,8 @@ export async function updatePage(
   id: string,
   input: PageFormInput,
 ): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.title.trim()) return fail("Title is required");
 
   const slug = slugify(input.slug || input.title);
@@ -196,7 +214,8 @@ export async function updatePage(
 }
 
 export async function deletePage(id: string): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   await sanityAdminClient.delete(id);
   revalidatePath("/admin/content/pages");
   return { success: true, data: { id } };
@@ -208,7 +227,8 @@ export async function createCategory(input: {
   title: string;
   description?: string;
 }): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.title.trim()) return fail("Title is required");
   const doc = await sanityAdminClient.create({
     _type: "category",
@@ -225,7 +245,8 @@ export async function updateCategory(
   id: string,
   input: { title: string; description?: string },
 ): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.title.trim()) return fail("Title is required");
   await sanityAdminClient
     .patch(id)
@@ -241,7 +262,8 @@ export async function updateCategory(
 }
 
 export async function deleteCategory(id: string): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   await sanityAdminClient.delete(id);
   revalidatePath("/blog");
   revalidatePath("/admin/content/categories-authors");
@@ -255,7 +277,8 @@ export async function createAuthor(input: {
   bio?: string;
   imageAssetId?: string;
 }): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.name.trim()) return fail("Name is required");
   const doc = await sanityAdminClient.create({
     _type: "author",
@@ -274,7 +297,8 @@ export async function updateAuthor(
   id: string,
   input: { name: string; bio?: string; imageAssetId?: string },
 ): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.name.trim()) return fail("Name is required");
   await sanityAdminClient
     .patch(id)
@@ -292,7 +316,8 @@ export async function updateAuthor(
 }
 
 export async function deleteAuthor(id: string): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   await sanityAdminClient.delete(id);
   revalidatePath("/admin/content/categories-authors");
   return { success: true, data: { id } };
@@ -308,7 +333,8 @@ export interface FaqFormInput {
 }
 
 export async function createFaq(input: FaqFormInput): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.question.trim() || !input.answer.trim() || !input.category.trim()) {
     return fail("Question, answer, and category are all required");
   }
@@ -328,7 +354,8 @@ export async function updateFaq(
   id: string,
   input: FaqFormInput,
 ): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.question.trim() || !input.answer.trim() || !input.category.trim()) {
     return fail("Question, answer, and category are all required");
   }
@@ -347,7 +374,8 @@ export async function updateFaq(
 }
 
 export async function deleteFaq(id: string): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   await sanityAdminClient.delete(id);
   revalidatePath("/faq");
   revalidatePath("/admin/content/faq");
@@ -384,7 +412,8 @@ function revalidateExperiencePaths(slug: string) {
 export async function createLocalExperience(
   input: LocalExperienceFormInput,
 ): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.title.trim() || !input.category.trim() || !input.imageUrl.trim()) {
     return fail("Title, category, and image URL are all required");
   }
@@ -418,7 +447,8 @@ export async function updateLocalExperience(
   id: string,
   input: LocalExperienceFormInput,
 ): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.title.trim() || !input.category.trim() || !input.imageUrl.trim()) {
     return fail("Title, category, and image URL are all required");
   }
@@ -451,7 +481,8 @@ export async function updateLocalExperience(
 }
 
 export async function deleteLocalExperience(id: string): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   await sanityAdminClient.delete(id);
   revalidatePath("/");
   revalidatePath("/explore-the-area");
@@ -477,7 +508,8 @@ export interface AboutPageFormInput {
 }
 
 export async function saveAboutPage(input: AboutPageFormInput): Promise<ActionResult<{ id: string }>> {
-  await requireAdmin();
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
   if (!input.heroTitle.trim()) return fail("Hero title is required");
 
   await sanityAdminClient.createOrReplace({
