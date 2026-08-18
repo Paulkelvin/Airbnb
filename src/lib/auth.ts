@@ -26,11 +26,24 @@ export async function getCurrentUser() {
   // access in the meantime. Re-checking status/roles against the DB on
   // every lookup (an indexed PK read) makes those admin actions take
   // effect immediately instead.
-  const current = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { status: true, roles: true },
-  });
-  if (!current || current.status !== "ACTIVE") return null;
+  let current: { status: string; roles: UserRole[] } | null;
+  try {
+    current = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { status: true, roles: true },
+    });
+  } catch {
+    throw new AuthError(
+      "UNAUTHORIZED",
+      "Unable to verify your account — the database may be temporarily unreachable. Please try again in a moment.",
+    );
+  }
+  if (!current) {
+    throw new AuthError("UNAUTHORIZED", "Your account was not found — please sign out and sign back in.");
+  }
+  if (current.status !== "ACTIVE") {
+    throw new AuthError("UNAUTHORIZED", "Your account has been suspended.");
+  }
 
   return { ...session.user, roles: current.roles };
 }
