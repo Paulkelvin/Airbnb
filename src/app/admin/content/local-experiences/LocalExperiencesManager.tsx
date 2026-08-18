@@ -135,24 +135,36 @@ export default function LocalExperiencesManager({
       publishedAt: visible ? new Date().toISOString() : null,
     };
     startTransition(async () => {
-      const result = editingId
-        ? await updateLocalExperience(editingId, input)
-        : await createLocalExperience(input);
-      if (!result.success) {
-        setError(result.error.message);
-        return;
+      try {
+        const result = editingId
+          ? await updateLocalExperience(editingId, input)
+          : await createLocalExperience(input);
+        if (!result.success) {
+          setError(result.error.message);
+          return;
+        }
+        setEditingId(null);
+        setShowNewForm(false);
+        router.refresh();
+      } catch {
+        // requireAdmin() (and any other unexpected failure) throws rather
+        // than returning a result — left uncaught, that crashes the whole
+        // page to the generic error boundary instead of just this form, so
+        // it's caught here and surfaced as an ordinary inline error.
+        setError("Your session may have expired — refresh the page and try again.");
       }
-      setEditingId(null);
-      setShowNewForm(false);
-      router.refresh();
     });
   }
 
   function handleDelete(id: string) {
     startTransition(async () => {
-      const result = await deleteLocalExperience(id);
-      if (!result.success) setError(result.error.message);
-      router.refresh();
+      try {
+        const result = await deleteLocalExperience(id);
+        if (!result.success) setError(result.error.message);
+        router.refresh();
+      } catch {
+        setError("Your session may have expired — refresh the page and try again.");
+      }
     });
   }
 
