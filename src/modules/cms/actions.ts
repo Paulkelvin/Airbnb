@@ -31,6 +31,16 @@ async function checkAdmin<T>(): Promise<ActionResult<T> | null> {
   }
 }
 
+function sanityError<T>(err: unknown): ActionResult<T> {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (msg.includes("Insufficient permissions")) {
+    return fail(
+      "The Sanity API token does not have write permissions. Please update SANITY_API_TOKEN in Vercel to an Editor-level token.",
+    );
+  }
+  return fail(`Sanity error: ${msg}`);
+}
+
 // ---------- Posts ----------
 
 export interface PostFormInput {
@@ -65,12 +75,15 @@ export async function uploadCmsImage(
   if (!file.type.startsWith("image/")) return fail("File must be an image");
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const asset = await sanityAdminClient.assets.upload("image", buffer, {
-    filename: file.name,
-    contentType: file.type,
-  });
-
-  return { success: true, data: { assetId: asset._id, url: asset.url } };
+  try {
+    const asset = await sanityAdminClient.assets.upload("image", buffer, {
+      filename: file.name,
+      contentType: file.type,
+    });
+    return { success: true, data: { assetId: asset._id, url: asset.url } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 export async function createPost(input: PostFormInput): Promise<ActionResult<{ id: string }>> {
@@ -79,30 +92,34 @@ export async function createPost(input: PostFormInput): Promise<ActionResult<{ i
   if (!input.title.trim()) return fail("Title is required");
 
   const slug = slugify(input.slug || input.title);
-  const doc = await sanityAdminClient.create({
-    _type: "post",
-    title: input.title.trim(),
-    slug: { _type: "slug", current: slug },
-    author: input.authorId ? { _type: "reference", _ref: input.authorId } : undefined,
-    categories: input.categoryIds.map((id) => ({ _type: "reference", _ref: id, _key: id })),
-    excerpt: input.excerpt.trim() || undefined,
-    body: plainTextToBlocks(input.bodyText),
-    publishedAt: input.publishedAt,
-    seo: {
-      metaTitle: input.metaTitle?.trim() || undefined,
-      metaDescription: input.metaDescription?.trim() || undefined,
-    },
-    ...(input.mainImageAssetId
-      ? { mainImage: { _type: "image", asset: { _type: "reference", _ref: input.mainImageAssetId } } }
-      : {}),
-  });
+  try {
+    const doc = await sanityAdminClient.create({
+      _type: "post",
+      title: input.title.trim(),
+      slug: { _type: "slug", current: slug },
+      author: input.authorId ? { _type: "reference", _ref: input.authorId } : undefined,
+      categories: input.categoryIds.map((id) => ({ _type: "reference", _ref: id, _key: id })),
+      excerpt: input.excerpt.trim() || undefined,
+      body: plainTextToBlocks(input.bodyText),
+      publishedAt: input.publishedAt,
+      seo: {
+        metaTitle: input.metaTitle?.trim() || undefined,
+        metaDescription: input.metaDescription?.trim() || undefined,
+      },
+      ...(input.mainImageAssetId
+        ? { mainImage: { _type: "image", asset: { _type: "reference", _ref: input.mainImageAssetId } } }
+        : {}),
+    });
 
-  revalidatePath("/blog");
-  revalidatePath(`/blog/${slug}`);
-  revalidatePath("/sitemap.xml");
-  revalidatePath("/admin/content/posts");
+    revalidatePath("/blog");
+    revalidatePath(`/blog/${slug}`);
+    revalidatePath("/sitemap.xml");
+    revalidatePath("/admin/content/posts");
 
-  return { success: true, data: { id: doc._id } };
+    return { success: true, data: { id: doc._id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 export async function updatePost(
@@ -114,42 +131,50 @@ export async function updatePost(
   if (!input.title.trim()) return fail("Title is required");
 
   const slug = slugify(input.slug || input.title);
-  await sanityAdminClient
-    .patch(id)
-    .set({
-      title: input.title.trim(),
-      slug: { _type: "slug", current: slug },
-      author: input.authorId ? { _type: "reference", _ref: input.authorId } : undefined,
-      categories: input.categoryIds.map((catId) => ({ _type: "reference", _ref: catId, _key: catId })),
-      excerpt: input.excerpt.trim() || undefined,
-      body: plainTextToBlocks(input.bodyText),
-      publishedAt: input.publishedAt,
-      seo: {
-        metaTitle: input.metaTitle?.trim() || undefined,
-        metaDescription: input.metaDescription?.trim() || undefined,
-      },
-      ...(input.mainImageAssetId
-        ? { mainImage: { _type: "image", asset: { _type: "reference", _ref: input.mainImageAssetId } } }
-        : {}),
-    })
-    .commit();
+  try {
+    await sanityAdminClient
+      .patch(id)
+      .set({
+        title: input.title.trim(),
+        slug: { _type: "slug", current: slug },
+        author: input.authorId ? { _type: "reference", _ref: input.authorId } : undefined,
+        categories: input.categoryIds.map((catId) => ({ _type: "reference", _ref: catId, _key: catId })),
+        excerpt: input.excerpt.trim() || undefined,
+        body: plainTextToBlocks(input.bodyText),
+        publishedAt: input.publishedAt,
+        seo: {
+          metaTitle: input.metaTitle?.trim() || undefined,
+          metaDescription: input.metaDescription?.trim() || undefined,
+        },
+        ...(input.mainImageAssetId
+          ? { mainImage: { _type: "image", asset: { _type: "reference", _ref: input.mainImageAssetId } } }
+          : {}),
+      })
+      .commit();
 
-  revalidatePath("/blog");
-  revalidatePath(`/blog/${slug}`);
-  revalidatePath("/sitemap.xml");
-  revalidatePath("/admin/content/posts");
+    revalidatePath("/blog");
+    revalidatePath(`/blog/${slug}`);
+    revalidatePath("/sitemap.xml");
+    revalidatePath("/admin/content/posts");
 
-  return { success: true, data: { id } };
+    return { success: true, data: { id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 export async function deletePost(id: string): Promise<ActionResult<{ id: string }>> {
   const authErr = await checkAdmin<{ id: string }>();
   if (authErr) return authErr;
-  await sanityAdminClient.delete(id);
-  revalidatePath("/blog");
-  revalidatePath("/sitemap.xml");
-  revalidatePath("/admin/content/posts");
-  return { success: true, data: { id } };
+  try {
+    await sanityAdminClient.delete(id);
+    revalidatePath("/blog");
+    revalidatePath("/sitemap.xml");
+    revalidatePath("/admin/content/posts");
+    return { success: true, data: { id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 // ---------- Pages ----------
@@ -168,21 +193,25 @@ export async function createPage(input: PageFormInput): Promise<ActionResult<{ i
   if (!input.title.trim()) return fail("Title is required");
 
   const slug = slugify(input.slug || input.title);
-  const doc = await sanityAdminClient.create({
-    _type: "page",
-    title: input.title.trim(),
-    slug: { _type: "slug", current: slug },
-    body: plainTextToBlocks(input.bodyText),
-    seo: {
-      metaTitle: input.metaTitle?.trim() || undefined,
-      metaDescription: input.metaDescription?.trim() || undefined,
-    },
-  });
+  try {
+    const doc = await sanityAdminClient.create({
+      _type: "page",
+      title: input.title.trim(),
+      slug: { _type: "slug", current: slug },
+      body: plainTextToBlocks(input.bodyText),
+      seo: {
+        metaTitle: input.metaTitle?.trim() || undefined,
+        metaDescription: input.metaDescription?.trim() || undefined,
+      },
+    });
 
-  revalidatePath(`/${slug}`);
-  revalidatePath("/admin/content/pages");
+    revalidatePath(`/${slug}`);
+    revalidatePath("/admin/content/pages");
 
-  return { success: true, data: { id: doc._id } };
+    return { success: true, data: { id: doc._id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 export async function updatePage(
@@ -194,31 +223,39 @@ export async function updatePage(
   if (!input.title.trim()) return fail("Title is required");
 
   const slug = slugify(input.slug || input.title);
-  await sanityAdminClient
-    .patch(id)
-    .set({
-      title: input.title.trim(),
-      slug: { _type: "slug", current: slug },
-      body: plainTextToBlocks(input.bodyText),
-      seo: {
-        metaTitle: input.metaTitle?.trim() || undefined,
-        metaDescription: input.metaDescription?.trim() || undefined,
-      },
-    })
-    .commit();
+  try {
+    await sanityAdminClient
+      .patch(id)
+      .set({
+        title: input.title.trim(),
+        slug: { _type: "slug", current: slug },
+        body: plainTextToBlocks(input.bodyText),
+        seo: {
+          metaTitle: input.metaTitle?.trim() || undefined,
+          metaDescription: input.metaDescription?.trim() || undefined,
+        },
+      })
+      .commit();
 
-  revalidatePath(`/${slug}`);
-  revalidatePath("/admin/content/pages");
+    revalidatePath(`/${slug}`);
+    revalidatePath("/admin/content/pages");
 
-  return { success: true, data: { id } };
+    return { success: true, data: { id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 export async function deletePage(id: string): Promise<ActionResult<{ id: string }>> {
   const authErr = await checkAdmin<{ id: string }>();
   if (authErr) return authErr;
-  await sanityAdminClient.delete(id);
-  revalidatePath("/admin/content/pages");
-  return { success: true, data: { id } };
+  try {
+    await sanityAdminClient.delete(id);
+    revalidatePath("/admin/content/pages");
+    return { success: true, data: { id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 // ---------- Categories ----------
@@ -230,15 +267,19 @@ export async function createCategory(input: {
   const authErr = await checkAdmin<{ id: string }>();
   if (authErr) return authErr;
   if (!input.title.trim()) return fail("Title is required");
-  const doc = await sanityAdminClient.create({
-    _type: "category",
-    title: input.title.trim(),
-    slug: { _type: "slug", current: slugify(input.title) },
-    description: input.description?.trim() || undefined,
-  });
-  revalidatePath("/blog");
-  revalidatePath("/admin/content/categories-authors");
-  return { success: true, data: { id: doc._id } };
+  try {
+    const doc = await sanityAdminClient.create({
+      _type: "category",
+      title: input.title.trim(),
+      slug: { _type: "slug", current: slugify(input.title) },
+      description: input.description?.trim() || undefined,
+    });
+    revalidatePath("/blog");
+    revalidatePath("/admin/content/categories-authors");
+    return { success: true, data: { id: doc._id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 export async function updateCategory(
@@ -248,26 +289,34 @@ export async function updateCategory(
   const authErr = await checkAdmin<{ id: string }>();
   if (authErr) return authErr;
   if (!input.title.trim()) return fail("Title is required");
-  await sanityAdminClient
-    .patch(id)
-    .set({
-      title: input.title.trim(),
-      slug: { _type: "slug", current: slugify(input.title) },
-      description: input.description?.trim() || undefined,
-    })
-    .commit();
-  revalidatePath("/blog");
-  revalidatePath("/admin/content/categories-authors");
-  return { success: true, data: { id } };
+  try {
+    await sanityAdminClient
+      .patch(id)
+      .set({
+        title: input.title.trim(),
+        slug: { _type: "slug", current: slugify(input.title) },
+        description: input.description?.trim() || undefined,
+      })
+      .commit();
+    revalidatePath("/blog");
+    revalidatePath("/admin/content/categories-authors");
+    return { success: true, data: { id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 export async function deleteCategory(id: string): Promise<ActionResult<{ id: string }>> {
   const authErr = await checkAdmin<{ id: string }>();
   if (authErr) return authErr;
-  await sanityAdminClient.delete(id);
-  revalidatePath("/blog");
-  revalidatePath("/admin/content/categories-authors");
-  return { success: true, data: { id } };
+  try {
+    await sanityAdminClient.delete(id);
+    revalidatePath("/blog");
+    revalidatePath("/admin/content/categories-authors");
+    return { success: true, data: { id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 // ---------- Authors ----------
@@ -280,17 +329,21 @@ export async function createAuthor(input: {
   const authErr = await checkAdmin<{ id: string }>();
   if (authErr) return authErr;
   if (!input.name.trim()) return fail("Name is required");
-  const doc = await sanityAdminClient.create({
-    _type: "author",
-    name: input.name.trim(),
-    slug: { _type: "slug", current: slugify(input.name) },
-    bio: input.bio?.trim() || undefined,
-    ...(input.imageAssetId
-      ? { image: { _type: "image", asset: { _type: "reference", _ref: input.imageAssetId } } }
-      : {}),
-  });
-  revalidatePath("/admin/content/categories-authors");
-  return { success: true, data: { id: doc._id } };
+  try {
+    const doc = await sanityAdminClient.create({
+      _type: "author",
+      name: input.name.trim(),
+      slug: { _type: "slug", current: slugify(input.name) },
+      bio: input.bio?.trim() || undefined,
+      ...(input.imageAssetId
+        ? { image: { _type: "image", asset: { _type: "reference", _ref: input.imageAssetId } } }
+        : {}),
+    });
+    revalidatePath("/admin/content/categories-authors");
+    return { success: true, data: { id: doc._id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 export async function updateAuthor(
@@ -300,27 +353,35 @@ export async function updateAuthor(
   const authErr = await checkAdmin<{ id: string }>();
   if (authErr) return authErr;
   if (!input.name.trim()) return fail("Name is required");
-  await sanityAdminClient
-    .patch(id)
-    .set({
-      name: input.name.trim(),
-      slug: { _type: "slug", current: slugify(input.name) },
-      bio: input.bio?.trim() || undefined,
-      ...(input.imageAssetId
-        ? { image: { _type: "image", asset: { _type: "reference", _ref: input.imageAssetId } } }
-        : {}),
-    })
-    .commit();
-  revalidatePath("/admin/content/categories-authors");
-  return { success: true, data: { id } };
+  try {
+    await sanityAdminClient
+      .patch(id)
+      .set({
+        name: input.name.trim(),
+        slug: { _type: "slug", current: slugify(input.name) },
+        bio: input.bio?.trim() || undefined,
+        ...(input.imageAssetId
+          ? { image: { _type: "image", asset: { _type: "reference", _ref: input.imageAssetId } } }
+          : {}),
+      })
+      .commit();
+    revalidatePath("/admin/content/categories-authors");
+    return { success: true, data: { id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 export async function deleteAuthor(id: string): Promise<ActionResult<{ id: string }>> {
   const authErr = await checkAdmin<{ id: string }>();
   if (authErr) return authErr;
-  await sanityAdminClient.delete(id);
-  revalidatePath("/admin/content/categories-authors");
-  return { success: true, data: { id } };
+  try {
+    await sanityAdminClient.delete(id);
+    revalidatePath("/admin/content/categories-authors");
+    return { success: true, data: { id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 // ---------- FAQ ----------
@@ -338,16 +399,20 @@ export async function createFaq(input: FaqFormInput): Promise<ActionResult<{ id:
   if (!input.question.trim() || !input.answer.trim() || !input.category.trim()) {
     return fail("Question, answer, and category are all required");
   }
-  const doc = await sanityAdminClient.create({
-    _type: "faq",
-    question: input.question.trim(),
-    answer: input.answer.trim(),
-    category: input.category.trim(),
-    order: input.order,
-  });
-  revalidatePath("/faq");
-  revalidatePath("/admin/content/faq");
-  return { success: true, data: { id: doc._id } };
+  try {
+    const doc = await sanityAdminClient.create({
+      _type: "faq",
+      question: input.question.trim(),
+      answer: input.answer.trim(),
+      category: input.category.trim(),
+      order: input.order,
+    });
+    revalidatePath("/faq");
+    revalidatePath("/admin/content/faq");
+    return { success: true, data: { id: doc._id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 export async function updateFaq(
@@ -359,27 +424,35 @@ export async function updateFaq(
   if (!input.question.trim() || !input.answer.trim() || !input.category.trim()) {
     return fail("Question, answer, and category are all required");
   }
-  await sanityAdminClient
-    .patch(id)
-    .set({
-      question: input.question.trim(),
-      answer: input.answer.trim(),
-      category: input.category.trim(),
-      order: input.order,
-    })
-    .commit();
-  revalidatePath("/faq");
-  revalidatePath("/admin/content/faq");
-  return { success: true, data: { id } };
+  try {
+    await sanityAdminClient
+      .patch(id)
+      .set({
+        question: input.question.trim(),
+        answer: input.answer.trim(),
+        category: input.category.trim(),
+        order: input.order,
+      })
+      .commit();
+    revalidatePath("/faq");
+    revalidatePath("/admin/content/faq");
+    return { success: true, data: { id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 export async function deleteFaq(id: string): Promise<ActionResult<{ id: string }>> {
   const authErr = await checkAdmin<{ id: string }>();
   if (authErr) return authErr;
-  await sanityAdminClient.delete(id);
-  revalidatePath("/faq");
-  revalidatePath("/admin/content/faq");
-  return { success: true, data: { id } };
+  try {
+    await sanityAdminClient.delete(id);
+    revalidatePath("/faq");
+    revalidatePath("/admin/content/faq");
+    return { success: true, data: { id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 // ---------- Local Experiences ----------
@@ -419,44 +492,9 @@ export async function createLocalExperience(
   }
 
   const slug = slugify(input.slug || input.title);
-  const doc = await sanityAdminClient.create({
-    _type: "localExperience",
-    title: input.title.trim(),
-    slug: { _type: "slug", current: slug },
-    category: input.category.trim(),
-    tagline: input.tagline.trim(),
-    description: input.description.trim(),
-    imageUrl: input.imageUrl.trim(),
-    galleryImageUrls: input.galleryImageUrls.map((u) => u.trim()).filter(Boolean),
-    distanceLabel: input.distanceLabel.trim(),
-    latitude: input.latitude ?? undefined,
-    longitude: input.longitude ?? undefined,
-    openingHours: input.openingHours?.trim() || undefined,
-    websiteUrl: input.websiteUrl?.trim() || undefined,
-    featured: input.featured,
-    order: input.order,
-    publishedAt: input.publishedAt,
-  });
-
-  revalidateExperiencePaths(slug);
-
-  return { success: true, data: { id: doc._id } };
-}
-
-export async function updateLocalExperience(
-  id: string,
-  input: LocalExperienceFormInput,
-): Promise<ActionResult<{ id: string }>> {
-  const authErr = await checkAdmin<{ id: string }>();
-  if (authErr) return authErr;
-  if (!input.title.trim() || !input.category.trim() || !input.imageUrl.trim()) {
-    return fail("Title, category, and image URL are all required");
-  }
-
-  const slug = slugify(input.slug || input.title);
-  await sanityAdminClient
-    .patch(id)
-    .set({
+  try {
+    const doc = await sanityAdminClient.create({
+      _type: "localExperience",
       title: input.title.trim(),
       slug: { _type: "slug", current: slug },
       category: input.category.trim(),
@@ -472,22 +510,69 @@ export async function updateLocalExperience(
       featured: input.featured,
       order: input.order,
       publishedAt: input.publishedAt,
-    })
-    .commit();
+    });
 
-  revalidateExperiencePaths(slug);
+    revalidateExperiencePaths(slug);
 
-  return { success: true, data: { id } };
+    return { success: true, data: { id: doc._id } };
+  } catch (err) {
+    return sanityError(err);
+  }
+}
+
+export async function updateLocalExperience(
+  id: string,
+  input: LocalExperienceFormInput,
+): Promise<ActionResult<{ id: string }>> {
+  const authErr = await checkAdmin<{ id: string }>();
+  if (authErr) return authErr;
+  if (!input.title.trim() || !input.category.trim() || !input.imageUrl.trim()) {
+    return fail("Title, category, and image URL are all required");
+  }
+
+  const slug = slugify(input.slug || input.title);
+  try {
+    await sanityAdminClient
+      .patch(id)
+      .set({
+        title: input.title.trim(),
+        slug: { _type: "slug", current: slug },
+        category: input.category.trim(),
+        tagline: input.tagline.trim(),
+        description: input.description.trim(),
+        imageUrl: input.imageUrl.trim(),
+        galleryImageUrls: input.galleryImageUrls.map((u) => u.trim()).filter(Boolean),
+        distanceLabel: input.distanceLabel.trim(),
+        latitude: input.latitude ?? undefined,
+        longitude: input.longitude ?? undefined,
+        openingHours: input.openingHours?.trim() || undefined,
+        websiteUrl: input.websiteUrl?.trim() || undefined,
+        featured: input.featured,
+        order: input.order,
+        publishedAt: input.publishedAt,
+      })
+      .commit();
+
+    revalidateExperiencePaths(slug);
+
+    return { success: true, data: { id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 export async function deleteLocalExperience(id: string): Promise<ActionResult<{ id: string }>> {
   const authErr = await checkAdmin<{ id: string }>();
   if (authErr) return authErr;
-  await sanityAdminClient.delete(id);
-  revalidatePath("/");
-  revalidatePath("/explore-the-area");
-  revalidatePath("/admin/content/local-experiences");
-  return { success: true, data: { id } };
+  try {
+    await sanityAdminClient.delete(id);
+    revalidatePath("/");
+    revalidatePath("/explore-the-area");
+    revalidatePath("/admin/content/local-experiences");
+    return { success: true, data: { id } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 // ---------- About page (singleton) ----------
@@ -512,35 +597,39 @@ export async function saveAboutPage(input: AboutPageFormInput): Promise<ActionRe
   if (authErr) return authErr;
   if (!input.heroTitle.trim()) return fail("Hero title is required");
 
-  await sanityAdminClient.createOrReplace({
-    _id: ABOUT_PAGE_ID,
-    _type: "aboutPage",
-    heroTitle: input.heroTitle.trim(),
-    heroSubtitle: input.heroSubtitle.trim() || undefined,
-    heroBody: plainTextToBlocks(input.heroBodyText),
-    stats: input.stats
-      .filter((s) => s.label.trim() && s.value.trim())
-      .map((s) => ({ _type: "stat", _key: cryptoKey(), label: s.label.trim(), value: s.value.trim() })),
-    missionTitle: input.missionTitle.trim() || undefined,
-    missionBody: plainTextToBlocks(input.missionBodyText),
-    missionImageUrl: input.missionImageUrl.trim() || undefined,
-    valuesTitle: input.valuesTitle.trim() || undefined,
-    valuesSubtitle: input.valuesSubtitle.trim() || undefined,
-    values: input.values
-      .filter((v) => v.title.trim())
-      .map((v) => ({
-        _type: "value",
-        _key: cryptoKey(),
-        title: v.title.trim(),
-        description: v.description.trim(),
-      })),
-    ctaTitle: input.ctaTitle.trim() || undefined,
-    ctaSubtitle: input.ctaSubtitle.trim() || undefined,
-  });
+  try {
+    await sanityAdminClient.createOrReplace({
+      _id: ABOUT_PAGE_ID,
+      _type: "aboutPage",
+      heroTitle: input.heroTitle.trim(),
+      heroSubtitle: input.heroSubtitle.trim() || undefined,
+      heroBody: plainTextToBlocks(input.heroBodyText),
+      stats: input.stats
+        .filter((s) => s.label.trim() && s.value.trim())
+        .map((s) => ({ _type: "stat", _key: cryptoKey(), label: s.label.trim(), value: s.value.trim() })),
+      missionTitle: input.missionTitle.trim() || undefined,
+      missionBody: plainTextToBlocks(input.missionBodyText),
+      missionImageUrl: input.missionImageUrl.trim() || undefined,
+      valuesTitle: input.valuesTitle.trim() || undefined,
+      valuesSubtitle: input.valuesSubtitle.trim() || undefined,
+      values: input.values
+        .filter((v) => v.title.trim())
+        .map((v) => ({
+          _type: "value",
+          _key: cryptoKey(),
+          title: v.title.trim(),
+          description: v.description.trim(),
+        })),
+      ctaTitle: input.ctaTitle.trim() || undefined,
+      ctaSubtitle: input.ctaSubtitle.trim() || undefined,
+    });
 
-  revalidatePath("/about");
-  revalidatePath("/admin/content/about");
-  return { success: true, data: { id: ABOUT_PAGE_ID } };
+    revalidatePath("/about");
+    revalidatePath("/admin/content/about");
+    return { success: true, data: { id: ABOUT_PAGE_ID } };
+  } catch (err) {
+    return sanityError(err);
+  }
 }
 
 function cryptoKey(): string {
