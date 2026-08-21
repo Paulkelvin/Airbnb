@@ -4,24 +4,7 @@ import React, { useState, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ConfirmModal from "@/components/ui/ConfirmModal";
-import {
-  approveListing,
-  rejectListing,
-  adminUnpublishListing,
-  adminDeleteListing,
-  addListingImages,
-} from "@/modules/admin/actions";
-
-// One-off: 6 new cottage photos to add to the primary listing's gallery.
-// Remove this NEW_PHOTOS constant and the button below once they're added.
-const NEW_PHOTOS = [
-  { url: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1787327171/potomac/listings/dock-chairs-dusk.jpg", altText: "Adirondack chairs by the dock at dusk", category: "Waterfront" },
-  { url: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1787327172/potomac/listings/firepit-chairs-day.jpg", altText: "Fire pit and chairs overlooking the water", category: "Outdoor" },
-  { url: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1787327174/potomac/listings/firepit-chairs-clearsky.jpg", altText: "Fire pit and chairs on a clear day", category: "Outdoor" },
-  { url: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1787327172/potomac/listings/bonfire-night.jpg", altText: "Bonfire at night by the water", category: "Outdoor" },
-  { url: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1787327173/potomac/listings/dogs-paddleboard.jpg", altText: "Dogs on a paddleboard on the water", category: "Waterfront" },
-  { url: "https://res.cloudinary.com/lbwzvp5s/image/upload/v1787327170/potomac/listings/dog-deck-waterview.jpg", altText: "Dog resting on the deck overlooking the water", category: "Outdoor" },
-];
+import { approveListing, rejectListing, adminUnpublishListing, adminDeleteListing } from "@/modules/admin/actions";
 
 export function ListingActions({
   listingId,
@@ -103,13 +86,6 @@ export function ListingActions({
         className="px-2 py-1 text-xs rounded bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 disabled:opacity-50"
       >
         Delete
-      </button>
-      <button
-        onClick={() => handleAction(() => addListingImages(listingId, NEW_PHOTOS))}
-        disabled={isPending}
-        className="px-2 py-1 text-xs rounded bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40 disabled:opacity-50"
-      >
-        Import 6 new photos
       </button>
     </div>
   );
