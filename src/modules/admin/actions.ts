@@ -270,6 +270,38 @@ export async function adminDeleteListing(listingId: string): Promise<ActionResul
   return { success: true, data: { id: listingId } };
 }
 
+export async function addListingImages(
+  listingId: string,
+  images: { url: string; altText?: string; category?: string }[],
+): Promise<ActionResult<{ count: number }>> {
+  await requireAdmin();
+  if (images.length === 0) return { success: false, error: { code: "VALIDATION_ERROR", message: "No images provided" } };
+
+  const maxPosition = await prisma.image.aggregate({
+    where: { listingId },
+    _max: { position: true },
+  });
+  let nextPosition = (maxPosition._max.position ?? -1) + 1;
+
+  const created = await prisma.$transaction(
+    images.map((img) =>
+      prisma.image.create({
+        data: {
+          listingId,
+          url: img.url,
+          altText: img.altText ?? null,
+          category: img.category ?? null,
+          position: nextPosition++,
+        },
+      }),
+    ),
+  );
+
+  revalidatePath("/admin/listings");
+  revalidatePath("/listing-stay");
+  return { success: true, data: { count: created.length } };
+}
+
 // ─── Booking Dispute Resolution ──────────────────────────────────────────────
 
 export async function adminForceBookingTransition(
