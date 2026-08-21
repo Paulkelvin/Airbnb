@@ -19,6 +19,12 @@ const HERO_IMAGES = [
   "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784640964/listings/potomac-vista-cottage/aerial-waterfront-dusk.jpg",
   "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784642246/listings/potomac-vista-cottage/exterior-cottage-waterside.jpg",
   "https://res.cloudinary.com/lbwzvp5s/image/upload/v1784642254/listings/potomac-vista-cottage/sunset-over-water.jpg",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1787327171/potomac/listings/dock-chairs-dusk.jpg",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1787327172/potomac/listings/firepit-chairs-day.jpg",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1787327174/potomac/listings/firepit-chairs-clearsky.jpg",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1787327172/potomac/listings/bonfire-night.jpg",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1787327173/potomac/listings/dogs-paddleboard.jpg",
+  "https://res.cloudinary.com/lbwzvp5s/image/upload/v1787327170/potomac/listings/dog-deck-waterview.jpg",
 ];
 
 const SectionHero: FC<SectionHeroProps> = ({ className = "", listingHref, blockedDates = [] }) => {
