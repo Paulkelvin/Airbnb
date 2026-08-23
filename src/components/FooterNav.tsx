@@ -119,6 +119,16 @@ const FooterNav = () => {
         {/* MENU */}
         {NAV.map(renderItem)}
       </div>
+      {/* iOS Safari briefly exposes the page background below this fixed bar
+          when the address bar auto-hides on scroll, since fixed positioning
+          lags a frame behind the viewport resize. This strip is normally
+          off-screen and invisible; it only becomes visible in that gap,
+          where it paints over it with the same background instead of the
+          page showing through. */}
+      <div
+        aria-hidden
+        className="absolute left-0 right-0 top-full h-24 bg-white dark:bg-neutral-800"
+      />
     </nav>
   );
 };
