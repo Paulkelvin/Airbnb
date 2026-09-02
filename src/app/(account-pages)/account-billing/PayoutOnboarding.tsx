@@ -81,7 +81,7 @@ export default function PayoutOnboarding({
       <div className="flex gap-3">
         {!fullyOnboarded && (
           <ButtonPrimary disabled={isPending} loading={isPending} onClick={handleConnect}>
-            {status.hasAccount ? "Continue onboarding" : "Connect with Stripe"}
+            {status.hasAccount ? "Continue onboarding" : "Connect payout account"}
           </ButtonPrimary>
         )}
         {status.hasAccount && (

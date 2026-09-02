@@ -125,6 +125,7 @@ enum PaymentStatus {
 
 enum PaymentProvider {
   STRIPE_CONNECT
+  SQUARE
   PAYSTACK
   FLUTTERWAVE
 }
@@ -180,6 +181,7 @@ model User {
   auditLogs             AuditLog[]
   paymentsAsPayer       Payment[]  @relation("PayerPayments")
   paymentsAsPayee       Payment[]  @relation("PayeePayments")
+  pendingPaymentIntents PendingPaymentIntent[]
 
   // NextAuth fields
   accounts              Account[]
@@ -633,6 +635,38 @@ model Payment {
   @@index([payerUserId])
   @@index([payeeUserId])
   @@index([relatedPaymentId])
+}
+
+// ─── PendingPaymentIntent ────────────────────────────────────────────────────
+
+// Bridges Square's tokenize-then-charge checkout flow onto the
+// gateway-agnostic createPaymentIntent/verifyPaymentIntent shape the rest of
+// the app is built against (src/lib/payments/provider.ts). Unlike Stripe,
+// Square has no server-side "unconfirmed intent" a browser can confirm
+// directly against the gateway — the actual charge only happens once the
+// browser hands back a card token (nonce), which requires a real server
+// round-trip (see src/modules/payments/square-checkout.ts). This row is
+// that round-trip's temporary home: created PENDING before a Booking row
+// exists (mirroring the old Stripe PaymentIntent's lifetime), updated to
+// SUCCEEDED/FAILED once the token is charged, and read back by
+// verifyPaymentIntent(). Provider-agnostic on purpose (`provider` column) in
+// case a future gateway needs the same bridge.
+model PendingPaymentIntent {
+  id                    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider              PaymentProvider
+  payerUserId           String          @db.Uuid
+  amount                Int
+  currency              String          @db.VarChar(3)
+  status                PaymentStatus   @default(PENDING)
+  providerTransactionRef String?
+  failureReason         String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  payer User @relation(fields: [payerUserId], references: [id])
+
+  @@index([payerUserId])
+  @@index([status])
 }
 
 // ─── AuditLog ────────────────────────────────────────────────────────────────

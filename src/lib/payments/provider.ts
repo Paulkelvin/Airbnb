@@ -153,7 +153,7 @@ export interface PaymentProvider {
 
   payout(payoutAccountRef: string, amountCents: number, currency: string): Promise<PayoutResult>;
 
-  verifyWebhookSignature(payload: string, signature: string): boolean;
+  verifyWebhookSignature(payload: string, signature: string): Promise<boolean>;
 
   /** Assumes the caller already verified the signature — parses/normalizes only, per Domain Model Spec §6's exact interface shape. */
   parseWebhookEvent(payload: string): NormalizedPaymentEvent;

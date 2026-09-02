@@ -3,9 +3,12 @@ const isProd = process.env.NODE_ENV === "production";
 /**
  * Baseline CSP (release-readiness §4). Sources are scoped to what this app
  * actually loads: Cloudinary/Pexels/Unsplash images, the Google Maps iframe
- * embed + `google-map-react`'s tile/script requests, and Stripe.js/Checkout
- * for when real Stripe Elements replaces the current test-card stand-in
- * (see project-status.md's Known Issues). `'unsafe-eval'` is dev-only —
+ * embed + `google-map-react`'s tile/script requests, and the Square Web
+ * Payments SDK for real card collection at checkout (both
+ * web.squarecdn.com and sandbox.web.squarecdn.com are allowed
+ * unconditionally so switching SQUARE_ENVIRONMENT doesn't need a CSP
+ * change too — see https://developer.squareup.com/docs/web-payments/content-security-policy
+ * for the exact domain list this mirrors). `'unsafe-eval'` is dev-only —
  * Next's webpack HMR needs it locally; the production bundle does not.
  * `'unsafe-inline'` for script/style is a known, accepted trade-off (Next's
  * own inline bootstrap data plus Tailwind/Headless UI inline styles) — a
@@ -14,12 +17,12 @@ const isProd = process.env.NODE_ENV === "production";
  */
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline' ${isProd ? "" : "'unsafe-eval'"} https://maps.googleapis.com https://js.stripe.com`,
-  `style-src 'self' 'unsafe-inline'`,
+  `script-src 'self' 'unsafe-inline' ${isProd ? "" : "'unsafe-eval'"} https://maps.googleapis.com https://web.squarecdn.com https://sandbox.web.squarecdn.com`,
+  `style-src 'self' 'unsafe-inline' https://web.squarecdn.com https://sandbox.web.squarecdn.com`,
   `img-src 'self' data: blob: https://images.pexels.com https://images.unsplash.com https://res.cloudinary.com https://cdn.sanity.io https://*.googleapis.com https://*.gstatic.com https://*.ggpht.com`,
-  `font-src 'self' data:`,
-  `connect-src 'self' https://maps.googleapis.com https://api.stripe.com https://api.cloudinary.com https://*.sanity.io https://*.apicdn.sanity.io`,
-  `frame-src 'self' https://www.google.com https://js.stripe.com https://hooks.stripe.com`,
+  `font-src 'self' data: https://square-fonts-production-f.squarecdn.com https://d1g145x70srn7h.cloudfront.net`,
+  `connect-src 'self' https://maps.googleapis.com https://web.squarecdn.com https://sandbox.web.squarecdn.com https://pci-connect.squareup.com https://pci-connect.squareupsandbox.com https://api.cloudinary.com https://*.sanity.io https://*.apicdn.sanity.io`,
+  `frame-src 'self' https://www.google.com https://web.squarecdn.com https://sandbox.web.squarecdn.com`,
   `object-src 'none'`,
   `base-uri 'self'`,
   `frame-ancestors 'none'`,

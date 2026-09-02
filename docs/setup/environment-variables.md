@@ -37,14 +37,23 @@ Setup notes: Postgres 15+; confirm `postgis` and `pgcrypto` show as available un
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary | Same value as `CLOUDINARY_CLOUD_NAME` | Both | Client-side — cloud name isn't sensitive. |
 | `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` | Cloudinary | Dashboard → **Settings** → **Upload** → **Upload presets** → create an **unsigned** preset, scope to a `listings/` folder, restrict to image formats | Both | Lets the browser upload directly to Cloudinary without exposing the API secret. |
 
-## Payments — Stripe Connect (test mode)
+## Payments — Square (sandbox first)
+
+This is a single-merchant site — one host (the site owner), one Square
+account — so there's no Connect-style sub-account onboarding to do; see
+`SquarePaymentProvider`'s class doc in `src/lib/payments/square-provider.ts`
+for why.
 
 | Variable | Service | Where to obtain | Required | Purpose |
 |---|---|---|---|---|
-| `PAYMENTS_PROVIDER` | Self-selected | Set to `stripe` to activate real Stripe Connect calls | Optional — defaults to `stub` | Feature flag (`src/lib/payments/index.ts`). Unset or any value other than `stripe` keeps the app on `StubPaymentProvider` (no network calls, no credentials needed) — the entire booking engine works end-to-end without this. Setting `stripe` without both variables below throws a clear startup error rather than silently falling back. |
-| `STRIPE_SECRET_KEY` | Stripe | Dashboard → **Developers** → **API keys** → toggle **Test mode** → **Secret key** (`sk_test_...`) | Required only when `PAYMENTS_PROVIDER=stripe` | Server-side only. Test mode — never a live (`sk_live_...`) key. |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe | Same page → **Publishable key** (`pk_test_...`) | Required to show real card collection at instant-book checkout | Client-side. Gates `isStripeCheckoutConfigured()` (`src/lib/payments/client-config.ts`) — the booking widget only renders the embedded Stripe Elements card form when this is set; otherwise it falls back to the existing dev/stub one-click flow. Only consumed by the real-time instant-book flow (`createPaymentIntent`/`verifyPaymentIntent`) — `createCharge`'s hardcoded test-card stand-in is still used for the flows with no guest present in the moment (host-approval charging on "Request to book" listings, security deposit holds, monthly rent). |
-| `STRIPE_WEBHOOK_SECRET` | Stripe | Dashboard → **Developers** → **Webhooks** → add an endpoint pointing at `/api/webhooks/stripe` → **Signing secret** (`whsec_...`). For local testing, `stripe listen --forward-to localhost:3000/api/webhooks/stripe` prints a session-scoped secret instead. | Required only when `PAYMENTS_PROVIDER=stripe` | Verifies `POST /api/webhooks/stripe` request signatures (`stripe-signature` header). |
+| `PAYMENTS_PROVIDER` | Self-selected | Set to `square` to activate real Square calls | Optional — defaults to `stub` | Feature flag (`src/lib/payments/index.ts`). Unset or any value other than `square` keeps the app on `StubPaymentProvider` (no network calls, no credentials needed) — the entire booking engine works end-to-end without this. Setting `square` without `SQUARE_WEBHOOK_SIGNATURE_KEY` throws a clear startup error rather than silently falling back. |
+| `SQUARE_ACCESS_TOKEN` | Square | [Square Developer Dashboard](https://developer.squareup.com/apps) → your application → **Sandbox** tab (for testing) or **Production** tab → **Access token** | Required only when `PAYMENTS_PROVIDER=square` | Server-side only. Use a **Sandbox** token first — never a Production token during development. |
+| `SQUARE_LOCATION_ID` | Square | Same dashboard → **Locations** (or the Sandbox test account's default location, shown on the same page as the sandbox access token) | Required only when `PAYMENTS_PROVIDER=square` | Server-side only. Identifies which of your Square locations payments are charged against. |
+| `SQUARE_WEBHOOK_SIGNATURE_KEY` | Square | Dashboard → your application → **Webhooks** → add a subscription pointing at `https://<your-domain>/api/webhooks/square`, subscribed to `payment.updated`, `refund.updated`, and `dispute.created` → **Signature Key** | Required only when `PAYMENTS_PROVIDER=square` | Verifies `POST /api/webhooks/square` request signatures (`x-square-hmacsha256-signature` header). The signature check is computed over this exact notification URL, so the subscription's URL must match the deployed domain precisely. |
+| `SQUARE_ENVIRONMENT` | Self-selected | `sandbox` or `production` | Optional — defaults to `sandbox` | Must match which of the access token/location ID above you're using — a sandbox token against `SQUARE_ENVIRONMENT=production` (or vice versa) fails outright. |
+| `NEXT_PUBLIC_SQUARE_APPLICATION_ID` | Square | Same dashboard page as the access token — **Application ID** (`sandbox-sq0idb-...` or `sq0idp-...`) | Required to show real card collection at instant-book checkout | Client-side — not sensitive, this is what the Web Payments SDK uses to initialize in the browser. |
+| `NEXT_PUBLIC_SQUARE_LOCATION_ID` | Square | Same value as `SQUARE_LOCATION_ID` | Required to show real card collection at instant-book checkout | Client-side. Gates `isSquareCheckoutConfigured()` (`src/lib/payments/client-config.ts`) together with the Application ID above — the booking widget only renders the embedded Square card form when both are set; otherwise it falls back to the existing dev/stub one-click flow. Only consumed by the real-time instant-book flow (`createPaymentIntent`/`verifyPaymentIntent`) — `createCharge`'s hardcoded test-card stand-in is still used for the flows with no guest present in the moment (host-approval charging on "Request to book" listings, security deposit holds, monthly rent). |
+| `NEXT_PUBLIC_SQUARE_ENVIRONMENT` | Self-selected | `sandbox` or `production` | Optional — defaults to `sandbox` | Client-side counterpart to `SQUARE_ENVIRONMENT` — picks which Web Payments SDK script the browser loads (`sandbox.web.squarecdn.com` vs `web.squarecdn.com`). Keep in sync with the server-side value. |
 
 ## Notifications — Resend (email)
 
@@ -89,7 +98,7 @@ Once you confirm the Neon and Auth.js variables are populated, I will:
 3. Confirm the Vercel deployment builds and starts without error (via deployment logs, no secret values printed).
 4. Exercise registration → login → session on the deployed URL to confirm Auth.js + Neon connectivity end-to-end.
 
-Cloudinary and Stripe variables aren't required for the infra verification steps above — those can follow whenever, ahead of testing image upload or before the Payments phase.
+Cloudinary and Square variables aren't required for the infra verification steps above — those can follow whenever, ahead of testing image upload or before the Payments phase.
 
 ---
 

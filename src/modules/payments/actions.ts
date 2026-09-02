@@ -7,10 +7,14 @@ import type { ActionResult } from "@/lib/validations/auth";
 import { getSiteUrl as getAppUrl } from "@/lib/site-url";
 
 /**
- * Creates (or reuses) the user's Stripe Express account and returns a fresh
- * Stripe-hosted onboarding link. Safe to call repeatedly — Account Links
- * are single-use/short-lived by design, so "continue onboarding" is just
- * calling this again, not a separate code path.
+ * This is a single-merchant site (see SquarePaymentProvider's class doc) —
+ * there's one host (the site owner) and one Square account, so "onboarding"
+ * is trivial by construction: createPayeeAccount/createOnboardingLink/
+ * getAccountStatus are simplified, always-ready implementations rather than
+ * a real Stripe-Connect-style flow. This action still exists (rather than
+ * being deleted) so the account-billing page's status display keeps
+ * working unchanged, and so a future real multi-host marketplace only has
+ * to swap the provider's implementation of these methods, not this action.
  *
  * Marketplace mode is currently off, so payout onboarding is ADMIN-only
  * (`requireAdmin()`, not `requireAuth()`) — re-enabling public hosting is
@@ -29,7 +33,7 @@ export async function startHostOnboarding(): Promise<ActionResult<{ url: string 
   const provider = getPaymentProvider();
 
   // Session doesn't carry payoutAccountRef — always read fresh from the DB rather
-  // than risk a stale session token driving a duplicate Stripe account creation.
+  // than risk a stale session token driving a duplicate account creation.
   const dbUser = await prisma.user.findUniqueOrThrow({
     where: { id: user.id },
     select: { payoutAccountRef: true },

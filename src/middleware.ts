@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // dashboard -> Settings -> Environment Variables) and redeploy to take the
 // site offline for every visitor; set it back to false (or remove it) and
 // redeploy to bring it back exactly as it was. Webhook routes stay open
-// during maintenance so in-flight Stripe events don't get dropped.
+// during maintenance so in-flight Square events don't get dropped.
 const MAINTENANCE_BYPASS_PREFIXES = ["/api/webhooks"];
 
 const MAINTENANCE_PAGE = `<!DOCTYPE html>

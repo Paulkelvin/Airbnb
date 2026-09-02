@@ -145,7 +145,7 @@ async function runMonthlyRentCharges(referenceDate: Date): Promise<RentChargeRes
         type: "CHARGE",
         amount: amountCents,
         currency: lease.currency,
-        provider: "STRIPE_CONNECT",
+        provider: "SQUARE",
         providerTransactionRef: result.providerTransactionRef,
         status: result.status,
         failureReason: result.failureReason,

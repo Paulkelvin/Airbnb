@@ -207,7 +207,7 @@ export async function createShortTermBooking(
       // a full refund so the guest isn't charged for a booking that never
       // materialized — fire-and-forget since the DATES_UNAVAILABLE error
       // is the important signal; a refund failure here would surface in
-      // Stripe's dashboard or via webhook and is recoverable manually.
+      // Square's dashboard or via webhook and is recoverable manually.
       if (data.paymentIntentId) {
         getPaymentProvider()
           .refund(data.paymentIntentId)
@@ -249,8 +249,8 @@ export async function createShortTermBooking(
 }
 
 /**
- * Prices a stay and creates an unconfirmed Stripe PaymentIntent for the
- * guest's browser to confirm with their own card via embedded Elements —
+ * Prices a stay and creates a pending payment intent for the guest's
+ * browser to actually pay against via the embedded Square card form —
  * called before any booking row exists (see createShortTermBooking's
  * paymentIntentId param for what happens once the guest confirms it).
  * Mirrors createShortTermBooking's listing/date/guest validation exactly,
@@ -495,9 +495,9 @@ async function chargeBookingTx(
     amountDollars: number;
     currency: string;
     type?: "CHARGE" | "SECURITY_DEPOSIT_HOLD";
-    /** Set when the guest already confirmed payment client-side via
-     * embedded Stripe Elements (isStripeCheckoutConfigured() true) —
-     * re-verifies that PaymentIntent instead of creating a new charge, and
+    /** Set when the guest already confirmed payment client-side via the
+     * embedded Square card form (isSquareCheckoutConfigured() true) —
+     * re-verifies that payment intent instead of creating a new charge, and
      * rejects it outright if its amount doesn't match amountDollars. Absent
      * in stub/dev mode, where createCharge's existing test-card path runs
      * unchanged. */
@@ -508,7 +508,7 @@ async function chargeBookingTx(
   const provider = getPaymentProvider();
 
   // verifyPaymentAmount only proves the intent is real, succeeded, and for
-  // the right amount — a Stripe PaymentIntent can be retrieved and would
+  // the right amount — a resolved payment intent can be retrieved and would
   // pass that check as many times as it's presented. Without this lookup,
   // the same succeeded paymentIntentId could be replayed across multiple
   // createShortTermBooking calls (different dates, same total price) to
@@ -546,7 +546,7 @@ async function chargeBookingTx(
       type: args.type ?? "CHARGE",
       amount: amountCents,
       currency: args.currency,
-      provider: "STRIPE_CONNECT",
+      provider: "SQUARE",
       providerTransactionRef: result.providerTransactionRef,
       status: result.status,
     },
@@ -584,7 +584,7 @@ async function refundBookingTx(
       type: args.type ?? "REFUND",
       amount: amountCents,
       currency: args.currency,
-      provider: "STRIPE_CONNECT",
+      provider: "SQUARE",
       providerTransactionRef: result.providerTransactionRef,
       status: result.status,
       failureReason: result.failureReason,
@@ -1074,7 +1074,7 @@ export async function payoutForPayment(paymentId: string): Promise<ActionResult<
   if (!host?.payoutAccountRef) {
     return {
       success: false,
-      error: { code: "INVALID_STATE", message: "Host has not completed Stripe Connect onboarding" },
+      error: { code: "INVALID_STATE", message: "Host has not completed payout onboarding" },
     };
   }
 
@@ -1097,7 +1097,7 @@ export async function payoutForPayment(paymentId: string): Promise<ActionResult<
       type: "PAYOUT",
       amount: payoutAmountCents,
       currency: payment.currency,
-      provider: "STRIPE_CONNECT",
+      provider: "SQUARE",
       providerTransactionRef: result.providerTransactionRef,
       status: result.status,
       failureReason: result.failureReason,

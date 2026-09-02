@@ -100,7 +100,7 @@ export async function syncChargeFailed(
 export async function syncRefundSucceeded(providerTransactionRef: string): Promise<SyncResult> {
   const payment = await prisma.payment.findFirst({ where: { providerTransactionRef } });
   if (!payment) {
-    // Not necessarily a bug — a refund issued manually from the Stripe dashboard
+    // Not necessarily a bug — a refund issued manually from the Square dashboard
     // (outside our system) has no corresponding Payment row to update.
     return { processed: false, reason: "No matching Payment for this reference" };
   }

@@ -29,9 +29,9 @@ export const createShortTermBookingSchema = z
     // submission with the same key returns the original booking instead
     // of creating a second one and double-charging.
     idempotencyKey: z.string().uuid(),
-    // Present when the guest confirmed payment client-side via embedded
-    // Stripe Elements (isStripeCheckoutConfigured() true). Absent in
-    // stub/dev mode, where the existing hardcoded-test-card charge fires
+    // Present when the guest confirmed payment client-side via the
+    // embedded Square card form (isSquareCheckoutConfigured() true). Absent
+    // in stub/dev mode, where the existing hardcoded-test-card charge fires
     // as before.
     paymentIntentId: z.string().optional(),
   })
@@ -46,8 +46,8 @@ export const createShortTermBookingSchema = z
 
 /** Same date/guest fields as createShortTermBookingSchema, minus
  * idempotencyKey/paymentIntentId — used to price a stay and create a
- * PaymentIntent for the guest to confirm in Stripe Elements, before any
- * booking row exists. */
+ * pending payment intent for the guest to pay against via the embedded
+ * Square card form, before any booking row exists. */
 export const createBookingPaymentIntentSchema = z
   .object({
     listingId: z.string().uuid(),

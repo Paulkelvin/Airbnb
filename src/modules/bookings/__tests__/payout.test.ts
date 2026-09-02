@@ -7,7 +7,7 @@ import { payoutForPayment } from "../actions";
  * payoutForPayment's actual business logic (eligibility checks, idempotency,
  * subtotal-vs-total amount computation) end-to-end. Only the auth gate and
  * the PaymentProvider are mocked, since those are exercised separately
- * (stripe-provider.test.ts covers provider.payout() itself; the webhook E2E
+ * (square-provider.test.ts covers provider.payout() itself; the webhook E2E
  * pass covered live HTTP + real DB side effects for the sync paths).
  */
 
@@ -28,13 +28,13 @@ vi.mock("@/lib/payments", () => ({
 
 const LISTING_ID = "aaaaaaaa-0000-0000-0000-000000000001";
 const HOST_ID = "aaaaaaaa-0000-0000-0000-000000000002";
-const HOST_NO_STRIPE_ID = "aaaaaaaa-0000-0000-0000-000000000003";
+const HOST_NO_PAYOUT_ACCOUNT_ID = "aaaaaaaa-0000-0000-0000-000000000003";
 const GUEST_ID = "aaaaaaaa-0000-0000-0000-000000000004";
 const PROPERTY_TYPE_ID = "aaaaaaaa-0000-0000-0000-000000000005";
 const BOOKING_ID = "aaaaaaaa-0000-0000-0000-000000000006";
 const PAYMENT_ID = "aaaaaaaa-0000-0000-0000-000000000007";
-const BOOKING_NO_STRIPE_ID = "aaaaaaaa-0000-0000-0000-000000000008";
-const PAYMENT_NO_STRIPE_ID = "aaaaaaaa-0000-0000-0000-000000000009";
+const BOOKING_NO_PAYOUT_ACCOUNT_ID = "aaaaaaaa-0000-0000-0000-000000000008";
+const PAYMENT_NO_PAYOUT_ACCOUNT_ID = "aaaaaaaa-0000-0000-0000-000000000009";
 
 beforeAll(async () => {
   await prisma.propertyType.upsert({
@@ -55,11 +55,11 @@ beforeAll(async () => {
     update: { payoutAccountRef: "acct_test_payout" },
   });
   await prisma.user.upsert({
-    where: { id: HOST_NO_STRIPE_ID },
+    where: { id: HOST_NO_PAYOUT_ACCOUNT_ID },
     create: {
-      id: HOST_NO_STRIPE_ID,
-      email: "payout-test-host-nostripe@example.com",
-      firstName: "NoStripe",
+      id: HOST_NO_PAYOUT_ACCOUNT_ID,
+      email: "payout-test-host-nopayoutaccount@example.com",
+      firstName: "NoPayoutAccount",
       lastName: "Host",
       roles: ["CUSTOMER", "HOST"],
     },
@@ -137,7 +137,7 @@ beforeAll(async () => {
       type: "CHARGE",
       amount: 44000,
       currency: "USD",
-      provider: "STRIPE_CONNECT",
+      provider: "SQUARE",
       providerTransactionRef: "pi_test_payout_1",
       status: "SUCCEEDED",
     },
@@ -145,12 +145,12 @@ beforeAll(async () => {
   });
 
   await prisma.booking.upsert({
-    where: { id: BOOKING_NO_STRIPE_ID },
+    where: { id: BOOKING_NO_PAYOUT_ACCOUNT_ID },
     create: {
-      id: BOOKING_NO_STRIPE_ID,
+      id: BOOKING_NO_PAYOUT_ACCOUNT_ID,
       listingId: LISTING_ID,
       guestId: GUEST_ID,
-      hostId: HOST_NO_STRIPE_ID,
+      hostId: HOST_NO_PAYOUT_ACCOUNT_ID,
       rentalType: "SHORT_TERM",
       status: "CONFIRMED",
       currency: "USD",
@@ -167,16 +167,16 @@ beforeAll(async () => {
     update: {},
   });
   await prisma.payment.upsert({
-    where: { id: PAYMENT_NO_STRIPE_ID },
+    where: { id: PAYMENT_NO_PAYOUT_ACCOUNT_ID },
     create: {
-      id: PAYMENT_NO_STRIPE_ID,
-      bookingId: BOOKING_NO_STRIPE_ID,
+      id: PAYMENT_NO_PAYOUT_ACCOUNT_ID,
+      bookingId: BOOKING_NO_PAYOUT_ACCOUNT_ID,
       payerUserId: GUEST_ID,
-      payeeUserId: HOST_NO_STRIPE_ID,
+      payeeUserId: HOST_NO_PAYOUT_ACCOUNT_ID,
       type: "CHARGE",
       amount: 22000,
       currency: "USD",
-      provider: "STRIPE_CONNECT",
+      provider: "SQUARE",
       providerTransactionRef: "pi_test_payout_2",
       status: "SUCCEEDED",
     },
@@ -186,11 +186,11 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await prisma.auditLog.deleteMany({ where: { actorId: ADMIN_ID } });
-  await prisma.notification.deleteMany({ where: { userId: { in: [HOST_ID, HOST_NO_STRIPE_ID] } } });
-  await prisma.payment.deleteMany({ where: { bookingId: { in: [BOOKING_ID, BOOKING_NO_STRIPE_ID] } } });
-  await prisma.booking.deleteMany({ where: { id: { in: [BOOKING_ID, BOOKING_NO_STRIPE_ID] } } });
+  await prisma.notification.deleteMany({ where: { userId: { in: [HOST_ID, HOST_NO_PAYOUT_ACCOUNT_ID] } } });
+  await prisma.payment.deleteMany({ where: { bookingId: { in: [BOOKING_ID, BOOKING_NO_PAYOUT_ACCOUNT_ID] } } });
+  await prisma.booking.deleteMany({ where: { id: { in: [BOOKING_ID, BOOKING_NO_PAYOUT_ACCOUNT_ID] } } });
   await prisma.listing.deleteMany({ where: { id: LISTING_ID } });
-  await prisma.user.deleteMany({ where: { id: { in: [HOST_ID, HOST_NO_STRIPE_ID, GUEST_ID, ADMIN_ID] } } });
+  await prisma.user.deleteMany({ where: { id: { in: [HOST_ID, HOST_NO_PAYOUT_ACCOUNT_ID, GUEST_ID, ADMIN_ID] } } });
   await prisma.propertyType.deleteMany({ where: { id: PROPERTY_TYPE_ID } });
   await prisma.$disconnect();
 });
@@ -222,12 +222,12 @@ describe("payoutForPayment", () => {
     expect(payoutMock).toHaveBeenCalledTimes(1); // not called again
   });
 
-  it("rejects payout for a host who hasn't completed Stripe Connect onboarding", async () => {
-    const result = await payoutForPayment(PAYMENT_NO_STRIPE_ID);
+  it("rejects payout for a host who hasn't completed payout onboarding", async () => {
+    const result = await payoutForPayment(PAYMENT_NO_PAYOUT_ACCOUNT_ID);
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.message).toContain("Stripe Connect onboarding");
+      expect(result.error.message).toContain("payout onboarding");
     }
   });
 

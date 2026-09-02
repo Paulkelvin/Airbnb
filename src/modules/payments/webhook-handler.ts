@@ -18,13 +18,13 @@ export interface WebhookProcessResult {
  * PaymentProvider, then hands the normalized event to whichever module
  * owns the affected data. Never touches Booking/Payment/User rows itself.
  */
-export async function handleStripeWebhook(
+export async function handlePaymentWebhook(
   payload: string,
   signature: string,
 ): Promise<WebhookProcessResult> {
   const provider = getPaymentProvider();
 
-  if (!provider.verifyWebhookSignature(payload, signature)) {
+  if (!(await provider.verifyWebhookSignature(payload, signature))) {
     return { ok: false, reason: "Invalid webhook signature" };
   }
 

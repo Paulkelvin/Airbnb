@@ -3,8 +3,6 @@
 import React, { forwardRef, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DatePicker from "react-datepicker";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements } from "@stripe/react-stripe-js";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import NcInputNumber from "@/components/NcInputNumber";
 import DatePickerCustomHeaderTwoMonth from "@/components/DatePickerCustomHeaderTwoMonth";
@@ -17,12 +15,10 @@ import {
   createLongTermBooking,
 } from "@/modules/bookings/actions";
 import { computeShortTermQuote, nightsBetween } from "@/modules/bookings/pricing";
-import { isStripeCheckoutConfigured, getStripePublishableKey } from "@/lib/payments/client-config";
-import StripePaymentStep from "./StripePaymentStep";
+import { isSquareCheckoutConfigured } from "@/lib/payments/client-config";
+import SquarePaymentStep from "./SquarePaymentStep";
 import type { ListingDetailViewModel } from "@/modules/listings/types";
 import type { Route } from "@/routers/types";
-
-const stripePromise = isStripeCheckoutConfigured() ? loadStripe(getStripePublishableKey()) : null;
 
 // HTML readOnly suppresses the mobile virtual keyboard without telling
 // react-datepicker the field is non-interactive (which blocks the calendar).
@@ -140,14 +136,14 @@ function ShortTermBookingForm({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // Real card collection (embedded Stripe Elements) only applies to instant
+  // Real card collection (embedded Square card form) only applies to instant
   // book: "Request to book" doesn't charge until the host approves, so
   // there's nothing to pay yet at this step. Falls back to the pre-existing
-  // one-step flow (no paymentIntentId) whenever Stripe isn't configured —
+  // one-step flow (no paymentIntentId) whenever Square isn't configured —
   // that path still works exactly as before via createCharge's dev/stub
   // handling.
-  const needsCardCollection = pricing.instantBook && isStripeCheckoutConfigured();
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const needsCardCollection = pricing.instantBook && isSquareCheckoutConfigured();
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [isFetchingIntent, setIsFetchingIntent] = useState(false);
 
   // blockedDates are full UTC ISO strings (e.g. "2026-07-25T00:00:00.000Z").
@@ -178,7 +174,7 @@ function ShortTermBookingForm({
   // at the time — invalidate it the moment any of those change so a stale
   // intent (wrong amount) can never be confirmed against a different quote.
   useEffect(() => {
-    setClientSecret(null);
+    setPaymentIntentId(null);
   }, [checkInDate?.getTime(), checkOutDate?.getTime(), guestCount]);
 
   const sameDay = checkInDate != null && checkOutDate != null && nights === 0;
@@ -227,7 +223,7 @@ function ShortTermBookingForm({
           if (result.error.code === "DATES_UNAVAILABLE") router.refresh();
           return;
         }
-        setClientSecret(result.data.clientSecret);
+        setPaymentIntentId(result.data.paymentIntentId);
       } catch {
         setError("Your session expired. Please confirm your booking again.");
       } finally {
@@ -404,20 +400,12 @@ function ShortTermBookingForm({
           <InlineBookingAuth onAuthenticated={handleAuthenticated} />
         </div>
       ) : needsCardCollection ? (
-        clientSecret && stripePromise ? (
-          <Elements
-            stripe={stripePromise}
-            options={{
-              clientSecret,
-              appearance: {
-                theme: typeof document !== "undefined" && document.documentElement.classList.contains("dark")
-                  ? "night"
-                  : "stripe",
-              },
-            }}
-          >
-            <StripePaymentStep onConfirmed={handlePaymentConfirmed} buttonLabel="Pay & Reserve" />
-          </Elements>
+        paymentIntentId ? (
+          <SquarePaymentStep
+            paymentIntentId={paymentIntentId}
+            onConfirmed={handlePaymentConfirmed}
+            buttonLabel="Pay & Reserve"
+          />
         ) : (
           <ButtonPrimary
             disabled={!canSubmit || isFetchingIntent}

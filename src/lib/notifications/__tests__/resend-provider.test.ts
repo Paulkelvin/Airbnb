@@ -5,7 +5,7 @@ import { ResendEmailProvider } from "../resend-provider";
 /**
  * Exercises ResendEmailProvider entirely against a mocked Resend client
  * (dependency injection) — no network access, no real credentials. Mirrors
- * src/lib/payments/__tests__/stripe-provider.test.ts's DI pattern.
+ * src/lib/payments/__tests__/square-provider.test.ts's DI pattern.
  */
 
 function mockResend(overrides: Record<string, unknown> = {}): Resend {

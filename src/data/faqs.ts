@@ -21,7 +21,7 @@ export const faqs: Faq[] = [
     category: "Payments",
     question: "Is my payment secure?",
     answer:
-      "Your card details are encrypted and processed through Stripe; we never see or store your payment information directly. Funds are only released after your check-in, so you're protected if something doesn't match what was described.",
+      "Your card details are encrypted and processed through Square; we never see or store your payment information directly. Funds are only released after your check-in, so you're protected if something doesn't match what was described.",
   },
   {
     category: "Payments",

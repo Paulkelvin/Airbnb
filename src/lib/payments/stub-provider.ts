@@ -15,12 +15,12 @@ import type {
  * NOT FOR PRODUCTION. Deterministic fake PaymentProvider that always
  * succeeds and never calls a real gateway — lets the full booking engine
  * (charges, refunds, deposit holds/releases, payouts) be built and tested
- * end-to-end before real Stripe Connect credentials exist. Every
+ * end-to-end before real Square credentials exist. Every
  * `providerTransactionRef` is prefixed `stub_` so it can never collide
- * with — or be mistaken for — a real Stripe reference.
+ * with — or be mistaken for — a real Square reference.
  *
  * Selected automatically by src/lib/payments/index.ts whenever
- * PAYMENTS_PROVIDER isn't explicitly set to "stripe" — no call site outside
+ * PAYMENTS_PROVIDER isn't explicitly set to "square" — no call site outside
  * src/lib/payments/ should ever need to know which adapter is active.
  */
 export class StubPaymentProvider implements PaymentProvider {
@@ -45,10 +45,10 @@ export class StubPaymentProvider implements PaymentProvider {
     _payerUserId: string,
   ): Promise<PaymentIntentResult> {
     // Encodes the amount into the fake id so verifyPaymentIntent (below) can
-    // echo it back — there's no real Stripe.js session in stub mode to
-    // confirm anything against, so this is never exercised by the actual
-    // Elements UI (that requires a real publishable key), only by direct
-    // server-side calls/tests.
+    // echo it back — there's no real Square Web Payments SDK session in
+    // stub mode to confirm anything against, so this is never exercised by
+    // the actual checkout UI (that requires real Square credentials), only
+    // by direct server-side calls/tests.
     return {
       paymentIntentId: `stub_pi_${amountCents}_${crypto.randomUUID()}`,
       clientSecret: `stub_secret_${crypto.randomUUID()}`,
@@ -100,7 +100,7 @@ export class StubPaymentProvider implements PaymentProvider {
     };
   }
 
-  verifyWebhookSignature(_payload: string, _signature: string): boolean {
+  async verifyWebhookSignature(_payload: string, _signature: string): Promise<boolean> {
     return true;
   }
 

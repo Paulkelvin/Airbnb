@@ -28,8 +28,6 @@
     "@react-email/render": "^2.1.0",
     "@sanity/client": "^7.23.2",
     "@sanity/image-url": "^2.1.1",
-    "@stripe/react-stripe-js": "^6.8.0",
-    "@stripe/stripe-js": "^9.10.0",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.3",
     "@tailwindcss/typography": "^0.5.9",
@@ -61,7 +59,7 @@
     "sass": "^1.62.1",
     "server-only": "^0.0.1",
     "sonner": "^2.0.7",
-    "stripe": "^22.3.1",
+    "square": "^45.1.0",
     "typescript": "5.0.4",
     "zod": "^4.4.3"
   },
