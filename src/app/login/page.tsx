@@ -152,6 +152,8 @@ const PageLogin = () => {
                   </ButtonPrimary>
                 </form>
                 <p className="text-center text-sm mt-6">
+                  Don&apos;t have a password?
+                  <br />
                   <button
                     type="button"
                     onClick={() => {
@@ -160,13 +162,13 @@ const PageLogin = () => {
                     }}
                     className="font-medium text-primary-6000 hover:text-primary-700 dark:hover:text-primary-500"
                   >
-                    Don&apos;t have a password? Log in with an email code instead
+                    Log in with an email code instead
                   </button>
                 </p>
               </>
             ) : (
               <>
-                <InlineBookingAuth onAuthenticated={redirectAfterLogin} />
+                <InlineBookingAuth onAuthenticated={redirectAfterLogin} heading="Log in" />
                 <p className="text-center text-sm mt-6">
                   <button
                     type="button"

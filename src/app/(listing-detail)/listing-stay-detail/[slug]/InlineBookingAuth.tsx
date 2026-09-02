@@ -18,8 +18,12 @@ const RESEND_COOLDOWN_SECONDS = 30;
  */
 export default function InlineBookingAuth({
   onAuthenticated,
+  heading = "Confirm your booking",
 }: {
   onAuthenticated: () => void;
+  /** Defaults to the booking-flow wording — override when this is mounted
+   * somewhere else (e.g. the main /login page) that isn't mid-checkout. */
+  heading?: string;
 }) {
   const [step, setStep] = useState<"details" | "code">("details");
   const [fullName, setFullName] = useState("");
@@ -88,7 +92,7 @@ export default function InlineBookingAuth({
           onSubmit={handleDetailsSubmit}
           className="space-y-3 border border-neutral-200 dark:border-neutral-700 rounded-2xl p-4"
         >
-          <p className="text-sm font-medium">Confirm your booking</p>
+          <p className="text-sm font-medium">{heading}</p>
           <Input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
