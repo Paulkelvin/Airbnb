@@ -8,6 +8,7 @@ import PasswordInput from "@/components/ui/PasswordInput";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import Link from "next/link";
 import { getDefaultDashboardPath } from "@/lib/dashboard-path";
+import InlineBookingAuth from "@/app/(listing-detail)/listing-stay-detail/[slug]/InlineBookingAuth";
 import type { Route } from "@/routers/types";
 
 const PageLogin = () => {
@@ -20,6 +21,20 @@ const PageLogin = () => {
       : null;
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // Some accounts (e.g. anyone who booked via the passwordless inline OTP
+  // flow) never have a password to log in with — this reuses that same
+  // "email code" flow here instead of only being reachable mid-checkout.
+  const [authMethod, setAuthMethod] = useState<"password" | "code">("password");
+
+  async function redirectAfterLogin() {
+    if (safeCallbackUrl) {
+      router.push(safeCallbackUrl as Route);
+    } else {
+      const session = await getSession();
+      router.push(getDefaultDashboardPath(session?.user.roles ?? ["CUSTOMER"]));
+    }
+    router.refresh();
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,13 +57,7 @@ const PageLogin = () => {
         return;
       }
 
-      if (safeCallbackUrl) {
-        router.push(safeCallbackUrl as Route);
-      } else {
-        const session = await getSession();
-        router.push(getDefaultDashboardPath(session?.user.roles ?? ["CUSTOMER"]));
-      }
-      router.refresh();
+      await redirectAfterLogin();
     });
   }
 
@@ -105,41 +114,73 @@ const PageLogin = () => {
               Enter your credentials below to continue
             </p>
 
-            {error && (
+            {error && authMethod === "password" && (
               <div className="rounded-lg bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 text-sm px-4 py-3 mb-6">
                 {error}
               </div>
             )}
 
-            <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
-              <label className="block">
-                <span className="text-neutral-800 dark:text-neutral-200 text-sm font-medium">
-                  Email address
-                </span>
-                <Input
-                  name="email"
-                  type="email"
-                  placeholder="example@example.com"
-                  required
-                  className="mt-1.5"
-                />
-              </label>
-              <label className="block">
-                <span className="text-neutral-800 dark:text-neutral-200 text-sm font-medium">
-                  Password
-                </span>
-                <PasswordInput name="password" required className="mt-1.5" />
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-primary-6000 hover:text-primary-700 dark:hover:text-primary-500 mt-2 inline-block font-medium"
-                >
-                  Forgot password?
-                </Link>
-              </label>
-              <ButtonPrimary type="submit" loading={isPending} disabled={isPending} className="w-full py-3">
-                Log in
-              </ButtonPrimary>
-            </form>
+            {authMethod === "password" ? (
+              <>
+                <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
+                  <label className="block">
+                    <span className="text-neutral-800 dark:text-neutral-200 text-sm font-medium">
+                      Email address
+                    </span>
+                    <Input
+                      name="email"
+                      type="email"
+                      placeholder="example@example.com"
+                      required
+                      className="mt-1.5"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-neutral-800 dark:text-neutral-200 text-sm font-medium">
+                      Password
+                    </span>
+                    <PasswordInput name="password" required className="mt-1.5" />
+                    <Link
+                      href="/forgot-password"
+                      className="text-sm text-primary-6000 hover:text-primary-700 dark:hover:text-primary-500 mt-2 inline-block font-medium"
+                    >
+                      Forgot password?
+                    </Link>
+                  </label>
+                  <ButtonPrimary type="submit" loading={isPending} disabled={isPending} className="w-full py-3">
+                    Log in
+                  </ButtonPrimary>
+                </form>
+                <p className="text-center text-sm mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError(null);
+                      setAuthMethod("code");
+                    }}
+                    className="font-medium text-primary-6000 hover:text-primary-700 dark:hover:text-primary-500"
+                  >
+                    Don&apos;t have a password? Log in with an email code instead
+                  </button>
+                </p>
+              </>
+            ) : (
+              <>
+                <InlineBookingAuth onAuthenticated={redirectAfterLogin} />
+                <p className="text-center text-sm mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError(null);
+                      setAuthMethod("password");
+                    }}
+                    className="font-medium text-primary-6000 hover:text-primary-700 dark:hover:text-primary-500"
+                  >
+                    Use a password instead
+                  </button>
+                </p>
+              </>
+            )}
           </div>
 
           <p className="text-center text-neutral-600 dark:text-neutral-400 mt-8 text-sm">
