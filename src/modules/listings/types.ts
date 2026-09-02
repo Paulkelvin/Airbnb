@@ -105,7 +105,13 @@ export function toDetailViewModel(
           checkInTime: listing.checkInTime,
           checkInWindowEnd: metadata.checkInWindowEnd ?? null,
           checkOutTime: listing.checkOutTime,
-          instantBook: listing.instantBook ?? false,
+          // Hardcoded true rather than reading listing.instantBook: this is a
+          // single-listing site whose owner wants guest-pays-and-confirms
+          // behavior guaranteed, not dependent on a DB toggle that a broken
+          // edit-wizard step once silently reset (see the same override in
+          // modules/bookings/actions.ts's createShortTermBooking, the actual
+          // decision point). Both must stay hardcoded together.
+          instantBook: true,
           cancellationPolicy: listing.cancellationPolicy ?? "MODERATE",
           petPolicy: listing.petPolicy ?? "NOT_ALLOWED",
           petFeeAmount: metadata.petFeeAmount ?? null,

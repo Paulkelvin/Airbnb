@@ -452,12 +452,11 @@ export default function AddListingWizard({
                   <option value="CASE_BY_CASE">Case by case</option>
                 </Select>
               </FormItem>
-              <Checkbox
-                name="instantBook"
-                label="Allow instant booking"
-                defaultChecked={listing.instantBook ?? false}
-                onChange={(checked) => update("instantBook", checked)}
-              />
+              <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 p-4 text-sm text-neutral-500 dark:text-neutral-400">
+                Instant booking is always on for this listing — every guest
+                pays and is confirmed immediately at checkout, with no
+                approval step.
+              </div>
             </div>
           </>
         ) : (

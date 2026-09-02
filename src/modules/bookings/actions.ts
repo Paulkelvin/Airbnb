@@ -150,7 +150,14 @@ export async function createShortTermBooking(
   });
 
   const nightDates = datesInRange(data.checkInDate, data.checkOutDate);
-  const initialStatus = listing.instantBook ? "CONFIRMED" : "PENDING";
+  // Hardcoded to always instant-confirm, ignoring listing.instantBook — the
+  // owner explicitly wants "guest pays, booking confirms" guaranteed for
+  // every booking on this single-listing site, not dependent on a DB toggle
+  // that's proven fragile (a broken edit-wizard step silently reset it once
+  // already). The "Request to book"/host-approval path (PENDING status,
+  // approveBooking's charge-on-approval) is intentionally unreachable now —
+  // see the matching override in modules/listings/types.ts.
+  const initialStatus = "CONFIRMED";
 
   let bookingId: string;
   try {

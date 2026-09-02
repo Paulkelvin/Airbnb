@@ -328,7 +328,9 @@ function toStrictInput(listing: {
         : undefined,
       checkInTime: listing.checkInTime,
       checkOutTime: listing.checkOutTime,
-      instantBook: listing.instantBook ?? false,
+      // Hardcoded true — see modules/bookings/actions.ts's createShortTermBooking
+      // for why this is no longer read from the DB.
+      instantBook: true,
       cancellationPolicy: (listing.cancellationPolicy ?? "") as
         | "FLEXIBLE"
         | "MODERATE"
