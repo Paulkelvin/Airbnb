@@ -34,7 +34,10 @@ const baseListing = {
   sizeSqft: z.coerce.number().int().positive().nullish(),
   currency: z.string().length(3).default("USD"),
   amenityIds: z.array(z.string().uuid()).default([]),
-  images: z.array(listingImageSchema).max(20).default([]),
+  // 60 is a generous ceiling, not a meaningful business rule — just enough
+  // headroom above what a real listing's photo gallery actually accumulates
+  // over time, so it stops blocking edits without becoming unbounded.
+  images: z.array(listingImageSchema).max(60).default([]),
   address: addressSchema,
   // Not long-term-specific — a short-term rental can just as easily allow
   // (or charge for) pets, so this lives on both rental-type branches.
@@ -118,7 +121,7 @@ export const draftUpdateSchema = z.object({
   // didn't touch amenities/images" into "replace them with an empty array."
   // A draft save must be able to omit these entirely and leave them alone.
   amenityIds: z.array(z.string().uuid()).optional(),
-  images: z.array(listingImageSchema).max(20).optional(),
+  images: z.array(listingImageSchema).max(60).optional(),
   address: partialAddressSchema.optional(),
   petPolicy: baseListing.petPolicy.optional(),
   rentalType: z.enum(["SHORT_TERM", "LONG_TERM"]).optional(),

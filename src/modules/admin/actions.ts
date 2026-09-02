@@ -270,6 +270,16 @@ export async function adminDeleteListing(listingId: string): Promise<ActionResul
   return { success: true, data: { id: listingId } };
 }
 
+/** Derives a Cloudinary public_id from one of its delivery URLs — everything
+ * after "/upload/", minus an optional leading "v<digits>/" version segment
+ * and the file extension. Used both when a caller doesn't already have the
+ * public_id handy (addListingImages) and to backfill rows that were
+ * created without one (backfillMissingImagePublicIds). */
+function publicIdFromCloudinaryUrl(url: string): string | null {
+  const match = /\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+(?:\?.*)?$/.exec(url);
+  return match ? match[1] : null;
+}
+
 export async function addListingImages(
   listingId: string,
   images: { url: string; altText?: string; category?: string }[],
@@ -289,6 +299,10 @@ export async function addListingImages(
         data: {
           listingId,
           url: img.url,
+          // Required by the add-listing edit form's validation
+          // (listingImageSchema) — a row without one fails that form's
+          // Zod check the moment any admin tries to edit the listing.
+          publicId: publicIdFromCloudinaryUrl(img.url),
           altText: img.altText ?? null,
           category: img.category ?? null,
           position: nextPosition++,
@@ -300,6 +314,32 @@ export async function addListingImages(
   revalidatePath("/admin/listings");
   revalidatePath("/listing-stay");
   return { success: true, data: { count: created.length } };
+}
+
+/** One-time repair for rows created by an earlier version of
+ * addListingImages() that didn't set publicId at all — those rows fail the
+ * add-listing edit form's validation (listingImageSchema requires a
+ * non-empty publicId on every image), blocking edits to the whole listing
+ * until fixed. Safe to call repeatedly: only touches rows where publicId is
+ * still null. */
+export async function backfillMissingImagePublicIds(): Promise<ActionResult<{ count: number }>> {
+  await requireAdmin();
+
+  const broken = await prisma.image.findMany({
+    where: { publicId: null },
+    select: { id: true, url: true },
+  });
+
+  let fixed = 0;
+  for (const image of broken) {
+    const publicId = publicIdFromCloudinaryUrl(image.url);
+    if (!publicId) continue;
+    await prisma.image.update({ where: { id: image.id }, data: { publicId } });
+    fixed++;
+  }
+
+  revalidatePath("/admin/listings");
+  return { success: true, data: { count: fixed } };
 }
 
 // ─── Booking Dispute Resolution ──────────────────────────────────────────────
