@@ -49,8 +49,11 @@ export async function confirmSquarePayment(
   // A fresh idempotency key per real attempt (rather than reusing
   // paymentIntentId forever) so a guest whose card was declined can retry
   // with a different card under the same pending row — reusing the same
-  // key would make Square just replay the earlier failed result.
-  const idempotencyKey = `${paymentIntentId}:${randomUUID()}`;
+  // key would make Square just replay the earlier failed result. A bare
+  // UUID (36 chars) rather than prefixing it with paymentIntentId — Square
+  // caps idempotency_key at 45 characters, and two concatenated UUIDs blew
+  // well past that.
+  const idempotencyKey = randomUUID();
 
   try {
     const response = await client.payments.create({
