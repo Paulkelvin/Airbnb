@@ -1,6 +1,5 @@
 import { getAdminListings } from "@/modules/admin/queries";
 import { ListingActions } from "./ListingActions";
-import FixMissingImagePublicIds from "./FixMissingImagePublicIds";
 import Link from "next/link";
 import CloudinaryImage from "@/components/ui/CloudinaryImage";
 import {
@@ -30,8 +29,6 @@ export default async function AdminListingsPage({
   return (
     <div>
       <AdminPageHeader title="Listing Management" description={`${total} total listings`} />
-
-      <FixMissingImagePublicIds />
 
       <AdminFilterPills
         options={STATUSES}
