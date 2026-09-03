@@ -7,6 +7,7 @@ import { getReviewByBookingAndDirection } from "@/modules/reviews/queries";
 import BookingDetailActions from "./BookingDetailActions";
 import BookingMessageEntry from "./BookingMessageEntry";
 import ReviewPrompt from "./ReviewPrompt";
+import RetryRefundButton from "./RetryRefundButton";
 import type { Route } from "@/routers/types";
 
 export const metadata = {
@@ -136,11 +137,16 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
               {p.failureReason && (
                 <p className="text-xs text-red-600 mt-1">{p.failureReason}</p>
               )}
-              {p.failureReason && p.type === "REFUND" && p.status === "FAILED" && (
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  This refund could not be completed automatically. The host will need to
-                  reimburse this amount directly (e.g. Venmo, Zelle, or cash).
-                </p>
+              {p.failureReason && (p.type === "REFUND" || p.type === "SECURITY_DEPOSIT_RELEASE") && p.status === "FAILED" && (
+                <>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    This refund could not be completed automatically.
+                    {isAdmin
+                      ? " You can retry it using the button below."
+                      : " The host will need to reimburse this amount directly (e.g. Venmo, Zelle, or cash)."}
+                  </p>
+                  {isAdmin && <RetryRefundButton paymentId={p.id} />}
+                </>
               )}
             </div>
           ))}

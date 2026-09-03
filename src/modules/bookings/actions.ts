@@ -1166,3 +1166,69 @@ export async function payoutForPayment(paymentId: string): Promise<ActionResult<
 
   return { success: true, data: { id: payout.id } };
 }
+
+/** Admin-only: retry a FAILED refund. Updates the existing Payment row
+ * in place rather than creating a duplicate — prevents double-refunding. */
+export async function adminRetryRefund(
+  failedPaymentId: string,
+): Promise<ActionResult<{ id: string }>> {
+  const admin = await requireAdmin();
+
+  const payment = await prisma.payment.findUnique({
+    where: { id: failedPaymentId },
+    include: { relatedPayment: true },
+  });
+
+  if (!payment) {
+    return { success: false, error: { code: "NOT_FOUND", message: "Payment not found" } };
+  }
+
+  if (payment.type !== "REFUND" && payment.type !== "SECURITY_DEPOSIT_RELEASE") {
+    return { success: false, error: { code: "VALIDATION_ERROR", message: "This payment is not a refund" } };
+  }
+
+  if (payment.status !== "FAILED") {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: payment.status === "SUCCEEDED"
+          ? "This refund has already been processed successfully"
+          : `Refund is currently ${payment.status} — cannot retry`,
+      },
+    };
+  }
+
+  const originalCharge = payment.relatedPayment;
+  if (!originalCharge?.providerTransactionRef) {
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Cannot find the original charge to refund against" },
+    };
+  }
+
+  const provider = getPaymentProvider();
+  const result = await provider.refund(originalCharge.providerTransactionRef, payment.amount);
+
+  await prisma.payment.update({
+    where: { id: failedPaymentId },
+    data: {
+      providerTransactionRef: result.providerTransactionRef || payment.providerTransactionRef,
+      status: result.status,
+      failureReason: result.status === "SUCCEEDED" ? null : result.failureReason,
+      updatedAt: new Date(),
+    },
+  });
+
+  revalidatePath("/account-bookings");
+  revalidatePath("/admin/bookings");
+
+  if (result.status === "FAILED") {
+    return {
+      success: false,
+      error: { code: "PAYMENT_FAILED", message: result.failureReason ?? "Refund failed again — check Square dashboard for details" },
+    };
+  }
+
+  return { success: true, data: { id: failedPaymentId } };
+}
