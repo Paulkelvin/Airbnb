@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAdminBookings } from "@/modules/admin/queries";
 import { BookingActions } from "./BookingActions";
 import {
@@ -52,10 +53,12 @@ export default async function AdminBookingsPage({
             {bookings.map((booking) => (
               <tr key={booking.id}>
                 <td className="px-4 py-3">
-                  <div className="font-medium text-neutral-900 dark:text-neutral-100 text-xs font-mono">
-                    {booking.id.slice(0, 8)}...
-                  </div>
-                  <div className="text-xs text-neutral-400">{booking.listing.title}</div>
+                  <Link href={`/account-bookings/${booking.id}`} className="hover:underline">
+                    <div className="font-medium text-primary-6000 dark:text-primary-400 text-xs font-mono">
+                      {booking.id.slice(0, 8)}...
+                    </div>
+                    <div className="text-xs text-neutral-400">{booking.listing.title}</div>
+                  </Link>
                 </td>
                 <td className="px-4 py-3 text-neutral-600 dark:text-neutral-300">
                   {booking.guest.firstName} {booking.guest.lastName}
