@@ -15,7 +15,14 @@ export async function GET() {
     status: 200,
     headers: {
       "content-type": "text/plain; charset=utf-8",
-      "cache-control": "public, max-age=3600",
+      // no-transform tells Vercel's edge network not to Brotli/gzip-encode
+      // this response — with compression on, Vercel switches to chunked
+      // transfer and drops Content-Length entirely, which is exactly what
+      // produced Square's "partial response" verification error (confirmed
+      // by re-requesting with Accept-Encoding set, matching what a real
+      // verifier bot sends by default, unlike curl).
+      "cache-control": "public, max-age=3600, no-transform",
+      "content-length": String(Buffer.byteLength(DOMAIN_ASSOCIATION, "utf-8")),
     },
   });
 }
