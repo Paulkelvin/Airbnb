@@ -1,6 +1,7 @@
 "use server";
 
 import { randomUUID } from "crypto";
+import { SquareError } from "square";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import type { ActionResult } from "@/lib/validations/auth";
@@ -8,6 +9,30 @@ import { createSquareClient, getSquareLocationId } from "@/lib/payments/square-c
 
 function fail<T>(message: string): ActionResult<T> {
   return { success: false, error: { code: "VALIDATION_ERROR", message } };
+}
+
+// Square's card-decline codes, mapped to plain-English messages a guest can
+// actually act on. Anything not in this list falls back to a generic
+// message — guests should never see a raw Square API error (error codes,
+// "Status code: 400 Body: {...}" dumps, etc.), only developers reading logs
+// should see those.
+const DECLINE_MESSAGES: Record<string, string> = {
+  CVV_FAILURE: "The security code (CVV) doesn't match your card. Please check it and try again.",
+  ADDRESS_VERIFICATION_FAILURE:
+    "The billing address or zip code doesn't match your card. Please check it and try again.",
+  INSUFFICIENT_FUNDS: "Your card was declined for insufficient funds.",
+  CARD_EXPIRED: "This card has expired. Please use a different card.",
+  CARD_DECLINED: "Your card was declined. Please try a different card or contact your bank.",
+  GENERIC_DECLINE: "Your card was declined. Please try a different card or contact your bank.",
+  INVALID_EXPIRATION: "The expiration date entered doesn't match your card.",
+  INVALID_CARD: "This card couldn't be processed. Please check the details or try a different card.",
+  TRANSACTION_LIMIT: "This charge exceeds a limit on your card. Please contact your bank or try a different card.",
+};
+const GENERIC_DECLINE_MESSAGE = "We couldn't process your card. Please try a different card or contact your bank.";
+
+function friendlyFailureReason(errorCode: string | undefined): string {
+  if (errorCode && DECLINE_MESSAGES[errorCode]) return DECLINE_MESSAGES[errorCode];
+  return GENERIC_DECLINE_MESSAGE;
 }
 
 /**
@@ -68,7 +93,7 @@ export async function confirmSquarePayment(
     const succeeded = payment?.id && (payment.status === "COMPLETED" || payment.status === "APPROVED");
 
     if (!succeeded) {
-      const failureReason = response.errors?.[0]?.detail ?? "Payment was not approved";
+      const failureReason = friendlyFailureReason(response.errors?.[0]?.code);
       await prisma.pendingPaymentIntent.update({
         where: { id: paymentIntentId },
         data: { status: "FAILED", failureReason },
@@ -82,7 +107,16 @@ export async function confirmSquarePayment(
     });
     return { success: true, data: { status: "SUCCEEDED" } };
   } catch (err) {
-    const failureReason = err instanceof Error ? err.message : "Payment failed";
+    // Square's SDK throws SquareError with the same {errors: [{code, ...}]}
+    // shape as a non-throwing decline response — map it the same way rather
+    // than surfacing err.message, which is a raw "Status code: 400 Body:
+    // {...}" API dump, not something a guest should ever see.
+    const failureReason =
+      err instanceof SquareError
+        ? friendlyFailureReason(err.errors?.[0]?.code)
+        : GENERIC_DECLINE_MESSAGE;
+    // eslint-disable-next-line no-console
+    console.error("Square payment confirmation failed", err);
     await prisma.pendingPaymentIntent
       .update({ where: { id: paymentIntentId }, data: { status: "FAILED", failureReason } })
       .catch(() => {});
