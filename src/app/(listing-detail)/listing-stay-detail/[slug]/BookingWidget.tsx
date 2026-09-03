@@ -355,7 +355,7 @@ function ShortTermBookingForm({
               }
               className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-600 text-primary-6000 focus:ring-primary-6000"
             />
-            Traveling with a pet? (${pricing.petFeeAmount} fee)
+            Traveling with pets? Up to 2 pets (${pricing.petFeeAmount} fee)
           </label>
         )}
       </div>
