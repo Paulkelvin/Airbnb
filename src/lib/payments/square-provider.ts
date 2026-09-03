@@ -148,10 +148,12 @@ export class SquarePaymentProvider implements PaymentProvider {
         amountMoney: { amount: BigInt(refundAmountCents), currency: currency as never },
       });
       if (response.errors?.length || !response.refund) {
+        const reason = response.errors?.[0]?.detail ?? "Refund failed";
+        console.error(`Square refund rejected for payment ${providerTransactionRef}: ${reason}`);
         return {
           providerTransactionRef: "",
           status: "FAILED",
-          failureReason: response.errors?.[0]?.detail ?? "Refund failed",
+          failureReason: reason,
         };
       }
       return {
@@ -159,6 +161,7 @@ export class SquarePaymentProvider implements PaymentProvider {
         status: mapRefundStatus(response.refund.status),
       };
     } catch (err) {
+      console.error(`Square refund failed for payment ${providerTransactionRef}:`, err);
       return chargeFailureResult(err);
     }
   }
