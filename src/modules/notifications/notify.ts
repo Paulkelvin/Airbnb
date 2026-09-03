@@ -20,6 +20,14 @@ const CRITICAL_EMAIL_TYPES: ReadonlySet<NotificationType> = new Set<Notification
 ]);
 
 /**
+ * NEW_BOOKING emails go here instead of the host account's own login
+ * email — the owner explicitly wants new-booking alerts landing in this
+ * inbox regardless of what email their site account uses. Overridable via
+ * env without a code change if that inbox ever needs to change.
+ */
+const OWNER_NOTIFICATION_EMAIL = process.env.OWNER_NOTIFICATION_EMAIL || "Margojsmith@msn.com";
+
+/**
  * The notification emission primitive (Platform Architecture Blueprint
  * §7). Every domain action that should notify a user calls this — it is
  * the only writer of Notification rows in the codebase.
@@ -65,7 +73,8 @@ export async function notify<T extends NotificationType>(
   try {
     const { subject, html, text } = renderEmailTemplate(type, payload, user.firstName);
     const provider = getEmailProvider();
-    const result = await provider.send({ to: user.email, subject, html, text });
+    const to = type === "NEW_BOOKING" ? OWNER_NOTIFICATION_EMAIL : user.email;
+    const result = await provider.send({ to, subject, html, text });
     if (!result.success) {
       console.error(`[notifications] Email send failed for ${type} to user ${userId}: ${result.error}`);
     }
