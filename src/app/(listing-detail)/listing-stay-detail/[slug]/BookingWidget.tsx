@@ -341,6 +341,23 @@ function ShortTermBookingForm({
           value={guestBreakdown}
           onChange={setGuestBreakdown}
         />
+        {pricing.petPolicy === "ALLOWED" && pricing.petFeeAmount && (
+          // Also settable via the Pets count inside GuestSelector's dropdown
+          // (same guestBreakdown.pets value) — this is a second, always-
+          // visible entry point so the fee isn't easy to miss behind a
+          // popover a guest might never open before paying.
+          <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={guestBreakdown.pets > 0}
+              onChange={(e) =>
+                setGuestBreakdown({ ...guestBreakdown, pets: e.target.checked ? 1 : 0 })
+              }
+              className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-600 text-primary-6000 focus:ring-primary-6000"
+            />
+            Traveling with a pet? (${pricing.petFeeAmount} fee)
+          </label>
+        )}
       </div>
 
       <div className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${sameDay ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
