@@ -566,10 +566,13 @@ function titleCase(value: string) {
     .join(" ");
 }
 
-// Surfaces the fee amount right on the summary row — it was otherwise only
-// mentioned in the long-form description, easy to miss if a guest never
-// expands "Read more".
+// Whether pets are allowed is driven entirely by whether a fee is set
+// (see BookingWidget's "Traveling with a pet?" checkbox and
+// getListingForBooking), not the underlying petPolicy enum — the fee
+// amount is what actually gates the checkbox/charge, so this disclosure
+// text has to agree with that rather than the enum, which the listing
+// editor no longer exposes a way to change independently.
 function formatPetPolicy(policy: string, feeAmount: number | null) {
-  const label = titleCase(policy);
-  return policy === "ALLOWED" && feeAmount ? `${label} ($${feeAmount} fee)` : label;
+  if (feeAmount) return `Allowed ($${feeAmount} fee)`;
+  return policy === "NOT_ALLOWED" ? "Not allowed" : titleCase(policy);
 }

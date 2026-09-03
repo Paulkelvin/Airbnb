@@ -36,10 +36,10 @@ export async function getListingForBooking(listingId: string) {
   const { petFeeAmount } = parseListingMetadata(listing.metadata);
   return {
     ...listing,
-    // Only actually chargeable when pets are allowed at all — a fee amount
-    // left over from a listing that later switched to NOT_ALLOWED should
-    // never get charged.
-    petFeeAmount: listing.petPolicy === "ALLOWED" ? petFeeAmount ?? null : null,
+    // Whether a pet fee applies is driven entirely by whether the host set
+    // one — not the petPolicy enum, which the listing editor no longer
+    // exposes a way to change independently of it.
+    petFeeAmount: petFeeAmount ?? null,
   };
 }
 

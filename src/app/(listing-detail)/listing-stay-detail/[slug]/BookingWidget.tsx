@@ -337,11 +337,11 @@ function ShortTermBookingForm({
         </div>
         <GuestSelector
           maxOccupants={maxOccupants}
-          petsAllowed={pricing.petPolicy !== "NOT_ALLOWED"}
+          petsAllowed
           value={guestBreakdown}
           onChange={setGuestBreakdown}
         />
-        {pricing.petPolicy === "ALLOWED" && pricing.petFeeAmount && (
+        {pricing.petFeeAmount && (
           // Also settable via the Pets count inside GuestSelector's dropdown
           // (same guestBreakdown.pets value) — this is a second, always-
           // visible entry point so the fee isn't easy to miss behind a

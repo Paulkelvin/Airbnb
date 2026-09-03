@@ -443,28 +443,19 @@ export default function AddListingWizard({
                   <option value="STRICT">Strict</option>
                 </Select>
               </FormItem>
-              <FormItem label="Pet policy">
-                <Select
-                  value={listing.petPolicy ?? "NOT_ALLOWED"}
-                  onChange={(e) => update("petPolicy", e.target.value)}
-                >
-                  <option value="NOT_ALLOWED">Not allowed</option>
-                  <option value="ALLOWED">Allowed</option>
-                  <option value="CASE_BY_CASE">Case by case</option>
-                </Select>
+              <FormItem
+                label="Pet fee ($)"
+                desc="Guests always see a 'Traveling with a pet?' checkbox at checkout — checking it adds this fee. Leave blank for no fee."
+              >
+                <Input
+                  type="number"
+                  min={0}
+                  value={listing.petFeeAmount ?? ""}
+                  onChange={(e) =>
+                    update("petFeeAmount", e.target.value ? Number(e.target.value) : null)
+                  }
+                />
               </FormItem>
-              {listing.petPolicy === "ALLOWED" && (
-                <FormItem label="Pet fee ($)" desc="Charged automatically when a guest indicates they're bringing a pet at checkout.">
-                  <Input
-                    type="number"
-                    min={0}
-                    value={listing.petFeeAmount ?? ""}
-                    onChange={(e) =>
-                      update("petFeeAmount", e.target.value ? Number(e.target.value) : null)
-                    }
-                  />
-                </FormItem>
-              )}
               <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 p-4 text-sm text-neutral-500 dark:text-neutral-400">
                 Instant booking is always on for this listing — every guest
                 pays and is confirmed immediately at checkout, with no
@@ -915,11 +906,11 @@ function stepPayload(
             cancellationPolicy: listing.cancellationPolicy ?? "MODERATE",
             instantBook: listing.instantBook ?? false,
             petPolicy: listing.petPolicy ?? "NOT_ALLOWED",
-            petFeeAmount: listing.petPolicy === "ALLOWED" ? listing.petFeeAmount : null,
+            petFeeAmount: listing.petFeeAmount,
           }
         : {
             petPolicy: listing.petPolicy ?? "NOT_ALLOWED",
-            petFeeAmount: listing.petPolicy === "ALLOWED" ? listing.petFeeAmount : null,
+            petFeeAmount: listing.petFeeAmount,
             earlyTerminationPolicy: listing.earlyTerminationPolicy ?? "STANDARD",
             utilitiesIncluded: listing.utilitiesIncluded ?? false,
           };
