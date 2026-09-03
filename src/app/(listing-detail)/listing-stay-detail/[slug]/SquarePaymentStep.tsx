@@ -42,13 +42,18 @@ interface SquarePayments {
 // Opaque handle passed straight from paymentRequest() to applePay() —
 // nothing in this component reads its shape.
 type SquarePaymentRequest = unknown;
+interface BillingContact {
+  givenName?: string;
+  familyName?: string;
+  email?: string;
+}
 interface SquareCard {
   attach(selector: string): Promise<void>;
-  tokenize(): Promise<TokenizeResult>;
+  tokenize(options?: { billingContact?: BillingContact }): Promise<TokenizeResult>;
   destroy(): Promise<void>;
 }
 interface SquareApplePay {
-  tokenize(): Promise<TokenizeResult>;
+  tokenize(options?: { billingContact?: BillingContact }): Promise<TokenizeResult>;
 }
 
 // Parked for now — Square's domain-verification check for Apple Pay kept
@@ -90,6 +95,7 @@ export default function SquarePaymentStep({
   paymentIntentId,
   amount,
   currency,
+  billingContact,
   onConfirmed,
   buttonLabel,
 }: {
@@ -97,6 +103,9 @@ export default function SquarePaymentStep({
   /** Whole-currency-unit amount (e.g. dollars, not cents) — only used to build Apple Pay's on-sheet total. */
   amount: number;
   currency: string;
+  /** Guest's name/email, sent alongside the card token so Square records who paid
+   * (shows as "Unknown Name" in the dashboard otherwise) — not used for AVS. */
+  billingContact?: BillingContact;
   onConfirmed: (paymentIntentId: string) => void;
   buttonLabel: string;
 }) {
@@ -189,7 +198,7 @@ export default function SquarePaymentStep({
     if (!cardRef.current) return;
     setError(null);
     setIsPending(true);
-    const succeeded = await confirm(await cardRef.current.tokenize());
+    const succeeded = await confirm(await cardRef.current.tokenize({ billingContact }));
     // No setIsPending(false) on success — the parent takes over (creating
     // the booking) and replaces this UI once that resolves.
     if (!succeeded) setIsPending(false);
@@ -199,7 +208,7 @@ export default function SquarePaymentStep({
     if (!applePayRef.current) return;
     setError(null);
     setIsApplePayPending(true);
-    const succeeded = await confirm(await applePayRef.current.tokenize());
+    const succeeded = await confirm(await applePayRef.current.tokenize({ billingContact }));
     if (!succeeded) setIsApplePayPending(false);
   }
 

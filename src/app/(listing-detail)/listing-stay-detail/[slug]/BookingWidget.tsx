@@ -2,6 +2,7 @@
 
 import React, { forwardRef, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import DatePicker from "react-datepicker";
 import ButtonPrimary from "@/components/ui/ButtonPrimary";
 import NcInputNumber from "@/components/NcInputNumber";
@@ -88,6 +89,7 @@ function ShortTermBookingForm({
   serviceFeePercent: number;
 }) {
   const router = useRouter();
+  const { data: session } = useSession();
   // Local, optimistic copy of auth state: flips true the instant the inline
   // OTP step succeeds, without waiting on a server round-trip, so the
   // pending action (below) can continue immediately in the same render
@@ -449,6 +451,15 @@ function ShortTermBookingForm({
             paymentIntentId={paymentIntentId}
             amount={quote?.totalPrice ?? 0}
             currency={currency}
+            billingContact={
+              session?.user
+                ? {
+                    givenName: session.user.firstName,
+                    familyName: session.user.lastName,
+                    email: session.user.email,
+                  }
+                : undefined
+            }
             onConfirmed={handlePaymentConfirmed}
             buttonLabel="Pay & Reserve"
           />
