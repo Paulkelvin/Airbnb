@@ -162,6 +162,20 @@ function ShortTermBookingForm({
     [blockedDates],
   );
 
+  // Once a check-in is selected, cap the check-out at the first blocked
+  // date after it so guests can't book a range that spans unavailable days.
+  const maxCheckoutDate = useMemo(() => {
+    if (!checkInDate || excludeDates.length === 0) return undefined;
+    const ciTime = checkInDate.getTime();
+    let earliest: Date | undefined;
+    for (const d of excludeDates) {
+      if (d.getTime() > ciTime && (!earliest || d.getTime() < earliest.getTime())) {
+        earliest = d;
+      }
+    }
+    return earliest;
+  }, [checkInDate, excludeDates]);
+
   const hasPet = guestBreakdown.pets > 0;
   const nights = checkInDate && checkOutDate ? nightsBetween(checkInDate, checkOutDate) : 0;
   const quote =
@@ -321,6 +335,7 @@ function ShortTermBookingForm({
                   endDate={checkOutDate}
                   selectsRange
                   minDate={new Date()}
+                  maxDate={checkInDate && !checkOutDate ? maxCheckoutDate : undefined}
                   excludeDates={excludeDates}
                   monthsShown={1}
                   inline
