@@ -128,11 +128,15 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
         <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 space-y-3">
           <h3 className="font-medium text-lg">Payments</h3>
           {booking.payments.map((p) => (
-            <Row
-              key={p.id}
-              label={`${p.type.replace(/_/g, " ")} - ${p.status}`}
-              value={`$${(p.amount / 100).toFixed(2)}`}
-            />
+            <div key={p.id}>
+              <Row
+                label={`${p.type.replace(/_/g, " ")} - ${p.status}`}
+                value={`$${(p.amount / 100).toFixed(2)}`}
+              />
+              {p.failureReason && (
+                <p className="text-xs text-red-600 mt-1">{p.failureReason}</p>
+              )}
+            </div>
           ))}
         </div>
       )}
