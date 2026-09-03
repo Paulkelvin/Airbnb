@@ -26,7 +26,14 @@ export async function GET() {
       // final encoding, so it passes it through unmodified instead of
       // compressing on top of it.
       "content-encoding": "identity",
-      "cache-control": "public, max-age=3600, no-transform",
+      // no-store: we've redeployed this route ~5 times in 20 minutes, each
+      // with different (initially broken) behavior. With any caching
+      // allowed, a Vercel edge node that cached an earlier broken response
+      // could keep serving it for up to an hour regardless of what the
+      // origin now returns — a very plausible reason Square kept seeing
+      // the same stale "partial response" while direct fresh requests
+      // looked perfect. no-store forces every request back to the origin.
+      "cache-control": "no-store, no-transform",
       "content-length": String(Buffer.byteLength(DOMAIN_ASSOCIATION, "utf-8")),
     },
   });
