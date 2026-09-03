@@ -592,8 +592,17 @@ export default function AddListingWizard({
                         src={img.url}
                         loader={cloudinaryLoader}
                         alt=""
-                        width={img.width ?? 400}
-                        height={img.height ?? 300}
+                        // Fixed small thumbnail dimensions regardless of the
+                        // photo's actual upload resolution (up to 2400px) —
+                        // passing img.width/height straight through here let
+                        // Next.js request 2x that as a srcset candidate for
+                        // what's only ever displayed as a 128px-tall
+                        // thumbnail, and with up to 60 photos on this page
+                        // that's enough decoded image memory to crash a
+                        // mobile browser tab outright.
+                        width={300}
+                        height={225}
+                        sizes="(max-width: 640px) 50vw, 33vw"
                         className="w-full h-32 object-cover rounded-lg pointer-events-none"
                       />
                       {img.isCover && (
