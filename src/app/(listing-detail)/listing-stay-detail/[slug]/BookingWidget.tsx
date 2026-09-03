@@ -415,6 +415,8 @@ function ShortTermBookingForm({
         paymentIntentId ? (
           <SquarePaymentStep
             paymentIntentId={paymentIntentId}
+            amount={quote?.totalPrice ?? 0}
+            currency={currency}
             onConfirmed={handlePaymentConfirmed}
             buttonLabel="Pay & Reserve"
           />

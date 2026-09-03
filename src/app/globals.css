@@ -55,3 +55,17 @@
     display: none;
   }
 }
+
+/* Apple's required rendering for the Apple Pay button (SquarePaymentStep.tsx)
+   — the -apple-pay-button-* properties are Safari-only and simply do
+   nothing on other browsers, which is fine since the button only renders
+   there in the first place (gated on window.ApplePaySession). */
+.apple-pay-button {
+  display: inline-block;
+  -webkit-appearance: -apple-pay-button;
+  -apple-pay-button-type: plain;
+  -apple-pay-button-style: black;
+  width: 100%;
+  height: 48px;
+  border-radius: 8px;
+}
