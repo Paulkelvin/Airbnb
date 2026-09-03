@@ -2,6 +2,7 @@ import type { NotificationType } from "@prisma/client";
 
 export const TYPE_LABELS: Record<NotificationType, string> = {
   BOOKING_CONFIRMED: "Booking confirmed",
+  NEW_BOOKING: "New booking",
   BOOKING_CANCELLED: "Booking cancelled",
   NEW_MESSAGE: "New message",
   NEW_INQUIRY: "New inquiry",
@@ -22,6 +23,8 @@ export function summarizeNotification(
     case "BOOKING_CONFIRMED":
     case "BOOKING_CANCELLED":
       return String(payload.listingTitle ?? "");
+    case "NEW_BOOKING":
+      return `${payload.guestName} — ${payload.listingTitle}`;
     case "NEW_MESSAGE":
       return `${payload.senderName}: "${payload.preview}"`;
     case "NEW_INQUIRY":

@@ -13,6 +13,7 @@ import { renderEmailTemplate, type NotificationPayloads } from "@/lib/notificati
  */
 const CRITICAL_EMAIL_TYPES: ReadonlySet<NotificationType> = new Set<NotificationType>([
   "BOOKING_CONFIRMED",
+  "NEW_BOOKING",
   "BOOKING_CANCELLED",
   "PAYMENT_FAILED",
   "PASSWORD_CHANGED",

@@ -89,6 +89,7 @@ enum ReviewDirection {
 
 enum NotificationType {
   BOOKING_CONFIRMED
+  NEW_BOOKING
   BOOKING_CANCELLED
   NEW_MESSAGE
   NEW_INQUIRY

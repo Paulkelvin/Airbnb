@@ -247,6 +247,20 @@ export async function createShortTermBooking(
       amount: dollarsToCents(quote.totalPrice),
       currency: listing.currency,
     });
+    // The owner otherwise has no way to learn a booking happened short of
+    // manually checking the admin dashboard or Square's own transaction
+    // list — this is the host-side counterpart to the guest confirmation
+    // above.
+    await notify(listing.hostId, "NEW_BOOKING", {
+      bookingId,
+      listingTitle: listing.title,
+      guestName: `${user.firstName} ${user.lastName}`.trim(),
+      checkInDate: data.checkInDate.toISOString().slice(0, 10),
+      checkOutDate: data.checkOutDate.toISOString().slice(0, 10),
+      guestCount: data.guestCount,
+      amount: dollarsToCents(quote.totalPrice),
+      currency: listing.currency,
+    });
   }
 
   revalidatePath(`/listing-stay-detail/${listing.slug}`);

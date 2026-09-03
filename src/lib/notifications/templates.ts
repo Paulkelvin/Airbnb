@@ -15,6 +15,16 @@ export type NotificationPayloads = {
     amount: number;
     currency: string;
   };
+  NEW_BOOKING: {
+    bookingId: string;
+    listingTitle: string;
+    guestName: string;
+    checkInDate: string;
+    checkOutDate: string;
+    guestCount: number;
+    amount: number;
+    currency: string;
+  };
   BOOKING_CANCELLED: {
     bookingId: string;
     listingTitle: string;
@@ -214,6 +224,23 @@ ${dates}
 </td></tr></table>
 <p style="margin:0;font-size:13px;line-height:1.5;color:#71717a;">We look forward to hosting you!</p>`, text);
       return { subject: `Booking confirmed: ${p.listingTitle}`, text, html };
+    }
+    case "NEW_BOOKING": {
+      const p = payload as NotificationPayloads["NEW_BOOKING"];
+      const text = `New booking from ${p.guestName} for "${p.listingTitle}": ${p.checkInDate} to ${p.checkOutDate}, ${p.guestCount} guest(s). Paid: ${formatMoney(p.amount, p.currency)}.`;
+      const html = wrap(firstName, `
+<p style="margin:0 0 20px 0;font-size:16px;line-height:1.5;color:#27272a;">You have a new paid, confirmed booking.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px 0;background-color:#fafafa;border:1px solid #e4e4e7;border-radius:8px;">
+<tr><td style="padding:16px 20px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<tr><td style="padding:8px 0;font-size:14px;color:#71717a;width:100px;">Guest</td><td style="padding:8px 0;font-size:14px;font-weight:600;color:#27272a;">${p.guestName}</td></tr>
+<tr><td style="padding:8px 0;font-size:14px;color:#71717a;width:100px;">Property</td><td style="padding:8px 0;font-size:14px;font-weight:600;color:#27272a;">${p.listingTitle}</td></tr>
+<tr><td style="padding:8px 0;font-size:14px;color:#71717a;width:100px;">Dates</td><td style="padding:8px 0;font-size:14px;color:#27272a;">${p.checkInDate} - ${p.checkOutDate}</td></tr>
+<tr><td style="padding:8px 0;font-size:14px;color:#71717a;width:100px;">Guests</td><td style="padding:8px 0;font-size:14px;color:#27272a;">${p.guestCount}</td></tr>
+<tr><td style="padding:8px 0;font-size:14px;color:#71717a;width:100px;">Paid</td><td style="padding:8px 0;font-size:14px;font-weight:600;color:#166534;">${formatMoney(p.amount, p.currency)}</td></tr>
+</table>
+</td></tr></table>`, text);
+      return { subject: `New booking: ${p.guestName}, ${p.checkInDate} - ${p.checkOutDate}`, text, html };
     }
     case "BOOKING_CANCELLED": {
       const p = payload as NotificationPayloads["BOOKING_CANCELLED"];
