@@ -25,6 +25,9 @@ export const createShortTermBookingSchema = z
     checkInDate: z.coerce.date(),
     checkOutDate: z.coerce.date(),
     guestCount: z.coerce.number().int().min(1),
+    // Guest indicated a pet via GuestSelector's pets count > 0 — drives
+    // whether the listing's pet fee gets added to the quote.
+    hasPet: z.coerce.boolean().optional().default(false),
     // Client-generated per the domain model spec — a retried/duplicate
     // submission with the same key returns the original booking instead
     // of creating a second one and double-charging.
@@ -54,6 +57,7 @@ export const createBookingPaymentIntentSchema = z
     checkInDate: z.coerce.date(),
     checkOutDate: z.coerce.date(),
     guestCount: z.coerce.number().int().min(1),
+    hasPet: z.coerce.boolean().optional().default(false),
   })
   .refine((data) => data.checkOutDate > data.checkInDate, {
     message: "Check-out date must be after check-in date",

@@ -147,6 +147,8 @@ export async function createShortTermBooking(
       : null,
     nights,
     serviceFeePercent,
+    petFeeAmount: listing.petFeeAmount,
+    hasPet: data.hasPet,
   });
 
   const nightDates = datesInRange(data.checkInDate, data.checkOutDate);
@@ -177,6 +179,8 @@ export async function createShortTermBooking(
           guestCount: data.guestCount,
           nightlyRateSnapshot: quote.nightlyRate,
           cleaningFeeSnapshot: quote.cleaningFee,
+          hasPet: data.hasPet,
+          petFeeSnapshot: quote.petFee,
           subtotal: quote.subtotal,
           serviceFee: quote.serviceFee,
           totalPrice: quote.totalPrice,
@@ -359,6 +363,8 @@ export async function createBookingPaymentIntent(
       : null,
     nights,
     serviceFeePercent,
+    petFeeAmount: listing.petFeeAmount,
+    hasPet: data.hasPet,
   });
 
   const provider = getPaymentProvider();

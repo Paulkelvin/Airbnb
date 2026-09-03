@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/db";
+import { parseListingMetadata } from "@/modules/listings/metadata";
 
 /** Minimal listing projection booking creation needs — not the full search/detail `listingInclude`. */
 export async function getListingForBooking(listingId: string) {
-  return prisma.listing.findUnique({
+  const listing = await prisma.listing.findUnique({
     where: { id: listingId },
     select: {
       id: true,
@@ -27,8 +28,19 @@ export async function getListingForBooking(listingId: string) {
       maxLeaseTermMonths: true,
       availableFromDate: true,
       earlyTerminationPolicy: true,
+      petPolicy: true,
+      metadata: true,
     },
   });
+  if (!listing) return null;
+  const { petFeeAmount } = parseListingMetadata(listing.metadata);
+  return {
+    ...listing,
+    // Only actually chargeable when pets are allowed at all — a fee amount
+    // left over from a listing that later switched to NOT_ALLOWED should
+    // never get charged.
+    petFeeAmount: listing.petPolicy === "ALLOWED" ? petFeeAmount ?? null : null,
+  };
 }
 
 /** True if every date in [checkInDate, checkOutDate) is free of a BOOKED/BLOCKED Availability row. */

@@ -462,6 +462,8 @@ model Booking {
   guestCount            Int?
   nightlyRateSnapshot   Decimal?  @db.Decimal(10, 2)
   cleaningFeeSnapshot   Decimal?  @db.Decimal(10, 2)
+  hasPet                Boolean?  @default(false)
+  petFeeSnapshot        Decimal?  @db.Decimal(10, 2)
   subtotal              Decimal?  @db.Decimal(10, 2)
   serviceFee            Decimal?  @db.Decimal(10, 2)
   totalPrice            Decimal?  @db.Decimal(10, 2)

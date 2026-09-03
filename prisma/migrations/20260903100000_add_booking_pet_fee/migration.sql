@@ -1,0 +1,2 @@
+ALTER TABLE "Booking" ADD COLUMN "hasPet" BOOLEAN DEFAULT false;
+ALTER TABLE "Booking" ADD COLUMN "petFeeSnapshot" DECIMAL(10,2);

@@ -104,6 +104,9 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
             {booking.cleaningFeeSnapshot && (
               <Row label="Cleaning fee" value={`$${Number(booking.cleaningFeeSnapshot).toFixed(2)}`} />
             )}
+            {booking.petFeeSnapshot && Number(booking.petFeeSnapshot) > 0 && (
+              <Row label="Pet fee" value={`$${Number(booking.petFeeSnapshot).toFixed(2)}`} />
+            )}
             <Row label="Subtotal" value={`$${Number(booking.subtotal ?? 0).toFixed(2)}`} />
             <Row label="Service fee" value={`$${Number(booking.serviceFee ?? 0).toFixed(2)}`} />
             <Row label="Total" value={`$${Number(booking.totalPrice ?? 0).toFixed(2)}`} bold />

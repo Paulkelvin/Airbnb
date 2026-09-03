@@ -162,8 +162,10 @@ function ShortTermBookingForm({
     [blockedDates],
   );
 
+  const hasPet = guestBreakdown.pets > 0;
   const nights = checkInDate && checkOutDate ? nightsBetween(checkInDate, checkOutDate) : 0;
-  const quote = nights > 0 ? computeShortTermQuote({ ...pricing, nights, serviceFeePercent }) : null;
+  const quote =
+    nights > 0 ? computeShortTermQuote({ ...pricing, nights, serviceFeePercent, hasPet }) : null;
 
   const idempotencyKey = useMemo(
     () => crypto.randomUUID(),
@@ -171,11 +173,12 @@ function ShortTermBookingForm({
   );
 
   // A previously-fetched PaymentIntent was priced for the dates/guest count
-  // at the time — invalidate it the moment any of those change so a stale
-  // intent (wrong amount) can never be confirmed against a different quote.
+  // (and now pet status) at the time — invalidate it the moment any of
+  // those change so a stale intent (wrong amount) can never be confirmed
+  // against a different quote.
   useEffect(() => {
     setPaymentIntentId(null);
-  }, [checkInDate?.getTime(), checkOutDate?.getTime(), guestCount]);
+  }, [checkInDate?.getTime(), checkOutDate?.getTime(), guestCount, hasPet]);
 
   const sameDay = checkInDate != null && checkOutDate != null && nights === 0;
   const nightsTooFew = nights > 0 && nights < pricing.minNights;
@@ -192,6 +195,7 @@ function ShortTermBookingForm({
           checkInDate,
           checkOutDate,
           guestCount,
+          hasPet,
           idempotencyKey,
         });
         if (!result.success) {
@@ -217,6 +221,7 @@ function ShortTermBookingForm({
           checkInDate,
           checkOutDate,
           guestCount,
+          hasPet,
         });
         if (!result.success) {
           setError(result.error.message);
@@ -242,6 +247,7 @@ function ShortTermBookingForm({
           checkInDate,
           checkOutDate,
           guestCount,
+          hasPet,
           idempotencyKey,
           paymentIntentId,
         });
@@ -373,6 +379,12 @@ function ShortTermBookingForm({
                 <div className="flex justify-between">
                   <span>Cleaning fee</span>
                   <span>${quote.cleaningFee.toFixed(2)}</span>
+                </div>
+              )}
+              {quote.petFee > 0 && (
+                <div className="flex justify-between">
+                  <span>Pet fee</span>
+                  <span>${quote.petFee.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between">

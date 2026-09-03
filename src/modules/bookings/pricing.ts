@@ -14,6 +14,10 @@ export interface ShortTermQuoteInput {
   nights: number;
   /** Fraction (0-1) of subtotal charged as the guest service fee. Defaults to the platform constant. */
   serviceFeePercent?: number;
+  /** The listing's flat one-time pet fee — only actually charged when hasPet is true. */
+  petFeeAmount?: number | null;
+  /** Whether the guest indicated they're bringing a pet (GuestSelector's pets count > 0). */
+  hasPet?: boolean;
 }
 
 export interface ShortTermQuote {
@@ -23,7 +27,8 @@ export interface ShortTermQuote {
   discountPercent: number;
   discountAmount: number;
   cleaningFee: number;
-  /** Nightly total minus discount, plus cleaning fee — the service-fee basis. */
+  petFee: number;
+  /** Nightly total minus discount, plus cleaning fee and pet fee — the service-fee basis. */
   subtotal: number;
   serviceFee: number;
   totalPrice: number;
@@ -42,7 +47,8 @@ export function computeShortTermQuote(input: ShortTermQuoteInput): ShortTermQuot
 
   const discountAmount = roundToCents(nightlyTotal * (discountPercent / 100));
   const cleaningFee = input.cleaningFee ?? 0;
-  const subtotal = roundToCents(nightlyTotal - discountAmount + cleaningFee);
+  const petFee = input.hasPet ? input.petFeeAmount ?? 0 : 0;
+  const subtotal = roundToCents(nightlyTotal - discountAmount + cleaningFee + petFee);
   const serviceFee = computeServiceFeeDollars(subtotal, input.serviceFeePercent);
   const totalPrice = roundToCents(subtotal + serviceFee);
 
@@ -53,6 +59,7 @@ export function computeShortTermQuote(input: ShortTermQuoteInput): ShortTermQuot
     discountPercent,
     discountAmount,
     cleaningFee,
+    petFee,
     subtotal,
     serviceFee,
     totalPrice,
