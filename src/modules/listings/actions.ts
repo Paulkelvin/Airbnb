@@ -14,6 +14,7 @@ import {
 } from "@/lib/validations/listing";
 import type { ActionResult } from "@/lib/validations/auth";
 import { isListingModerationEnabled } from "@/modules/admin/settings";
+import { parseListingMetadata } from "./metadata";
 
 function slugify(title: string): string {
   return title
@@ -133,7 +134,7 @@ export async function saveListingDraft(
     };
   }
 
-  const { id, address, amenityIds, images, ...scalarFields } = parsed.data;
+  const { id, address, amenityIds, images, petFeeAmount, ...scalarFields } = parsed.data;
 
   const existing = await prisma.listing.findUnique({
     where: { id },
@@ -142,6 +143,21 @@ export async function saveListingDraft(
 
   if (!existing) {
     return { success: false, error: { code: "NOT_FOUND", message: "Listing not found" } };
+  }
+
+  // petFeeAmount lives in the metadata JSON column, not a real column —
+  // merge it into whatever's already there rather than clobbering other
+  // metadata keys (e.g. checkInWindowEnd) this step didn't touch.
+  // `undefined` (key omitted entirely) leaves it as-is; `null` clears it.
+  const metadataUpdate =
+    petFeeAmount !== undefined
+      ? {
+          ...parseListingMetadata(existing.metadata),
+          petFeeAmount: petFeeAmount ?? undefined,
+        }
+      : undefined;
+  if (metadataUpdate && petFeeAmount === null) {
+    delete metadataUpdate.petFeeAmount;
   }
 
   const removedImages =
@@ -158,6 +174,7 @@ export async function saveListingDraft(
         data: {
           ...scalarFields,
           sizeSqft: scalarFields.sizeSqft ?? undefined,
+          metadata: metadataUpdate,
           address: address
             ? {
                 upsert: {

@@ -124,6 +124,10 @@ export const draftUpdateSchema = z.object({
   images: z.array(listingImageSchema).max(60).optional(),
   address: partialAddressSchema.optional(),
   petPolicy: baseListing.petPolicy.optional(),
+  // Stored in Listing.metadata (see modules/listings/metadata.ts), not a
+  // real column — null clears it (e.g. host switches pet policy back to
+  // Not allowed), omitted leaves whatever's already saved untouched.
+  petFeeAmount: z.coerce.number().positive().nullable().optional(),
   rentalType: z.enum(["SHORT_TERM", "LONG_TERM"]).optional(),
   // Short-term fields
   nightlyPrice: shortTermFields.nightlyPrice.optional(),

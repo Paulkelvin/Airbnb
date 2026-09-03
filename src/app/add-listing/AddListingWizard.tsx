@@ -77,6 +77,7 @@ export interface WizardListing {
   availableFromDate: string | null;
   utilitiesIncluded: boolean | null;
   petPolicy: string | null;
+  petFeeAmount: number | null;
   earlyTerminationPolicy: string | null;
 }
 
@@ -452,6 +453,18 @@ export default function AddListingWizard({
                   <option value="CASE_BY_CASE">Case by case</option>
                 </Select>
               </FormItem>
+              {listing.petPolicy === "ALLOWED" && (
+                <FormItem label="Pet fee ($)" desc="Charged automatically when a guest indicates they're bringing a pet at checkout.">
+                  <Input
+                    type="number"
+                    min={0}
+                    value={listing.petFeeAmount ?? ""}
+                    onChange={(e) =>
+                      update("petFeeAmount", e.target.value ? Number(e.target.value) : null)
+                    }
+                  />
+                </FormItem>
+              )}
               <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 p-4 text-sm text-neutral-500 dark:text-neutral-400">
                 Instant booking is always on for this listing — every guest
                 pays and is confirmed immediately at checkout, with no
@@ -893,9 +906,11 @@ function stepPayload(
             cancellationPolicy: listing.cancellationPolicy ?? "MODERATE",
             instantBook: listing.instantBook ?? false,
             petPolicy: listing.petPolicy ?? "NOT_ALLOWED",
+            petFeeAmount: listing.petPolicy === "ALLOWED" ? listing.petFeeAmount : null,
           }
         : {
             petPolicy: listing.petPolicy ?? "NOT_ALLOWED",
+            petFeeAmount: listing.petPolicy === "ALLOWED" ? listing.petFeeAmount : null,
             earlyTerminationPolicy: listing.earlyTerminationPolicy ?? "STANDARD",
             utilitiesIncluded: listing.utilitiesIncluded ?? false,
           };

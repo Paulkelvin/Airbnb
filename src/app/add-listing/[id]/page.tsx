@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getListingByIdForAdmin, getActivePropertyTypes, getActiveAmenities } from "@/modules/listings/queries";
+import { parseListingMetadata } from "@/modules/listings/metadata";
 import AddListingWizard from "../AddListingWizard";
 import type { WizardListing } from "../AddListingWizard";
 
@@ -92,6 +93,7 @@ export default async function AddListingContinuePage({
       : null,
     utilitiesIncluded: listing.utilitiesIncluded,
     petPolicy: listing.petPolicy,
+    petFeeAmount: parseListingMetadata(listing.metadata).petFeeAmount ?? null,
     earlyTerminationPolicy: listing.earlyTerminationPolicy,
   };
 
