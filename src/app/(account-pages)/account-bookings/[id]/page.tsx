@@ -136,6 +136,12 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
               {p.failureReason && (
                 <p className="text-xs text-red-600 mt-1">{p.failureReason}</p>
               )}
+              {p.failureReason && p.type === "REFUND" && p.status === "FAILED" && (
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  This refund could not be completed automatically. The host will need to
+                  reimburse this amount directly (e.g. Venmo, Zelle, or cash).
+                </p>
+              )}
             </div>
           ))}
         </div>

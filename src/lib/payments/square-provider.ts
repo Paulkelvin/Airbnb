@@ -319,7 +319,14 @@ function mapRefundStatus(status: string | null | undefined): RefundResult["statu
  * not a system fault. Anything else (auth, connection, rate limit) propagates. */
 function chargeFailureResult(err: unknown): { providerTransactionRef: ""; status: "FAILED"; failureReason: string } {
   if (err instanceof SquareError) {
-    return { providerTransactionRef: "", status: "FAILED", failureReason: err.message };
+    // err.message on a thrown SquareError is a raw "Status code: 400 Body:
+    // {...}" API dump — not something a guest or host should ever see.
+    // Square's own `detail` field on the first reported error is already a
+    // real English sentence (e.g. "Payment could not be refunded."), so
+    // prefer that; only fall back to the raw message if a future error
+    // shape somehow omits it.
+    const failureReason = err.errors?.[0]?.detail ?? err.message;
+    return { providerTransactionRef: "", status: "FAILED", failureReason };
   }
   throw err;
 }
